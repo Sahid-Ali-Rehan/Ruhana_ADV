@@ -98,7 +98,7 @@ const CheckoutForm = () => {
         throw new Error("Payment system not ready. Please try again.");
       }
 
-      const paymentIntentResponse = await fetch("https://original-collections.onrender.com/api/orders/create-payment-intent", {
+      const paymentIntentResponse = await fetch("https://ruhana-adv.onrender.com/api/orders/create-payment-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount: totalPrice })
@@ -166,7 +166,7 @@ const CheckoutForm = () => {
       paymentIntentId
     };
 
-    const response = await fetch("https://original-collections.onrender.com/api/orders/checkout", {
+    const response = await fetch("https://ruhana-adv.onrender.com/api/orders/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(order),

@@ -8,7 +8,7 @@ const RelatedProducts = ({ category }) => {
     const fetchRelatedProducts = async () => {
       try {
         const response = await fetch(
-          `https://original-collections.onrender.com/api/products/related/${category}`
+          `https://ruhana-adv.onrender.com/api/products/related/${category}`
         );
         if (!response.ok) {
           throw new Error("Failed to fetch related products");

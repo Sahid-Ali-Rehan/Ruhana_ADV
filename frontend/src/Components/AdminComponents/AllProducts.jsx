@@ -11,7 +11,7 @@ const AllProducts = () => {
     const fetchProducts = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('https://original-collections.onrender.com/api/products/fetch-products', {
+        const response = await axios.get('https://ruhana-adv.onrender.com/api/products/fetch-products', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setProducts(response.data);
@@ -27,7 +27,7 @@ const AllProducts = () => {
   const handleDelete = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`https://original-collections.onrender.com/api/products/${id}`, {
+      await axios.delete(`https://ruhana-adv.onrender.com/api/products/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success('Product deleted successfully');

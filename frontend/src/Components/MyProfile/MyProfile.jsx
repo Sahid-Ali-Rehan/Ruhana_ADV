@@ -42,7 +42,7 @@ const fetchProfile = async () => {
     }
 
     const response = await axios.get(
-      `https://original-collections.onrender.com/api/users/${userId}`,
+      `https://ruhana-adv.onrender.com/api/users/${userId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -115,7 +115,7 @@ const fetchProfile = async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `https://original-collections.onrender.com/api/orders/${orderId}`,
+        `https://ruhana-adv.onrender.com/api/orders/${orderId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -152,7 +152,7 @@ const handleCancelRequest = async () => {
     }
 
     const response = await axios.put(
-      `https://original-collections.onrender.com/api/orders/request-cancel/${order._id}`,
+      `https://ruhana-adv.onrender.com/api/orders/request-cancel/${order._id}`,
       {},
       { headers: { Authorization: `Bearer ${token}` } }
     );

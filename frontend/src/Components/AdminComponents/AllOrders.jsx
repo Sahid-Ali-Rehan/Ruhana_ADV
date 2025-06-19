@@ -22,7 +22,7 @@ const AllOrders = () => {
         }
 
         const response = await axios.get(
-          "https://original-collections.onrender.com/api/orders/all-orders",
+          "https://ruhana-adv.onrender.com/api/orders/all-orders",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -43,7 +43,7 @@ const AllOrders = () => {
   const updateStatus = async (orderId, status) => {
     try {
       const response = await axios.put(
-        `https://original-collections.onrender.com/api/orders/update-status/${orderId}`,
+        `https://ruhana-adv.onrender.com/api/orders/update-status/${orderId}`,
         { status }
       );
       setOrders((prevOrders) =>
@@ -103,7 +103,7 @@ const handleApproveCancellation = async (orderId) => {
   try {
     const token = localStorage.getItem("token");
     await axios.delete(
-      `https://original-collections.onrender.com/api/orders/cancel/${orderId}`,
+      `https://ruhana-adv.onrender.com/api/orders/cancel/${orderId}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     toast.success("Order cancelled and deleted");

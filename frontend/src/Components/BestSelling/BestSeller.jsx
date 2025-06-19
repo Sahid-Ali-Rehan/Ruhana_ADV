@@ -22,7 +22,7 @@ const BestSellers = () => {
     // Fetch all products from your API
     const fetchProducts = async () => {
       try {
-        const response = await fetch("https://original-collections.onrender.com/api/products/fetch-products");
+        const response = await fetch("https://ruhana-adv.onrender.com/api/products/fetch-products");
         const data = await response.json();
         const bestSellers = data.filter((product) => product.isBestSeller === true);
         setProducts(bestSellers);

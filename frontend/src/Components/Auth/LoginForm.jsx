@@ -17,7 +17,7 @@ const LoginForm = () => {
     e.preventDefault();
     console.log(formData);  // Log form data to console to ensure it's correct
     try {
-      const { data } = await axios.post("https://original-collections.onrender.com/api/auth/login", formData);
+      const { data } = await axios.post("https://ruhana-adv.onrender.com/api/auth/login", formData);
       toast.success(data.message);
 
       // Save token to localStorage

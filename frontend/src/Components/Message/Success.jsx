@@ -196,7 +196,7 @@ const addOrderDisplayButton = () => {
   doc.setFontSize(12);
   doc.setTextColor("#F68C1F");
   doc.textWithLink("Track Order", pageWidth / 2, yOffset + 15, {
-    url: "https://original-collections.onrender.com/my-profile",
+    url: "https://ruhana-adv.onrender.com/my-profile",
     align: "center",
   });
 

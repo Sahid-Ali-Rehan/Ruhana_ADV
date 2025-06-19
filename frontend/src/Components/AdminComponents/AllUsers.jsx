@@ -9,7 +9,7 @@ const AllUsers = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axios.get('https://original-collections.onrender.com/api/users/fetch-users', {
+        const res = await axios.get('https://ruhana-adv.onrender.com/api/users/fetch-users', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         setUsers(res.data);
@@ -24,11 +24,11 @@ const AllUsers = () => {
 
   const changeRole = async (id) => {
     try {
-      await axios.put(`https://original-collections.onrender.com/api/users/role/${id}`, {}, {
+      await axios.put(`https://ruhana-adv.onrender.com/api/users/role/${id}`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
 
-      const res = await axios.get('https://original-collections.onrender.com/api/users/fetch-users', {
+      const res = await axios.get('https://ruhana-adv.onrender.com/api/users/fetch-users', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setUsers(res.data);
@@ -43,11 +43,11 @@ const AllUsers = () => {
     if (!isConfirmed) return;
   
     try {
-      await axios.delete(`https://original-collections.onrender.com/api/users/${id}`, {
+      await axios.delete(`https://ruhana-adv.onrender.com/api/users/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
   
-      const res = await axios.get('https://original-collections.onrender.com/api/users/fetch-users', {
+      const res = await axios.get('https://ruhana-adv.onrender.com/api/users/fetch-users', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setUsers(res.data);

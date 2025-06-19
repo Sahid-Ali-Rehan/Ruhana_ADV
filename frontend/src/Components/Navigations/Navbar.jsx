@@ -60,7 +60,7 @@ const Navbar = () => {
           const userId = decodedToken?.id;
 
           if (userId) {
-            const response = await axios.get(`https://original-collections.onrender.com/api/users/${userId}`, {
+            const response = await axios.get(`https://ruhana-adv.onrender.com/api/users/${userId}`, {
               headers: {
                 Authorization: `Bearer ${token}`,
               },

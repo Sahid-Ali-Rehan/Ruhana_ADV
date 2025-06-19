@@ -31,7 +31,7 @@ const [isReviewModalOpen, setReviewModalOpen] = useState(false); // Modal state
 useEffect(() => {
   const fetchReviews = async () => {
     try {
-      const response = await fetch(`https://original-collections.onrender.com/api/reviews/${id}`);
+      const response = await fetch(`https://ruhana-adv.onrender.com/api/reviews/${id}`);
       const data = await response.json();
       setReviews(data);
     } catch (error) {
@@ -52,7 +52,7 @@ const handleAddReview = async () => {
   }
 
   try {
-    const response = await fetch(`https://original-collections.onrender.com/api/reviews/add`, {
+    const response = await fetch(`https://ruhana-adv.onrender.com/api/reviews/add`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...newReview, productId: id }),
@@ -96,7 +96,7 @@ const toggleReviewModal = () => setReviewModalOpen((prev) => !prev);
 
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`https://original-collections.onrender.com/api/products/single/${id}`);
+        const response = await fetch(`https://ruhana-adv.onrender.com/api/products/single/${id}`);
         if (!response.ok) {
           throw new Error("Failed to fetch product");
         }

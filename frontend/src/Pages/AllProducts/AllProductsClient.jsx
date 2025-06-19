@@ -43,7 +43,7 @@ const AllProductsClient = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const { data } = await axios.get('https://original-collections.onrender.com/api/products/fetch-products', {
+        const { data } = await axios.get('https://ruhana-adv.onrender.com/api/products/fetch-products', {
           params: {
             search: filters.search,
             productCode: filters.productCode,

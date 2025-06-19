@@ -32,7 +32,7 @@ const EditProduct = () => {
             toast.error('Authentication token missing');
             return;
           }
-          const response = await axios.get(`https://original-collections.onrender.com/api/products/details/${productId}`, {
+          const response = await axios.get(`https://ruhana-adv.onrender.com/api/products/details/${productId}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           console.log("Fetched Product ID:", productId);
@@ -66,7 +66,7 @@ const EditProduct = () => {
     };
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.put(`https://original-collections.onrender.com/api/products/update/${productId}`, payload, {
+      const response = await axios.put(`https://ruhana-adv.onrender.com/api/products/update/${productId}`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success(response.data.message);
