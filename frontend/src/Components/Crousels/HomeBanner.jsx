@@ -152,7 +152,7 @@ const HomeBanner = () => {
             textShadow: '0 4px 20px rgba(129, 75, 74, 0.6)'
           }}
         >
-          Exquisite
+          Ruhana's
         </span>
         <span
           ref={collectionsRef}
@@ -164,7 +164,7 @@ const HomeBanner = () => {
             textShadow: '0 4px 20px rgba(86, 122, 75, 0.6)'
           }}
         >
-          Collections
+          Fashion
         </span>
       </div>
 
