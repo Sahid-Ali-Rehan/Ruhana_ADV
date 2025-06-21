@@ -1,82 +1,96 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import { HiMenu } from "react-icons/hi"; // For menu
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faShoppingCart, faHeart } from "@fortawesome/free-solid-svg-icons";
-
-// Dropdown Items as JSON
-const categories = {
-    mens: [
-      { name: "Smartphones", link: "/category/smartphones" },
-      { name: "Feature Phones", link: "/category/featured-phones" },
-      { name: "Mobile Accessories", link: "/category/mobile-accessories" },
-      { name: "Refurbished Phones", link: "/category/refurbished-phones" },
-    ],
-    womens: [
-      { name: "Fast Charging Adapters", link: "/category/Adapters" },
-      { name: "Wireless Chargers", link: "/category/wireless-chargers" },
-      { name: "USB-C Chargers", link: "/category/usb-c" },
-      { name: "Multi-port Chargers", link: "/category/multi-port-chargers" }, // New category added
-    ],
-    kids: [
-      { name: "USB-C Laptop Chargers", link: "/category/laptop-chargers" },
-      { name: "AC Power Adapters", link: "/category/ac-power-adapters" },
-      { name: "Universal Laptop Chargers", link: "/category/universal-laptorp-chargers" }, // New category added
-    ],
-    accessories: [
-      { name: "Fitness Trackers", link: "/category/fitness-tracker" },
-      { name: "Luxury Smart Watches", link: "/category/luxury-smart-watches" },
-      { name: "Budget Smart Watches", link: "/category/budget-smart-watches" },
-    ],
-    footwear: [
-      { name: "High Capacity Power Banks", link: "/category/high-capacity-powerbanks" },
-      { name: "Portable Power Banks", link: "/category/portable-powerbanks" },
-      { name: "Solar Power Banks", link: "/category/solar-powerbanks" },
-    ],
-  };
-  
+import { motion, AnimatePresence } from "framer-motion";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isMensDropdownOpen, setIsMensDropdownOpen] = useState(false);
-  const [isWomensDropdownOpen, setIsWomensDropdownOpen] = useState(false);
-  const [isKidsDropdownOpen, setIsKidsDropdownOpen] = useState(false);
-  const [isAccessoriesDropdownOpen, setIsAccessoriesDropdownOpen] = useState(false);
-  const [isFootwearDropdownOpen, setIsFootwearDropdownOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
   const [user, setUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
+  const [particles, setParticles] = useState([]);
 
+  // Categories for a luxury showpiece website
+  const categories = {
+    vases: [
+      { name: "Crystal Vases", link: "/category/crystal-vases" },
+      { name: "Porcelain Vases", link: "/category/porcelain-vases" },
+      { name: "Artisan Vases", link: "/category/artisan-vases" },
+      { name: "Modern Vases", link: "/category/modern-vases" },
+    ],
+    sculptures: [
+      { name: "Bronze Sculptures", link: "/category/bronze-sculptures" },
+      { name: "Marble Sculptures", link: "/category/marble-sculptures" },
+      { name: "Abstract Sculptures", link: "/category/abstract-sculptures" },
+      { name: "Figurines", link: "/category/figurines" },
+    ],
+    decor: [
+      { name: "Centerpieces", link: "/category/centerpieces" },
+      { name: "Candle Holders", link: "/category/candle-holders" },
+      { name: "Decorative Bowls", link: "/category/decorative-bowls" },
+      { name: "Ornaments", link: "/category/ornaments" },
+    ],
+    art: [
+      { name: "Wall Art", link: "/category/wall-art" },
+      { name: "Sculptural Art", link: "/category/sculptural-art" },
+      { name: "Art Glass", link: "/category/art-glass" },
+      { name: "Artisan Crafts", link: "/category/artisan-crafts" },
+    ],
+    collections: [
+      { name: "Signature Collection", link: "/category/signature-collection" },
+      { name: "Limited Editions", link: "/category/limited-editions" },
+      { name: "Vintage Collection", link: "/category/vintage-collection" },
+      { name: "Contemporary", link: "/category/contemporary" },
+    ],
+  };
 
-  // Fetch the logged-in user data and check if the token exists in localStorage
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Update cart and wishlist counts
+  const updateCounts = useCallback(() => {
+    try {
+      const cart = JSON.parse(localStorage.getItem('cart_guest')) || [];
+      const wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
+      
+      const totalCartItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+      setCartCount(totalCartItems);
+      setWishlistCount(wishlist.length);
+    } catch (error) {
+      console.error('Error reading cart/wishlist:', error);
+    }
+  }, []);
+
+  // Fetch user data
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const token = localStorage.getItem("token");
+        if (!token) return;
 
-        if (token) {
-          const decodedToken = JSON.parse(atob(token.split('.')[1]));
-          const userId = decodedToken?.id;
+        const decodedToken = JSON.parse(atob(token.split('.')[1]));
+        const userId = decodedToken?.id;
+        if (!userId) return;
 
-          if (userId) {
-            const response = await axios.get(`https://ruhana-adv.onrender.com/api/users/${userId}`, {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            });
+        const response = await axios.get(`https://ruhana-adv.onrender.com/api/users/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-            if (response.data.user) {
-              setUser(response.data.user);
-              setIsLoggedIn(true);
-            } else {
-              setIsLoggedIn(false);
-            }
-          } else {
-            setIsLoggedIn(false);
-          }
-        } else {
-          setIsLoggedIn(false);
+        if (response.data.user) {
+          setUser(response.data.user);
+          setIsLoggedIn(true);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -85,355 +99,497 @@ const Navbar = () => {
     };
 
     fetchUser();
-  }, []);
+    updateCounts();
+    
+    // Listen for storage changes
+    const handleStorageChange = () => updateCounts();
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Custom event listener for updates within same tab
+    const handleCustomUpdate = () => updateCounts();
+    window.addEventListener('cartWishlistUpdate', handleCustomUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('cartWishlistUpdate', handleCustomUpdate);
+    };
+  }, [updateCounts]);
 
+  // Navigation handlers
+  const navigateToProducts = () => navigate('/products');
+  const navigateToProfile = () => navigate('/my-profile');
 
-  const handleClick = () => {
-    navigate('/products');
+  // Toggle dropdowns
+  const toggleDropdown = (dropdown) => {
+    setActiveDropdown(activeDropdown === dropdown ? null : dropdown);
   };
 
-  const handleRoute = () => {
-    navigate('/my-profile');
+  // Close all dropdowns
+  const closeAllDropdowns = () => {
+    setActiveDropdown(null);
+    setIsMenuOpen(false);
   };
+
+  // Generate particles (React-based solution)
+  useEffect(() => {
+    if (!scrolled) {
+      const interval = setInterval(() => {
+        if (particles.length > 20) return;
+        
+        const newParticle = {
+          id: Math.random().toString(36).substr(2, 9),
+          size: Math.random() * 5 + 2,
+          left: Math.random() * 100,
+          duration: Math.random() * 10 + 10,
+          delay: Math.random() * 5,
+          opacity: Math.random() * 0.4 + 0.1
+        };
+        
+        setParticles(prev => [...prev, newParticle]);
+        
+        // Remove particle after animation
+        setTimeout(() => {
+          setParticles(prev => prev.filter(p => p.id !== newParticle.id));
+        }, newParticle.duration * 1000);
+      }, 500);
+      
+      return () => clearInterval(interval);
+    }
+  }, [scrolled, particles.length]);
 
   return (
-    <nav className="p-3 backdrop-blur-md  shadow-lg z-50 sticky top-0">
+    <nav 
+      className={`fixed w-full z-50 transition-all duration-500 ${
+        scrolled 
+          ? "bg-[#EFE2B2]/90 backdrop-blur-md shadow-lg py-2" 
+          : "bg-transparent py-4"
+      }`}
+    >
+      {/* Floating particles - React-based implementation */}
+      {!scrolled && particles.map(particle => (
+        <motion.div
+          key={particle.id}
+          className="absolute bottom-0 rounded-full pointer-events-none z-0"
+          style={{
+            width: `${particle.size}px`,
+            height: `${particle.size}px`,
+            left: `${particle.left}%`,
+            background: "#9E5F57",
+          }}
+          initial={{ 
+            y: "100vh",
+            opacity: 0,
+            scale: 0
+          }}
+          animate={{ 
+            y: "-100px",
+            opacity: particle.opacity,
+            scale: 1
+          }}
+          transition={{ 
+            duration: particle.duration,
+            delay: particle.delay,
+            ease: "linear"
+          }}
+        />
+      ))}
 
-      <div className="max-w-screen-xl mx-auto flex justify-between items-center lg:flex-row flex-row-reverse">
-
-        {/* Logo */}
-<div className="flex items-center space-x-2 order-last lg:order-none">
-  <Link to="/">
-    <img src="/Images/Navlogo.png" alt="Logo" className="h-16 object-contain cursor-pointer" />
-  </Link>
-</div>
-
-        {/* Desktop Menu */}
-        <div className="relative hidden lg:flex items-center space-x-6">
-          {/* Mobile Phone Items Dropdown */}
-          <div
-            className="relative group"
-            onMouseEnter={() => setIsMensDropdownOpen(true)}
-            onMouseLeave={() => setIsMensDropdownOpen(false)}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center">
+          {/* Logo */}
+          <motion.div 
+            className="flex items-center"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
           >
-            <button className="text-primary hover:text-[#F9A02B] transition duration-200 text-md font-semibold">
-              Mobile Phones
-            </button>
-            <div
-  className={`absolute left-0 mt-2 space-y-2 bg-white shadow-lg w-48 border transition-all duration-500 ease-in-out ${isMensDropdownOpen ? "opacity-100 visible" : "opacity-0 invisible"} z-50`}
->
-
-              {categories.mens.map((item) => (
-               <Link
-               to={`/products?category=SmartPhones&subcategory=${item.name}`}
-               key={item.name}
-               className="block px-5 py-3 text-[#F68C1F] hover:bg-[#56C5DC] hover:text-white border-b hover:border-[#56C5DC] transition duration-200"
-             >
-               {item.name}
-             </Link>
-             
-              ))}
-            </div>
-          </div>
-
-          {/* Mobile CHarging Adapter Items Dropdown */}
-          <div
-            className="relative group"
-            onMouseEnter={() => setIsWomensDropdownOpen(true)}
-            onMouseLeave={() => setIsWomensDropdownOpen(false)}
-          >
-            <button className="text-primary hover:text-[#F9A02B] transition duration-200 text-md font-semibold">
-              Mobile Charging Adapter
-            </button>
-            <div
-              className={`absolute left-0 mt-2 space-y-2 bg-white shadow-lg w-48 border  transition-all duration-500 ease-in-out ${isWomensDropdownOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
-            >
-              {categories.womens.map((item) => (
-                  <Link
-                  to={`/products?category=Adapters&subcategory=${item.name}`}
-                  key={item.name}
-                  className="block px-5 py-3 text-[#F68C1F] hover:bg-[#56C5DC] hover:text-white border-b hover:border-[#a0926c] transition duration-200"
+            <Link to="/" onClick={closeAllDropdowns}>
+              <div className="flex items-center space-x-2">
+                <div className="p-1 rounded-full">
+                  <motion.img 
+                    src='/Images/Navlogo.png'
+                    alt="Logo" 
+                    className="h-10 w-10 object-contain rounded-full"
+                    whileHover={{ rotate: 15 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  />
+                </div>
+                <motion.span 
+                  className="text-2xl font-serif font-bold text-[#814B4A]"
+                  animate={{
+                    textShadow: ["0 0 0px rgba(129,75,74,0)", "0 0 8px rgba(129,75,74,0.8)", "0 0 0px rgba(129,75,74,0)"]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity
+                  }}
                 >
-                  {item.name}
-                </Link>
-                
-              ))}
-            </div>
-          </div>
+                  Ruhana
+                </motion.span>
+              </div>
+            </Link>
+          </motion.div>
 
-          {/* Laptop Charging Adapter Items Dropdown */}
-          <div
-            className="relative group"
-            onMouseEnter={() => setIsKidsDropdownOpen(true)}
-            onMouseLeave={() => setIsKidsDropdownOpen(false)}
-          >
-            <button className="text-primary hover:text-[#F9A02B] transition duration-200 text-md font-semibold">
-            Laptop Charging Adapter
-            </button>
-            <div
-              className={`absolute left-0 mt-2 space-y-2 bg-white shadow-lg w-48 border  transition-all duration-500 ease-in-out ${isKidsDropdownOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
-            >
-              {categories.kids.map((item) => (
-                  <Link
-                  to={`/products?category=Adapters&subcategory=${item.name}`}
-                  key={item.name}
-                  className="block px-5 py-3 text-[#F68C1F] hover:bg-[#56C5DC] hover:text-white border-b hover:border-[#a0926c] transition duration-200"
-                >
-                  {item.name}
-                </Link>
-                
-              ))}
-            </div>
-          </div>
-
-
-         {/* Smart Watch Items Dropdown */}
-         <div
-            className="relative group"
-            onMouseEnter={() => setIsAccessoriesDropdownOpen(true)}
-            onMouseLeave={() => setIsAccessoriesDropdownOpen(false)}
-          >
-            <button className="text-primary hover:text-[#F9A02B] transition duration-200 text-md font-semibold">
-            Smart Watch
-            </button>
-            <div
-              className={`absolute left-0 mt-2 space-y-2 bg-white shadow-lg w-48 border  transition-all duration-500 ease-in-out ${isAccessoriesDropdownOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
-            >
-              {categories.accessories.map((item) => (
-                  <Link
-                  to={`/products?category=Watches&subcategory=${item.name}`}
-                  key={item.name}
-                  className="block px-5 py-3 text-[#F68C1F] hover:bg-[#56C5DC] hover:text-white border-b hover:border-[#a0926c] transition duration-200"
-                >
-                  {item.name}
-                </Link>
-                
-              ))}
-            </div>
-          </div>
-
-          {/* Power Bank Items Dropdown */}
-          <div
-            className="relative group"
-            onMouseEnter={() => setIsFootwearDropdownOpen(true)}
-            onMouseLeave={() => setIsFootwearDropdownOpen(false)}
-          >
-            <button className="text-primary hover:text-[#F9A02B] transition duration-200 text-md font-semibold">
-              Power Bank
-            </button>
-            <div
-              className={`absolute left-0 mt-2 space-y-2 bg-white shadow-lg w-48 border  transition-all duration-500 ease-in-out ${isFootwearDropdownOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
-            >
-              {categories.footwear.map((item) => (
-                  <Link
-                  to={`/products?category=PowerBanks&subcategory=${item.name}`}
-                  key={item.name}
-                  className="block px-5 py-3 text-[#F68C1F] hover:bg-[#56C5DC] hover:text-white border-b hover:border-[#a0926c] transition duration-200"
-                >
-                  {item.name}
-                </Link>
-                
-              ))}
-            </div>
-          </div>
-
-          <button onClick={handleClick} className="text-primary hover:text-[#F9A02B] transition duration-200 text-md font-semibold">
-              All Products
-            </button>
-
-
-        </div>
-
-        {/* Mobile Menu Toggle */}
-        <div className="lg:hidden">
-          <button
-            className="text-[#8d5c51] text-3xl"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <HiMenu />
-          </button>
-        </div>
-
-        {/* Cart and Avatar/ Login */}
-        <div className="flex items-center space-x-4">
-
-          
-        
-  {/* Wishlist */}
-  {isLoggedIn && (
-    <Link to="/wish-list" className="flex items-center">
-      <FontAwesomeIcon
-        icon={faHeart}
-        className="w-6 h-6 text-primary hover:text-red-500 transition-all duration-200"
-      />
-    </Link>
-  )}
-  
-  {/* Cart */}
-  <Link to="/cart" className="flex items-center">
-    <FontAwesomeIcon
-      icon={faShoppingCart}
-      className="w-6 h-6 text-primary hover:text-[#F9A02B] transition-all duration-200"
-    />
-  </Link>
-          {/* Avatar or Login/Signup */}
-          {isLoggedIn ? (
-            <span 
-            onClick={handleRoute} 
-            className="w-7 h-7 flex items-center justify-center text-white bg-[#F9A02B] rounded-full text-md cursor-pointer"
-          >
-            {user?.fullname?.[0]}
-          </span>
-          ) : (
-            <div className="flex items-center space-x-2">
-              <Link
-                to="/login"
-                className="text-primary hover:text-[#F9A02B] transition duration-200 text-sm font-semibold"
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center space-x-10">
+            {Object.entries(categories).map(([key, items]) => (
+              <div
+                key={key}
+                className="relative"
+                onMouseEnter={() => setActiveDropdown(key)}
+                onMouseLeave={() => setActiveDropdown(null)}
               >
-                Login
-              </Link>
-              <Link
-                to="/signup"
-                className="text-primary hover:text-[#F9A02B] transition duration-200 text-sm font-semibold"
-              >
-                Sign Up
-              </Link>
-            </div>
-          )}
+                <motion.button 
+                  className="text-[#814B4A] hover:text-[#567A4B] transition-all duration-300 font-light tracking-wider uppercase text-sm relative group"
+                  whileHover={{ y: -2 }}
+                  whileTap={{ y: 1 }}
+                >
+                  {key}
+                  <motion.span 
+                    className="absolute bottom-0 left-0 w-0 h-px bg-[#567A4B]"
+                    initial={{ width: 0 }}
+                    animate={{ width: activeDropdown === key ? '100%' : '0%' }}
+                    transition={{ duration: 0.4 }}
+                  />
+                </motion.button>
+                
+                <AnimatePresence>
+                  {activeDropdown === key && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                      className="absolute left-0 mt-2 w-56 origin-top-left rounded-md bg-[#EFE2B2] shadow-2xl ring-1 ring-[#97A276] z-50"
+                    >
+                      <div className="py-1">
+                        {items.map((item) => (
+                          <Link
+                            to={`/products?category=${key}&subcategory=${item.name}`}
+                            key={item.name}
+                            onClick={closeAllDropdowns}
+                            className="block px-4 py-3 text-sm text-[#814B4A] hover:bg-[#97A276]/30 hover:text-[#567A4B] transition-all duration-200 border-b border-[#97A276]/30 last:border-b-0"
+                          >
+                            {item.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+          </div>
 
-          
+          {/* Right Section */}
+          <div className="flex items-center space-x-6">
+            <div className="hidden lg:flex items-center space-x-5">
+              <motion.button 
+                onClick={navigateToProducts}
+                className="text-[#814B4A] hover:text-[#567A4B] transition-all duration-300 font-light tracking-wider uppercase text-sm relative group"
+                whileHover={{ y: -2 }}
+                whileTap={{ y: 1 }}
+              >
+                All Collections
+                <motion.span 
+                  className="absolute bottom-0 left-0 w-0 h-px bg-[#567A4B]"
+                  initial={{ width: 0 }}
+                  animate={{ width: "100%" }}
+                  transition={{ duration: 0.4 }}
+                />
+              </motion.button>
+              
+              {isLoggedIn && (
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Link 
+                    to="/wish-list" 
+                    className="relative text-[#814B4A] hover:text-[#567A4B] transition-all duration-300"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    <AnimatePresence>
+                      {wishlistCount > 0 && (
+                        <motion.span 
+                          className="absolute -top-1 -right-1 bg-[#9E5F57] text-white text-xs rounded-full h-4 w-4 flex items-center justify-center"
+                          initial={{ scale: 0, rotate: -45 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          exit={{ scale: 0, rotate: 45 }}
+                          key={wishlistCount}
+                          transition={{ type: "spring", stiffness: 500 }}
+                        >
+                          {wishlistCount > 9 ? '9+' : wishlistCount}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </Link>
+                </motion.div>
+              )}
+              
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <Link 
+                  to="/cart" 
+                  className="relative text-[#814B4A] hover:text-[#567A4B] transition-all duration-300"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                  <AnimatePresence>
+                    {cartCount > 0 && (
+                      <motion.span 
+                        className="absolute -top-1 -right-1 bg-[#9E5F57] text-white text-xs rounded-full h-4 w-4 flex items-center justify-center"
+                        initial={{ scale: 0, rotate: -45 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        exit={{ scale: 0, rotate: 45 }}
+                        key={cartCount}
+                        transition={{ type: "spring", stiffness: 500 }}
+                      >
+                        {cartCount > 9 ? '9+' : cartCount}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </Link>
+              </motion.div>
+              
+              {isLoggedIn ? (
+                <motion.button 
+                  onClick={navigateToProfile}
+                  className="flex items-center space-x-2 group"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <motion.div 
+                    className="relative"
+                    whileHover={{ rotate: 5 }}
+                    transition={{ type: "spring" }}
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#9E5F57] to-[#814B4A] p-0.5">
+                      <div className="bg-[#EFE2B2] rounded-full w-full h-full flex items-center justify-center">
+                        <span className="text-[#814B4A] font-medium">
+                          {user?.fullname?.[0]?.toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 bg-[#9E5F57] rounded-full p-0.5">
+                      <div className="bg-white rounded-full p-0.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-[#814B4A]" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    </div>
+                  </motion.div>
+                  <motion.span 
+                    className="text-[#814B4A] group-hover:text-[#567A4B] transition-colors duration-300 text-sm font-light"
+                    animate={{
+                      textShadow: ["0 0 0px rgba(86,122,75,0)", "0 0 8px rgba(86,122,75,0.8)", "0 0 0px rgba(86,122,75,0)"]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity
+                    }}
+                  >
+                    {user?.fullname?.split(' ')[0]}
+                  </motion.span>
+                </motion.button>
+              ) : (
+                <div className="flex items-center space-x-4">
+                  <motion.div
+                    whileHover={{ y: -2 }}
+                    whileTap={{ y: 1 }}
+                  >
+                    <Link
+                      to="/login"
+                      className="text-[#814B4A] hover:text-[#567A4B] transition-all duration-300 text-sm font-light"
+                    >
+                      Sign In
+                    </Link>
+                  </motion.div>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Link
+                      to="/signup"
+                      className="px-4 py-2 bg-gradient-to-r from-[#9E5F57] to-[#814B4A] text-white rounded-full text-sm font-light tracking-wider transition-all duration-300 shadow-lg shadow-[#97A276]/30"
+                    >
+                      Join
+                    </Link>
+                  </motion.div>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile menu button */}
+            <motion.button
+              className="lg:hidden text-[#814B4A] focus:outline-none"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              {isMenuOpen ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-[#567A4B]" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </motion.button>
+          </div>
         </div>
       </div>
 
-     {/* Mobile Menu */}
-{isMenuOpen && (
-  <div className="lg:hidden bg-white px-6 py-4 space-y-4 mt-4 border-t">
-    {/* Mobile Phones */}
-    <div className="space-y-2">
-      <button
-        className="w-full text-left text-lg text-primary  font-semibold"
-        onClick={() => setIsMensDropdownOpen(!isMensDropdownOpen)}
-      >
-        Mobile Phones
-      </button>
-      {isMensDropdownOpen && (
-        <div className="space-y-2">
-          {categories.mens.map((item) => (
-              <Link
-              to={`/products?category=SmartPhones&subcategory=${item.name}`}
-              key={item.name}
-              className="block px-5 py-3 text-[#56C5DC] hover:bg-[#56C5DC] hover:text-white border-b hover:border-[#a0926c] transition duration-200"
-            >
-              {item.name}
-            </Link>
-            
-          ))}
-        </div>
-      )}
-    </div>
-
-    {/* Mobile Charging Adapter Items */}
-    <div className="space-y-2">
-      <button
-        className="w-full text-left text-lg text-primary font-semibold"
-        onClick={() => setIsWomensDropdownOpen(!isWomensDropdownOpen)}
-      >
-        Mobile Charging Adapter
-      </button>
-      {isWomensDropdownOpen && (
-        <div className="space-y-2">
-          {categories.womens.map((item) => (
-              <Link
-              to={`/products?category=Adapters&subcategory=${item.name}`}
-              key={item.name}
-              className="block px-5 py-3 text-[#56C5DC] hover:bg-[#56C5DC] hover:text-white border-b hover:border-[#a0926c] transition duration-200"
-            >
-              {item.name}
-            </Link>
-            
-          ))}
-        </div>
-      )}
-    </div>
-
-    {/* laptop Charging Adapter Items */}
-    <div className="space-y-2">
-      <button
-        className="w-full text-left text-lg text-primary font-semibold"
-        onClick={() => setIsKidsDropdownOpen(!isKidsDropdownOpen)}
-      >
-        Laptop Charging Adapter
-      </button>
-      {isKidsDropdownOpen && (
-        <div className="space-y-2">
-          {categories.kids.map((item) => (
-              <Link
-              to={`/products?category=Adapters&subcategory=${item.name}`}
-              key={item.name}
-              className="block px-5 py-3 text-[#56C5DC] hover:bg-[#56C5DC] hover:text-white border-b hover:border-[#a0926c] transition duration-200"
-            >
-              {item.name}
-            </Link>
-            
-          ))}
-        </div>
-      )}
-    </div>
-
-    {/* Smart Watches Items */}
-    <div className="space-y-2">
-      <button
-        className="w-full text-left text-lg text-primary font-semibold"
-        onClick={() => setIsAccessoriesDropdownOpen(!isAccessoriesDropdownOpen)}
-      >
-        Smart Watch
-      </button>
-      {isAccessoriesDropdownOpen && (
-        <div className="space-y-2">
-          {categories.accessories.map((item) => (
-             <Link
-             to={`/products?category=Watches&subcategory=${item.name}`}
-             key={item.name}
-             className="block px-5 py-3 text-[#56C5DC] hover:bg-[#56C5DC] hover:text-white border-b hover:border-[#a0926c] transition duration-200"
-           >
-             {item.name}
-           </Link>
-           
-          ))}
-        </div>
-      )}
-    </div>
-
-    {/* Power Bank Items */}
-    <div className="space-y-2">
-      <button
-        className="w-full text-left text-lg text-primary font-semibold"
-        onClick={() => setIsFootwearDropdownOpen(!isFootwearDropdownOpen)}
-      >
-        Power Bank
-      </button>
-      {isFootwearDropdownOpen && (
-        <div className="space-y-2">
-          {categories.footwear.map((item) => (
-              <Link
-              to={`/products?category=PowerBanks&subcategory=${item.name}`}
-              key={item.name}
-              className="block px-5 py-3 text-[#56C5DC] hover:bg-[#56C5DC] hover:text-white border-b hover:border-[#a0926c] transition duration-200"
-            >
-              {item.name}
-            </Link>
-            
-          ))}
-        </div>
-      )}
-    </div>
-
-    <button onClick={handleClick} className="text-primary hover:text-[#F9A02B] transition duration-200 text-md font-semibold">
-              All Products
-            </button>
-  </div>
-)}
-
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.4 }}
+            className="lg:hidden bg-[#EFE2B2] border-t border-[#97A276]"
+          >
+            <div className="px-4 py-5 space-y-6">
+              {Object.entries(categories).map(([key, items]) => (
+                <div key={key} className="border-b border-[#97A276] pb-4">
+                  <button
+                    className="w-full flex justify-between items-center text-[#814B4A] hover:text-[#567A4B] transition-colors duration-300 text-sm uppercase tracking-wider"
+                    onClick={() => toggleDropdown(key)}
+                  >
+                    <span>{key}</span>
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      className={`h-5 w-5 transition-transform duration-300 ${activeDropdown === key ? 'rotate-180' : ''}`} 
+                      viewBox="0 0 20 20" 
+                      fill="currentColor"
+                    >
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  
+                  <AnimatePresence>
+                    {activeDropdown === key && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="mt-3 space-y-2 pl-4"
+                      >
+                        {items.map((item) => (
+                          <Link
+                            to={`/products?category=${key}&subcategory=${item.name}`}
+                            key={item.name}
+                            onClick={closeAllDropdowns}
+                            className="block py-2 text-[#814B4A] hover:text-[#567A4B] transition-colors duration-300 text-sm"
+                          >
+                            {item.name}
+                          </Link>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ))}
+              
+              <div className="pt-2 flex flex-col space-y-4">
+                <button 
+                  onClick={() => {
+                    navigateToProducts();
+                    closeAllDropdowns();
+                  }}
+                  className="text-left text-[#814B4A] hover:text-[#567A4B] transition-colors duration-300 text-sm uppercase tracking-wider"
+                >
+                  All Collections
+                </button>
+                
+                <div className="flex items-center space-x-6 pt-4 border-t border-[#97A276]">
+                  {isLoggedIn && (
+                    <Link 
+                      to="/wish-list" 
+                      className="flex items-center space-x-2 text-[#814B4A] hover:text-[#567A4B] transition-colors duration-300"
+                      onClick={closeAllDropdowns}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                      <span className="text-sm">Wishlist</span>
+                    </Link>
+                  )}
+                  
+                  <Link 
+                    to="/cart" 
+                    className="flex items-center space-x-2 text-[#814B4A] hover:text-[#567A4B] transition-colors duration-300"
+                    onClick={closeAllDropdowns}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span className="text-sm">Cart</span>
+                  </Link>
+                </div>
+                
+                <div className="pt-4 border-t border-[#97A276]">
+                  {isLoggedIn ? (
+                    <button 
+                      onClick={() => {
+                        navigateToProfile();
+                        closeAllDropdowns();
+                      }}
+                      className="flex items-center space-x-3 group w-full"
+                    >
+                      <div className="relative">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#9E5F57] to-[#814B4A] p-0.5">
+                          <div className="bg-[#EFE2B2] rounded-full w-full h-full flex items-center justify-center">
+                            <span className="text-[#814B4A] font-medium text-lg">
+                              {user?.fullname?.[0]?.toUpperCase()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 bg-[#9E5F57] rounded-full p-0.5">
+                          <div className="bg-white rounded-full p-0.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-[#814B4A]" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-left">
+                        <p className="text-[#814B4A] text-sm font-light">{user?.fullname}</p>
+                        <p className="text-[#567A4B] text-xs">View Profile</p>
+                      </div>
+                    </button>
+                  ) : (
+                    <div className="flex flex-col space-y-4">
+                      <Link
+                        to="/login"
+                        className="text-[#814B4A] hover:text-[#567A4B] transition-colors duration-300 text-sm font-light text-center py-2 border border-[#97A276] rounded-lg"
+                        onClick={closeAllDropdowns}
+                      >
+                        Sign In
+                      </Link>
+                      <Link
+                        to="/signup"
+                        className="px-4 py-3 bg-gradient-to-r from-[#9E5F57] to-[#814B4A] text-white rounded-full text-sm font-light tracking-wider transition-all duration-300 shadow-lg shadow-[#97A276]/30 text-center"
+                        onClick={closeAllDropdowns}
+                      >
+                        Create Account
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };

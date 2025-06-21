@@ -2,40 +2,143 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  
-  font-family: 'Inter', sans-serif;
-}
-
-
-/* Custom Thin Scrollbar */
+/* Improved thin scrollbar */
 ::-webkit-scrollbar {
-  width: 6px; /* Thin scrollbar */
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f0f0f0; /* Light background */
+  background: #f5ebcd;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #56C5DC, #F68C1F); /* Gradient color */
+  background: linear-gradient(45deg, #9E5F57, #567A4B);
   border-radius: 10px;
+  border: 2px solid #f5ebcd;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, #F68C1F, #56C5DC); /* Reverse on hover */
+  background: linear-gradient(45deg, #814B4A, #97A276);
 }
 
-
-.animate-pulse {
-  animation: pulse 0.5s ease-in-out;
+/* Floating particles animation */
+@keyframes float {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(-10px, -15px) rotate(5deg);
+  }
+  50% {
+    transform: translate(5px, -30px) rotate(-5deg);
+  }
+  75% {
+    transform: translate(-5px, -20px) rotate(3deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.3); }
-  100% { transform: scale(1); }
+.floating-particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: float 15s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 10;
+  filter: blur(1px);
+  transform-origin: center;
 }
 
+/* Ensure elements are visible */
+#categories-section .grid > div,
+#featured-product-section > div {
+  opacity: 1 !important;
+  transform: none !important;
+}
 
+/* Add to your global CSS */
+.floating-particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: float 20s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 5;
+  filter: blur(1px);
+  transform-origin: center;
+}
+
+@keyframes float {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(-15px, -20px) rotate(5deg);
+  }
+  50% {
+    transform: translate(10px, -35px) rotate(-5deg);
+  }
+  75% {
+    transform: translate(-5px, -25px) rotate(3deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+/* Force visibility of critical elements */
+#best-sellers-section h2,
+#best-sellers-section p,
+#best-sellers-section .product-card {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+}
+
+/* Toast styles */
+.Toastify__toast {
+  border-radius: 12px !important;
+  font-family: 'Cormorant Garamond', serif !important;
+  font-weight: 500 !important;
+  font-size: 1.1rem !important;
+}
+
+/* Add to your global CSS */
+.floating-particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: float 20s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 5;
+  filter: blur(1px);
+  transform-origin: center;
+}
+
+@keyframes float {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(-15px, -20px) rotate(5deg);
+  }
+  50% {
+    transform: translate(10px, -35px) rotate(-5deg);
+  }
+  75% {
+    transform: translate(-5px, -25px) rotate(3deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+/* Footer specific styles */
+footer a {
+  transition: all 0.4s ease;
+}
+
+footer .social-icon {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}

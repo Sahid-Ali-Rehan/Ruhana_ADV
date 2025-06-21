@@ -1,174 +1,157 @@
 import React, { useEffect, useRef } from "react";
-import { FaShoppingCart } from "react-icons/fa";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-// Register ScrollTrigger plugin
-gsap.registerPlugin(ScrollTrigger);
+import { motion } from "framer-motion";
+import { FaShoppingCart, FaStar } from "react-icons/fa";
 
 const FeaturedProduct = () => {
-  const imageRef = useRef(null);
-  const titleRef = useRef(null);
-  const descriptionRef = useRef(null);
-  const priceRef = useRef(null);
-  const discountRef = useRef(null);
-  const buttonRef = useRef(null);
+  const blob1Ref = useRef(null);
+  const blob2Ref = useRef(null);
 
   useEffect(() => {
-    // Animation for the image
-    gsap.from(imageRef.current, {
-      opacity: 0,
-      x: -100,
-      duration: 1,
-      scrollTrigger: {
-        trigger: imageRef.current,
-        start: "top 80%",
-        end: "top 50%",
-        scrub: 1,
-      },
-    });
+    // Animate decorative blobs
+    const animateBlobs = () => {
+      if (blob1Ref.current && blob2Ref.current) {
+        const animate = (element, x, y, duration) => {
+          element.animate(
+            [
+              { transform: 'translate(0, 0)' },
+              { transform: `translate(${x}px, ${y}px)` },
+              { transform: 'translate(0, 0)' }
+            ],
+            {
+              duration: duration * 1000,
+              iterations: Infinity,
+              easing: 'ease-in-out'
+            }
+          );
+        };
 
-    // Animation for the title
-    gsap.from(titleRef.current, {
-      opacity: 0,
-      y: 50,
-      duration: 1,
-      scrollTrigger: {
-        trigger: titleRef.current,
-        start: "top 80%",
-        end: "top 50%",
-        scrub: 1,
-      },
-    });
+        animate(blob1Ref.current, 30, -30, 25);
+        animate(blob2Ref.current, -40, 40, 30);
+      }
+    };
 
-    // Animation for the description
-    gsap.from(descriptionRef.current, {
-      opacity: 0,
-      y: 50,
-      duration: 1,
-      delay: 0.2, // Slight delay for staggered effect
-      scrollTrigger: {
-        trigger: descriptionRef.current,
-        start: "top 80%",
-        end: "top 50%",
-        scrub: 1,
-      },
-    });
-
-    // Animation for the price
-    gsap.from(priceRef.current, {
-      opacity: 0,
-      x: -50,
-      duration: 1,
-      delay: 0.4, // Slight delay for staggered effect
-      scrollTrigger: {
-        trigger: priceRef.current,
-        start: "top 80%",
-        end: "top 50%",
-        scrub: 1,
-      },
-    });
-
-    // Animation for the discounted price
-    gsap.from(discountRef.current, {
-      opacity: 0,
-      x: 50,
-      duration: 1,
-      delay: 0.4, // Slight delay for staggered effect
-      scrollTrigger: {
-        trigger: discountRef.current,
-        start: "top 80%",
-        end: "top 50%",
-        scrub: 1,
-      },
-    });
-
-    // Animation for the button
-    gsap.from(buttonRef.current, {
-      opacity: 0,
-      scale: 0.8,
-      duration: 1,
-      delay: 0.6, // Slight delay for staggered effect
-      scrollTrigger: {
-        trigger: buttonRef.current,
-        start: "top 80%",
-        end: "top 50%",
-        scrub: 1,
-      },
-    });
+    animateBlobs();
   }, []);
 
   return (
     <section
-      className="py-16"
-      style={{ backgroundColor: "#FFFFFF" }} // White background
+      className="py-24 relative overflow-hidden"
+      style={{ backgroundColor: '#EFE2B2' }}
     >
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-8">
+      {/* Decorative elements */}
+      <div ref={blob1Ref} className="absolute top-0 right-0 w-80 h-80 rounded-full bg-[#9E5F57] opacity-10 blur-[100px]"></div>
+      <div ref={blob2Ref} className="absolute bottom-0 left-0 w-60 h-60 rounded-full bg-[#567A4B] opacity-10 blur-[120px]"></div>
+      
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-16">
           {/* Product Image */}
-          <div className="flex justify-center" ref={imageRef}>
-            <img
-              src="/Featured/Featured.png" // Product image URL
-              alt="বিশেষ পণ্য"
-              className="rounded-lg shadow-lg"
+          <motion.div
+            initial={{ opacity: 0, x: -80 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            className="flex justify-center"
+          >
+            <div 
+              className="relative rounded-3xl overflow-hidden shadow-2xl"
               style={{
-                border: "4px solid #F68C1F", // Border color
-                backgroundColor: "#F4EBB4", // Background color
+                border: '2px solid #9E5F57',
+                backgroundColor: '#F5EBE0',
+                boxShadow: '0 30px 60px rgba(129, 75, 74, 0.25)'
               }}
-            />
-          </div>
+            >
+              <img
+                src="/Featured/Featured.png"
+                alt="Premium Crystal Vase"
+                className="w-full max-w-lg object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#814B4A]/20 to-transparent"></div>
+            </div>
+          </motion.div>
 
           {/* Product Details */}
           <div className="flex flex-col justify-center">
-            <h2
-              ref={titleRef}
-              className="text-3xl font-bold mb-4"
-              style={{ color: "#F68C1F" }} // Title color
+            <motion.h2
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
+              className="text-4xl font-bold mb-8"
+              style={{ color: "#814B4A", fontFamily: 'Cormorant Garamond, serif' }}
             >
-              অপ্পো সুপারভুক চার্জার ৬৫ওয়াট
-            </h2>
-            <p
-              ref={descriptionRef}
-              className="text-md mb-6"
-              style={{ color: "#56c5dc" }} // Subtitle color
+              Crystal Elegance Vase
+            </motion.h2>
+            
+            {/* Star rating */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="flex items-center mb-8"
             >
-              অপ্পো সুপারভুক ৬৫ওয়াট চার্জারের সাথে দ্রুত চার্জিং অভিজ্ঞতা নিন। এটি উন্নত নিরাপত্তা বৈশিষ্ট্য সহ ডিজাইন করা হয়েছে, যা অতিরিক্ত চার্জিং, অতিরিক্ত গরম হওয়া এবং শর্ট সার্কিট থেকে সুরক্ষা প্রদান করে। কমপ্যাক্ট ডিজাইনের কারণে এটি বহন করাও সহজ। অপ্পো স্মার্টফোন এবং বিভিন্ন ইউএসবি টাইপ-সি ডিভাইসের সাথে সামঞ্জস্যপূর্ণ।
-            </p>
-            <div className="flex items-center mb-6">
+              <div className="flex">
+                {[...Array(5)].map((_, i) => (
+                  <FaStar 
+                    key={i} 
+                    className="text-2xl mr-1" 
+                    style={{ color: '#9E5F57' }} 
+                  />
+                ))}
+              </div>
+              <span className="ml-4 text-lg" style={{ color: '#567A4B' }}>128 Reviews</span>
+            </motion.div>
+            
+            <motion.p
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1.2, ease: "easeOut", delay: 0.3 }}
+              className="text-xl mb-10 leading-relaxed tracking-wide"
+              style={{ color: "#567A4B" }}
+            >
+              Handcrafted by master artisans, this crystal vase features intricate cuts that capture and reflect light beautifully. Perfect for displaying floral arrangements or as a standalone decorative piece.
+            </motion.p>
+            
+            <motion.div 
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="flex items-center mb-12"
+            >
               <p
-                ref={priceRef}
-                className="text-3xl font-bold mr-4"
-                style={{ color: "#F68C1F" }} // Price color
+                className="text-4xl font-bold mr-6"
+                style={{ color: "#9E5F57" }}
               >
-                ৳১২৯৯.০০
+                $129.99
               </p>
               <span
-                ref={discountRef}
-                className="text-sm line-through"
-                style={{ color: "#56c5dc" }} // Discounted price color
+                className="text-xl line-through opacity-80"
+                style={{ color: "#97A276" }}
               >
-                ৳১৫৪৯.০০
+                $149.99
               </span>
-            </div>
-            {/* Add to Cart Button */}
-            <button
-              ref={buttonRef}
-              className="flex items-center px-6 py-3 rounded-lg shadow-lg transition-all duration-300"
+            </motion.div>
+            
+            {/* Add to Collection Button - Guaranteed to appear */}
+            <motion.button
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1, ease: "easeOut", delay: 0.6 }}
+              className="flex items-center justify-center px-10 py-5 rounded-full text-xl font-medium transition-all duration-500 group w-full max-w-md"
               style={{
-                backgroundColor: "#F68C1F", // Button background color
-                color: "#fff", // Button text color
-                boxShadow: "0 6px 12px rgba(0, 0, 0, 0.1)", // Button shadow
+                backgroundColor: "#814B4A",
+                color: "#EFE2B2",
+                boxShadow: "0 15px 40px rgba(129, 75, 74, 0.35)"
               }}
-              onMouseOver={(e) =>
-                (e.currentTarget.style.backgroundColor = "#56c5dc") // Hover effect
-              }
-              onMouseOut={(e) =>
-                (e.currentTarget.style.backgroundColor = "#F68C1F")
-              }
             >
-              <FaShoppingCart className="mr-2" />
-              পণ্য দেখুন
-            </button>
+              <FaShoppingCart className="mr-4 transition-transform duration-500 group-hover:translate-x-2" />
+              <span className="tracking-wider group-hover:tracking-widest transition-all duration-500">
+                Add to Collection
+              </span>
+            </motion.button>
           </div>
         </div>
       </div>
