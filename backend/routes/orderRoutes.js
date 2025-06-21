@@ -82,8 +82,7 @@ router.post("/checkout", async (req, res) => {
     } = req.body;
 
     // Validate required fields
-   // Change required fields validation in /checkout route
-const requiredFields = ['items', 'deliveryCharge', 'totalAmount', 'name', 'phone', 'jela', 'upazela', 'address', 'paymentMethod'];
+    const requiredFields = ['items', 'deliveryCharge', 'totalAmount', 'name', 'phone', 'jela', 'upazela', 'address', 'paymentMethod'];
     for (const field of requiredFields) {
       if (!req.body[field]) {
         return res.status(400).json({ error: `${field} is required` });
@@ -113,13 +112,16 @@ const requiredFields = ['items', 'deliveryCharge', 'totalAmount', 'name', 'phone
           error: `Insufficient stock for ${product.productName}. Available: ${product.stock}`
         });
       }
+
+      // Store product image
+      item.productImage = product.images[0]; // Add this line
+
       product.stock -= item.quantity;
       await product.save();
     }
 
     // Create order
     const order = new Order({
-      
       items,
       deliveryCharge,
       totalAmount,
@@ -150,22 +152,18 @@ const requiredFields = ['items', 'deliveryCharge', 'totalAmount', 'name', 'phone
 // Keep all your existing routes below...
 
   // Get all orders for admin
-  router.get("/all-orders", async (req, res) => {
-    try {
-      console.log("Request received for all orders");
-  
-      // Populate productId field in the items array and get the 'name' of the product
-      const orders = await Order.find()
-        .populate('items.productId', 'productName'); // Populating just the 'name' field
-  
-      console.log("Fetched orders:", orders);  // Log the fetched orders to check populated data
-  
-      res.status(200).json(orders);
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-      res.status(500).json({ error: "Server error" });
-    }
-  });
+  // Get all orders for admin
+router.get("/all-orders", async (req, res) => {
+  try {
+    // Update populate to include 'images'
+    const orders = await Order.find()
+      .populate('items.productId', 'productName images'); // Added 'images'
+
+    res.status(200).json(orders);
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
     
   
   // Update order status (Pending, Confirm, Shipped, Delivered)
