@@ -164,7 +164,7 @@ const HomeBanner = () => {
             textShadow: '0 4px 20px rgba(86, 122, 75, 0.6)'
           }}
         >
-          Fashion
+          Decorations
         </span>
       </div>
 

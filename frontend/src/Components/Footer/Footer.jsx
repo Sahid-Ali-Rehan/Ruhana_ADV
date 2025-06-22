@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import { FaFacebookF, FaFacebookMessenger, FaWhatsapp, FaInstagram, FaMapMarkerAlt, FaPhoneAlt, FaEnvelope } from "react-icons/fa";
+import { FaXTwitter, FaYoutube, FaInstagram, FaTiktok } from "react-icons/fa6";
+import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope } from "react-icons/fa";
 import { IoIosArrowForward } from "react-icons/io";
-
 const Footer = () => {
   const footerRef = useRef(null);
   const curvedBgRef = useRef(null);
@@ -150,18 +150,18 @@ const Footer = () => {
             </p>
             <div className="flex space-x-6">
               <a 
-                href="https://www.facebook.com/originalcollections" 
+                href="https://twitter.com/originalcollections" 
                 className="social-icon bg-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-                aria-label="Facebook"
+                aria-label="Twitter"
               >
-                <FaFacebookF size={24} style={{ color: '#814B4A' }} />
+                <FaXTwitter size={24} style={{ color: '#814B4A' }} />
               </a>
               <a 
-                href="https://wa.me/8801789313805" 
+                href="https://youtube.com/@originalcollections" 
                 className="social-icon bg-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-                aria-label="WhatsApp"
+                aria-label="YouTube"
               >
-                <FaWhatsapp size={24} style={{ color: '#814B4A' }} />
+                <FaYoutube size={24} style={{ color: '#814B4A' }} />
               </a>
             </div>
           </div>
@@ -233,11 +233,11 @@ const Footer = () => {
               </li>
               <li className="flex items-center">
                 <FaPhoneAlt className="mr-3 text-[#9E5F57]" />
-                <p className="text-lg" style={{ color: '#567A4B' }}>(+880) 1789313805</p>
+                <p className="text-lg" style={{ color: '#567A4B' }}>(+880) 1714394330</p>
               </li>
               <li className="flex items-center">
                 <FaEnvelope className="mr-3 text-[#9E5F57]" />
-                <p className="text-lg" style={{ color: '#567A4B' }}>Originalcollections772@gmail.com</p>
+                <p className="text-lg" style={{ color: '#567A4B' }}>ruhanas0311@gmail.com</p>
               </li>
             </ul>
           </div>
@@ -254,40 +254,40 @@ const Footer = () => {
             </p>
             <div className="flex space-x-6">
               <a
-                href="https://www.facebook.com/originalcollections"
+                href="https://twitter.com/ruhanacreation"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="social-icon bg-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-                aria-label="Facebook"
+                aria-label="Twitter"
               >
-                <FaFacebookF size={28} style={{ color: '#814B4A' }} />
+                <FaXTwitter size={28} style={{ color: '#814B4A' }} />
               </a>
               <a
-                href="https://www.messenger.com/t/210831205441089"
+                href="https://youtube.com/@ruhanacreation"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="social-icon bg-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-                aria-label="Messenger"
+                aria-label="YouTube"
               >
-                <FaFacebookMessenger size={28} style={{ color: '#814B4A' }} />
+                <FaYoutube size={28} style={{ color: '#814B4A' }} />
               </a>
               <a
-                href="https://wa.me/8801789313805"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="social-icon bg-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-                aria-label="WhatsApp"
-              >
-                <FaWhatsapp size={28} style={{ color: '#814B4A' }} />
-              </a>
-              <a
-                href="https://instagram.com"
+                href="https://instagram.com/ruhanacreation"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="social-icon bg-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
                 aria-label="Instagram"
               >
                 <FaInstagram size={28} style={{ color: '#814B4A' }} />
+              </a>
+              <a
+                href="https://tiktok.com/@ruhanacreation"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="social-icon bg-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                aria-label="TikTok"
+              >
+                <FaTiktok size={28} style={{ color: '#814B4A' }} />
               </a>
             </div>
           </div>
@@ -302,7 +302,7 @@ const Footer = () => {
           <div className="absolute inset-0 rounded-2xl overflow-hidden">
             <iframe
               className="w-full h-full"
-              src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3524.808249764628!2d90.40774357533991!3d23.878302578583416!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMjPCsDUyJzQxLjkiTiA5MMKwMjQnMzcuMiJF!5e1!3m2!1sen!2sbd!4v1738493201186!5m2!1sen!2sbd"
+              src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d7052.16612955766!2d90.37824213228555!3d23.83144931468726!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755c1ae043955f1%3A0x9b5859a2015ec2a0!2sRuhanas%20Fashion%20Studio!5e1!3m2!1sen!2sbd!4v1750568439057!5m2!1sen!2sbd"
               allowFullScreen=""
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"

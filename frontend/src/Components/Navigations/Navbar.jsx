@@ -15,38 +15,53 @@ const Navbar = () => {
   const [wishlistCount, setWishlistCount] = useState(0);
   const [particles, setParticles] = useState([]);
 
-  // Categories for a luxury showpiece website
+  // Updated categories structure
   const categories = {
-    vases: [
-      { name: "Crystal Vases", link: "/category/crystal-vases" },
-      { name: "Porcelain Vases", link: "/category/porcelain-vases" },
-      { name: "Artisan Vases", link: "/category/artisan-vases" },
-      { name: "Modern Vases", link: "/category/modern-vases" },
+    showpieces: [
+      { name: "Matir Fuldani", link: "/category/matir-fuldani" },
+      { name: "Mirror Bottle", link: "/category/mirror-bottle" },
+      { name: "Premium Showpieces", link: "/category/premium-showpieces" },
+      { name: "Traditional Art", link: "/category/traditional-art" },
     ],
-    sculptures: [
-      { name: "Bronze Sculptures", link: "/category/bronze-sculptures" },
-      { name: "Marble Sculptures", link: "/category/marble-sculptures" },
-      { name: "Abstract Sculptures", link: "/category/abstract-sculptures" },
-      { name: "Figurines", link: "/category/figurines" },
+    candles: [
+      { name: "Scented Candles", link: "/category/scented-candles" },
+      { name: "Decorative Candles", link: "/category/decorative-candles" },
+      { name: "Tea Light Candles", link: "/category/tea-light-candles" },
+      { name: "Aromatic Candles", link: "/category/aromatic-candles" },
     ],
-    decor: [
-      { name: "Centerpieces", link: "/category/centerpieces" },
-      { name: "Candle Holders", link: "/category/candle-holders" },
-      { name: "Decorative Bowls", link: "/category/decorative-bowls" },
-      { name: "Ornaments", link: "/category/ornaments" },
+    walmart: [
+      { name: "Home Decor", link: "/category/walmart-home-decor" },
+      { name: "Kitchen Essentials", link: "/category/walmart-kitchen" },
+      { name: "Seasonal Specials", link: "/category/walmart-seasonal" },
+      { name: "Walmart Exclusives", link: "/category/walmart-exclusives" },
     ],
-    art: [
-      { name: "Wall Art", link: "/category/wall-art" },
-      { name: "Sculptural Art", link: "/category/sculptural-art" },
-      { name: "Art Glass", link: "/category/art-glass" },
-      { name: "Artisan Crafts", link: "/category/artisan-crafts" },
+    totebags: [
+      { name: "Canvas Totes", link: "/category/canvas-totes" },
+      { name: "Eco-friendly Bags", link: "/category/eco-bags" },
+      { name: "Printed Totes", link: "/category/printed-totes" },
+      { name: "Premium Tote Bags", link: "/category/premium-totes" },
+    ],
+    tshirts: [
+      { name: "Graphic Tees", link: "/category/graphic-tees" },
+      { name: "Premium Cotton", link: "/category/premium-cotton" },
+      { name: "Oversized T-shirts", link: "/category/oversized-tees" },
+      { name: "Minimalist Designs", link: "/category/minimalist-tees" },
     ],
     collections: [
-      { name: "Signature Collection", link: "/category/signature-collection" },
+      { name: "New Arrivals", link: "/category/new-arrivals" },
+      { name: "Best Sellers", link: "/category/best-sellers" },
       { name: "Limited Editions", link: "/category/limited-editions" },
-      { name: "Vintage Collection", link: "/category/vintage-collection" },
-      { name: "Contemporary", link: "/category/contemporary" },
+      { name: "Festive Collection", link: "/category/festive-collection" },
     ],
+  };
+
+  const categoryLabels = {
+    showpieces: "Show Pieces",
+    candles: "Candles",
+    walmart: "Walmart",
+    totebags: "Tote Bags",
+    tshirts: "T-Shirts",
+    collections: "Collections"
   };
 
   // Handle scroll effect
@@ -244,7 +259,7 @@ const Navbar = () => {
                   whileHover={{ y: -2 }}
                   whileTap={{ y: 1 }}
                 >
-                  {key}
+                  {categoryLabels[key]}
                   <motion.span 
                     className="absolute bottom-0 left-0 w-0 h-px bg-[#567A4B]"
                     initial={{ width: 0 }}
@@ -463,7 +478,7 @@ const Navbar = () => {
                     className="w-full flex justify-between items-center text-[#814B4A] hover:text-[#567A4B] transition-colors duration-300 text-sm uppercase tracking-wider"
                     onClick={() => toggleDropdown(key)}
                   >
-                    <span>{key}</span>
+                    <span>{categoryLabels[key]}</span>
                     <svg 
                       xmlns="http://www.w3.org/2000/svg" 
                       className={`h-5 w-5 transition-transform duration-300 ${activeDropdown === key ? 'rotate-180' : ''}`} 

@@ -61,7 +61,7 @@ const FeaturedProduct = () => {
               }}
             >
               <img
-                src="/Featured/Featured.png"
+                src="/Featured/Featured.jpg"
                 alt="Premium Crystal Vase"
                 className="w-full max-w-lg object-cover"
               />
@@ -79,7 +79,7 @@ const FeaturedProduct = () => {
               className="text-4xl font-bold mb-8"
               style={{ color: "#814B4A", fontFamily: 'Cormorant Garamond, serif' }}
             >
-              Crystal Elegance Vase
+              Handcrafted Rose Ribbon Vase
             </motion.h2>
             
             {/* Star rating */}
@@ -110,7 +110,7 @@ const FeaturedProduct = () => {
               className="text-xl mb-10 leading-relaxed tracking-wide"
               style={{ color: "#567A4B" }}
             >
-              Handcrafted by master artisans, this crystal vase features intricate cuts that capture and reflect light beautifully. Perfect for displaying floral arrangements or as a standalone decorative piece.
+              Add a touch of elegance to your space with this beautifully handcrafted vase, wrapped in vibrant multicolor yarn and adorned with delicate pink fabric roses. Perfect as a decorative centerpiece or a charming gift for loved ones. Durable and lightweight, this vase effortlessly blends style and utility.
             </motion.p>
             
             <motion.div 
@@ -124,13 +124,13 @@ const FeaturedProduct = () => {
                 className="text-4xl font-bold mr-6"
                 style={{ color: "#9E5F57" }}
               >
-                $129.99
+                ৳1299.00
               </p>
               <span
                 className="text-xl line-through opacity-80"
                 style={{ color: "#97A276" }}
               >
-                $149.99
+                ৳2000.00
               </span>
             </motion.div>
             
