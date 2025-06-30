@@ -1,3 +1,4 @@
+// Wishlist.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
@@ -16,7 +17,6 @@ const Wishlist = () => {
   const floatingBtnRef = useRef(null);
 
   useEffect(() => {
-    // Load wishlist from localStorage
     const loadWishlist = () => {
       try {
         const storedWishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
@@ -30,7 +30,6 @@ const Wishlist = () => {
 
     loadWishlist();
 
-    // Set up event listener for storage changes
     const handleStorageChange = () => {
       loadWishlist();
     };
@@ -45,7 +44,6 @@ const Wishlist = () => {
   useEffect(() => {
     if (isLoading || wishlist.length === 0) return;
 
-    // Floating button animation
     if (floatingBtnRef.current) {
       gsap.to(floatingBtnRef.current, {
         y: 10,
@@ -56,7 +54,6 @@ const Wishlist = () => {
       });
     }
 
-    // GSAP Animations for product cards
     if (sectionRef.current) {
       const cards = sectionRef.current.querySelectorAll('.product-card');
       
@@ -73,7 +70,6 @@ const Wishlist = () => {
           }
         });
 
-        // Clean up previous event listeners
         const image = card.querySelector('.product-image');
         const viewButton = card.querySelector('.view-button');
         
@@ -98,14 +94,14 @@ const Wishlist = () => {
         if (viewButton) {
           card.addEventListener('mouseenter', () => {
             gsap.to(viewButton, {
-              backgroundColor: '#814B4A',
+              backgroundColor: '#2563eb',
               duration: 0.3
             });
           });
           
           card.addEventListener('mouseleave', () => {
             gsap.to(viewButton, {
-              backgroundColor: '#9E5F57',
+              backgroundColor: '#3b82f6',
               duration: 0.3
             });
           });
@@ -119,7 +115,6 @@ const Wishlist = () => {
       const updatedWishlist = wishlist.filter(item => item._id !== productId);
       localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
       
-      // Animation for removal
       const removedItem = document.getElementById(`product-${productId}`);
       if (removedItem) {
         gsap.to(removedItem, {
@@ -130,8 +125,6 @@ const Wishlist = () => {
           duration: 0.5,
           onComplete: () => {
             setWishlist(updatedWishlist);
-            
-            // Force reflow to reset animation targets
             gsap.set(removedItem, { clearProps: "all" });
           }
         });
@@ -144,7 +137,6 @@ const Wishlist = () => {
   };
 
   const handleQuickAdd = (productId) => {
-    // Animation for quick add
     const item = document.getElementById(`product-${productId}`);
     if (item) {
       gsap.fromTo(item.querySelector('.quick-add-badge'),
@@ -152,8 +144,6 @@ const Wishlist = () => {
         { scale: 1.2, opacity: 1, duration: 0.3, yoyo: true, repeat: 1 }
       );
     }
-    
-    // Implement your actual quick add logic here
     console.log('Quick add product:', productId);
   };
 
@@ -163,31 +153,24 @@ const Wishlist = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#EFE2B2' }}>
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-[#9E5F57]"></div>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: '#EFE2B2' }}>
-      {/* Floral decorative elements */}
+    <div className="min-h-screen relative overflow-hidden bg-white">
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-        <div className="absolute top-10 right-10 w-40 h-40 rounded-full" style={{ backgroundColor: '#F5C9C6', opacity: 0.15 }}></div>
-        <div className="absolute bottom-20 left-10 w-32 h-32 rounded-full" style={{ backgroundColor: '#F5C9C6', opacity: 0.15 }}></div>
-        <div className="absolute top-1/3 left-1/4 w-24 h-24 rounded-full" style={{ backgroundColor: '#97A276', opacity: 0.1 }}></div>
+        <div className="absolute top-10 right-10 w-40 h-40 rounded-full bg-blue-50 opacity-30"></div>
+        <div className="absolute bottom-20 left-10 w-32 h-32 rounded-full bg-blue-50 opacity-30"></div>
+        <div className="absolute top-1/3 left-1/4 w-24 h-24 rounded-full bg-gray-100 opacity-20"></div>
       </div>
 
-      {/* Floating action button */}
       {wishlist.length > 0 && (
         <button 
           ref={floatingBtnRef}
-          className="fixed bottom-8 right-8 z-50 flex items-center gap-2 py-3 px-5 rounded-full text-lg font-medium shadow-xl transition-all"
-          style={{ 
-            backgroundColor: '#9E5F57',
-            color: '#EFE2B2',
-            fontFamily: 'Cormorant Garamond, serif'
-          }}
+          className="fixed bottom-8 right-8 z-50 flex items-center gap-2 py-3 px-5 rounded-full text-lg font-medium shadow-lg transition-all bg-blue-600 text-white"
           onClick={() => navigate('/products')}
         >
           <FontAwesomeIcon icon={faShoppingBag} />
@@ -197,37 +180,32 @@ const Wishlist = () => {
 
       <div className="container mx-auto p-4 relative z-10" ref={sectionRef}>
         <div className="text-center py-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: '#814B4A', fontFamily: 'Cormorant Garamond, serif' }}>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
             My Wishlist
           </h1>
-          <div className="w-24 h-1 mx-auto mb-6" style={{ backgroundColor: '#97A276' }}></div>
-          <p className="text-lg max-w-2xl mx-auto" style={{ color: '#567A4B' }}>
+          <div className="w-24 h-1 mx-auto mb-6 bg-blue-500"></div>
+          <p className="text-lg max-w-2xl mx-auto text-gray-600">
             Your curated collection of favorite products
           </p>
         </div>
         
         {wishlist.length === 0 ? (
           <div className="text-center py-20">
-            <div className="inline-block p-6 rounded-full mb-6" style={{ backgroundColor: '#F5C9C6' }}>
+            <div className="inline-block p-6 rounded-full mb-6 bg-blue-50">
               <FontAwesomeIcon 
                 icon={solidHeart} 
-                className="text-6xl" 
-                style={{ color: '#9E5F57' }} 
+                className="text-6xl text-blue-500" 
               />
             </div>
-            <p className="text-2xl font-bold mb-4" style={{ color: '#814B4A' }}>
+            <p className="text-2xl font-bold mb-4 text-gray-800">
               Your wishlist is empty
             </p>
-            <p className="text-lg mb-8 max-w-md mx-auto" style={{ color: '#567A4B' }}>
+            <p className="text-lg mb-8 max-w-md mx-auto text-gray-600">
               Start adding products to your wishlist to save them for later
             </p>
             <button
               onClick={() => navigate('/products')}
-              className="inline-flex items-center gap-2 py-3 px-6 rounded-full text-lg font-medium transition-all"
-              style={{ 
-                backgroundColor: '#9E5F57',
-                color: '#EFE2B2',
-              }}
+              className="inline-flex items-center gap-2 py-3 px-6 rounded-full text-lg font-medium transition-all bg-blue-600 text-white hover:bg-blue-700"
             >
               Browse Products
               <FontAwesomeIcon icon={faArrowRight} />
@@ -243,15 +221,11 @@ const Wishlist = () => {
                   <div
                     key={product._id}
                     id={`product-${product._id}`}
-                    className="product-card bg-white rounded-2xl overflow-hidden shadow-lg flex flex-col h-full relative border-2 border-transparent transition-all duration-300"
-                    style={{ borderColor: '#F5C9C6' }}
+                    className="product-card bg-white rounded-2xl overflow-hidden shadow-md flex flex-col h-full relative border border-gray-100 transition-all duration-300"
                   >
-                    {/* Ribbon for discount */}
                     {product.discount > 0 && (
-                      <div className="absolute top-4 left-0 py-1 px-6 font-bold z-10 shadow-md"
+                      <div className="absolute top-4 left-0 py-1 px-6 font-bold z-10 shadow-md bg-blue-100 text-blue-800"
                         style={{ 
-                          backgroundColor: '#9E5F57',
-                          color: '#EFE2B2',
                           clipPath: 'polygon(0 0, 100% 0, 90% 50%, 100% 100%, 0 100%)'
                         }}
                       >
@@ -259,10 +233,9 @@ const Wishlist = () => {
                       </div>
                     )}
                     
-                    {/* Quick add badge - appears on hover */}
                     <div className="quick-add-badge absolute top-4 right-14 z-10 opacity-0 transition-opacity">
                       <button 
-                        className="p-2 rounded-full bg-white shadow-md hover:bg-[#567A4B] hover:text-white transition-all"
+                        className="p-2 rounded-full bg-white shadow-md hover:bg-blue-500 hover:text-white transition-all"
                         onClick={() => handleQuickAdd(product._id)}
                         title="Quick Add to Cart"
                       >
@@ -270,7 +243,6 @@ const Wishlist = () => {
                       </button>
                     </div>
                     
-                    {/* Remove button */}
                     <div className="absolute top-4 right-4 z-10">
                       <button
                         onClick={() => handleRemoveFromWishlist(product._id)}
@@ -281,7 +253,6 @@ const Wishlist = () => {
                       </button>
                     </div>
                     
-                    {/* Product image */}
                     <div className="relative h-72 overflow-hidden">
                       {product.images && product.images[0] ? (
                         <>
@@ -299,7 +270,7 @@ const Wishlist = () => {
                           )}
                         </>
                       ) : (
-                        <div className="w-full h-full bg-gray-200 border-2 border-dashed rounded-xl flex items-center justify-center">
+                        <div className="w-full h-full bg-gray-100 border-2 border-dashed rounded-xl flex items-center justify-center">
                           <span className="text-gray-500">No Image</span>
                         </div>
                       )}
@@ -310,14 +281,13 @@ const Wishlist = () => {
                       )}
                     </div>
                     
-                    {/* Product info */}
-                    <div className="p-5 flex flex-col flex-grow" style={{ backgroundColor: '#F8F4EA' }}>
+                    <div className="p-5 flex flex-col flex-grow bg-white">
                       <div className="flex justify-between items-start mb-3">
                         <div>
-                          <h3 className="text-xl font-semibold mb-1" style={{ color: '#814B4A', fontFamily: 'Cormorant Garamond, serif' }}>
+                          <h3 className="text-xl font-semibold mb-1 text-gray-900">
                             {product.productName || 'Unnamed Product'}
                           </h3>
-                          <p className="text-sm mb-1" style={{ color: '#567A4B' }}>
+                          <p className="text-sm mb-1 text-gray-500">
                             Code: {product.productCode || 'N/A'}
                           </p>
                           {product.availableColors && product.availableColors.length > 0 && (
@@ -331,7 +301,7 @@ const Wishlist = () => {
                                 ></span>
                               ))}
                               {product.availableColors.length > 3 && (
-                                <span className="text-xs" style={{ color: '#97A276' }}>
+                                <span className="text-xs text-gray-500">
                                   +{product.availableColors.length - 3} more
                                 </span>
                               )}
@@ -339,11 +309,11 @@ const Wishlist = () => {
                           )}
                         </div>
                         <div className="flex flex-col items-end">
-                          <p className="text-lg font-bold" style={{ color: '#9E5F57' }}>
+                          <p className="text-lg font-bold text-gray-900">
                             ৳{discountedPrice.toFixed(2)}
                           </p>
                           {product.discount > 0 && (
-                            <span className="text-sm line-through opacity-80" style={{ color: '#97A276' }}>
+                            <span className="text-sm line-through opacity-80 text-gray-500">
                               ৳{product.price.toFixed(2)}
                             </span>
                           )}
@@ -355,9 +325,8 @@ const Wishlist = () => {
                           className={`view-button w-full py-3 px-4 rounded-full text-lg font-medium transition-all duration-300 ${
                             product.stock === 0 
                               ? 'bg-gray-300 cursor-not-allowed' 
-                              : 'bg-[#9E5F57] hover:bg-[#814B4A]'
-                          }`}
-                          style={{ color: '#EFE2B2' }}
+                              : 'bg-blue-500 hover:bg-blue-600'
+                          } text-white`}
                           disabled={product.stock === 0}
                           onClick={() => navigate(`/products/single/${product._id}`)}
                         >
@@ -370,15 +339,14 @@ const Wishlist = () => {
               })}
             </div>
             
-            {/* Stats section */}
-            <div className="max-w-4xl mx-auto mt-12 mb-8 p-6 rounded-2xl" style={{ backgroundColor: '#F5C9C6', border: '2px dashed #9E5F57' }}>
+            <div className="max-w-4xl mx-auto mt-12 mb-8 p-6 rounded-2xl bg-blue-50 border border-blue-100">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                 <div className="p-4">
-                  <div className="text-3xl font-bold" style={{ color: '#814B4A' }}>{wishlist.length}</div>
-                  <div className="text-sm" style={{ color: '#567A4B' }}>Items Saved</div>
+                  <div className="text-3xl font-bold text-gray-900">{wishlist.length}</div>
+                  <div className="text-sm text-gray-600">Items Saved</div>
                 </div>
                 <div className="p-4">
-                  <div className="text-3xl font-bold" style={{ color: '#814B4A' }}>
+                  <div className="text-3xl font-bold text-gray-900">
                     ৳{wishlist.reduce((acc, product) => {
                       const discountedPrice = product.discount 
                         ? calculateDiscountedPrice(product.price, product.discount)
@@ -386,21 +354,21 @@ const Wishlist = () => {
                       return acc + discountedPrice;
                     }, 0).toFixed(2)}
                   </div>
-                  <div className="text-sm" style={{ color: '#567A4B' }}>Total Value</div>
+                  <div className="text-sm text-gray-600">Total Value</div>
                 </div>
                 <div className="p-4">
-                  <div className="text-3xl font-bold" style={{ color: '#814B4A' }}>
+                  <div className="text-3xl font-bold text-gray-900">
                     ৳{wishlist.reduce((acc, product) => {
                       return product.discount ? acc + (product.price * product.discount) / 100 : acc;
                     }, 0).toFixed(2)}
                   </div>
-                  <div className="text-sm" style={{ color: '#567A4B' }}>Potential Savings</div>
+                  <div className="text-sm text-gray-600">Potential Savings</div>
                 </div>
                 <div className="p-4">
-                  <div className="text-3xl font-bold" style={{ color: '#814B4A' }}>
+                  <div className="text-3xl font-bold text-gray-900">
                     {[...new Set(wishlist.map(p => p.category))].length}
                   </div>
-                  <div className="text-sm" style={{ color: '#567A4B' }}>Categories</div>
+                  <div className="text-sm text-gray-600">Categories</div>
                 </div>
               </div>
             </div>

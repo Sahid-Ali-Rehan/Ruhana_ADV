@@ -4,7 +4,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FiUser, FiPackage, FiTruck, FiCheckCircle, FiClock, FiChevronRight, FiX } from "react-icons/fi";
+import { FiUser, FiPackage, FiTruck, FiCheckCircle, FiClock, FiChevronRight, FiLogOut } from "react-icons/fi";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -14,21 +14,19 @@ const MyProfile = () => {
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState(null);
   const [activeTab, setActiveTab] = useState("profile");
-  const [showFloral, setShowFloral] = useState(true);
   
   const formRef = useRef(null);
   const detailsRef = useRef(null);
   const statusRef = useRef(null);
   const deleteRef = useRef(null);
-  const floralRef = useRef(null);
   const containerRef = useRef(null);
   const tabsRef = useRef([]);
 
-  // Floral animation config
-  const floralPaths = [
-    "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z",
-    "M12 2c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6 2.69-6 6-6z",
-    "M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z"
+  // Premium animation config
+  const geometricPatterns = [
+    "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5",
+    "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z",
+    "M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm9 7h-6v13h-2V9H3V7h18v2z"
   ];
 
   useEffect(() => {
@@ -65,14 +63,15 @@ const MyProfile = () => {
     
     fetchProfile();
 
-    // Initial animations
+    // Premium animations
     gsap.fromTo(".profile-section", 
-      { opacity: 0, y: 50 },
+      { opacity: 0, y: 30 },
       {
         opacity: 1,
         y: 0,
-        duration: 1,
+        duration: 1.2,
         stagger: 0.3,
+        ease: "expo.out",
         scrollTrigger: {
           trigger: ".profile-container",
           start: "top center",
@@ -80,62 +79,84 @@ const MyProfile = () => {
       }
     );
 
-    gsap.fromTo(formRef.current, 
-      { opacity: 0, x: -50 },
-      {
-        opacity: 1,
-        x: 0,
-        duration: 1,
-        scrollTrigger: {
-          trigger: formRef.current,
-          start: "top 80%",
-        },
-      }
-    );
-
-    // Animate floral elements
-    if (showFloral && floralRef.current) {
-      gsap.fromTo(floralRef.current.children, 
-        { 
-          scale: 0, 
-          opacity: 0,
-          transformOrigin: "center" 
-        },
+    if (formRef.current) {
+      gsap.fromTo(formRef.current, 
+        { opacity: 0, x: -50 },
         {
-          scale: 1,
           opacity: 1,
-          duration: 1.5,
-          stagger: 0.2,
-          ease: "elastic.out(1, 0.8)"
+          x: 0,
+          duration: 1.1,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: formRef.current,
+            start: "top 80%",
+          },
         }
       );
     }
 
-    // Tab animation
-    gsap.fromTo(tabsRef.current, 
-      { y: 30, opacity: 0 },
+    // Animate geometric elements
+    gsap.fromTo(".geometric-element", 
+      { 
+        scale: 0, 
+        opacity: 0,
+        transformOrigin: "center" 
+      },
       {
-        y: 0,
-        opacity: 1,
-        duration: 0.7,
+        scale: 1,
+        opacity: 0.15,
+        duration: 1.8,
         stagger: 0.15,
-        ease: "back.out(1.7)"
+        ease: "expo.out",
+        delay: 0.4
       }
     );
 
-  }, [showFloral]);
+    // Tab animation
+    if (tabsRef.current.length > 0) {
+      gsap.fromTo(tabsRef.current, 
+        { y: 30, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          stagger: 0.15,
+          ease: "back.out(1.7)"
+        }
+      );
+    }
+
+    // Create subtle parallax effect for background elements
+    gsap.to(".geometric-element", {
+      y: (i) => i * 15,
+      scrollTrigger: {
+        trigger: containerRef.current,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: true
+      }
+    });
+
+  }, []);
 
   const animateOrderSections = () => {
-    gsap.fromTo([detailsRef.current, statusRef.current, deleteRef.current], 
-      { opacity: 0, y: 30 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        stagger: 0.2,
-        ease: "power2.out",
-      }
-    );
+    const sections = [];
+    if (detailsRef.current) sections.push(detailsRef.current);
+    if (statusRef.current) sections.push(statusRef.current);
+    if (deleteRef.current) sections.push(deleteRef.current);
+    
+    if (sections.length > 0) {
+      gsap.fromTo(sections, 
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          stagger: 0.2,
+          ease: "power2.out",
+        }
+      );
+    }
   };
 
   const handleTrackOrder = async () => {
@@ -156,15 +177,13 @@ const MyProfile = () => {
         setOrder(response.data);
         setTimeout(animateOrderSections, 100);
         
-        // Confetti effect animation
-        gsap.to(".confetti", {
-          y: -50,
-          opacity: 0,
-          duration: 1.5,
-          stagger: 0.05,
-          onComplete: () => {
-            gsap.set(".confetti", { clearProps: "all" });
-          }
+        // Premium animation effect
+        gsap.to(".premium-highlight", {
+          keyframes: [
+            { scale: 1.1, duration: 0.3 },
+            { scale: 1, duration: 0.7, ease: "elastic.out(1, 0.8)" }
+          ],
+          stagger: 0.1
         });
       }
     } catch (error) {
@@ -176,15 +195,17 @@ const MyProfile = () => {
   };
 
   const getStatusProgress = () => {
+    if (!order?.status) return 0;
+    
     const statusOrder = ["Pending", "Confirm", "Shipped", "Delivered"];
-    const currentIndex = statusOrder.indexOf(order?.status || "");
-    return ((currentIndex + 1) / statusOrder.length) * 100;
+    const currentIndex = statusOrder.indexOf(order.status);
+    return currentIndex >= 0 ? ((currentIndex + 1) / statusOrder.length) * 100 : 0;
   };
 
   const handleCancelRequest = async () => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) {
+      if (!token || !order?._id) {
         toast.error("Authentication required");
         return;
       }
@@ -199,16 +220,19 @@ const MyProfile = () => {
         toast.success("Cancellation request sent to admin");
         setOrder({ ...order, status: "CancellationRequested" });
         
-        // Animation for cancellation
-        gsap.fromTo(deleteRef.current, 
-          { backgroundColor: "#F5C9C6", scale: 1.05 },
-          {
-            backgroundColor: "#EFE2B2",
-            scale: 1,
-            duration: 1.5,
-            ease: "elastic.out(1, 0.8)"
-          }
-        );
+        // Premium animation
+        if (deleteRef.current) {
+          gsap.fromTo(deleteRef.current, 
+            { boxShadow: "0 0 0 0px rgba(0,0,0,0.4)" },
+            {
+              boxShadow: "0 0 0 8px rgba(0,0,0,0)",
+              duration: 1,
+              ease: "power2.out",
+              repeat: 1,
+              yoyo: true
+            }
+          );
+        }
       }
     } catch (error) {
       toast.error("Failed to request cancellation");
@@ -216,278 +240,262 @@ const MyProfile = () => {
     }
   };
 
-  const toggleFloral = () => {
-    if (showFloral) {
-      gsap.to(floralRef.current.children, {
-        scale: 0,
-        opacity: 0,
-        duration: 0.7,
-        stagger: 0.1,
-        onComplete: () => setShowFloral(false)
-      });
-    } else {
-      setShowFloral(true);
-    }
-  };
-
   return (
     <div 
-      className="min-h-screen px-4 py-12 profile-container" 
-      style={{ backgroundColor: "#EFE2B2" }}
+      className="min-h-screen px-4 py-12 profile-container relative overflow-hidden" 
+      style={{ 
+        backgroundColor: "#FFFFFF",
+      }}
       ref={containerRef}
     >
-      {/* Floral Elements */}
-      {showFloral && (
-        <div ref={floralRef} className="fixed inset-0 pointer-events-none z-0">
-          {[...Array(12)].map((_, i) => (
-            <svg
-              key={i}
-              className="absolute confetti"
-              style={{
-                top: `${Math.random() * 100}%`,
-                left: `${Math.random() * 100}%`,
-                width: `${20 + Math.random() * 30}px`,
-                fill: "#F5C9C6",
-                opacity: 0.7
-              }}
-              viewBox="0 0 24 24"
-            >
-              <path d={floralPaths[i % floralPaths.length]} />
-            </svg>
-          ))}
-        </div>
-      )}
+      {/* Add Google Fonts via style tag */}
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&family=Playfair+Display:wght@500;700&display=swap');
+        
+        body {
+          font-family: 'Montserrat', sans-serif;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+          font-family: 'Playfair Display', serif;
+        }
+      `}</style>
 
-      {/* Floral Toggle */}
-      <button
-        onClick={toggleFloral}
-        className="fixed top-4 left-4 z-10 p-2 rounded-full shadow-md"
-        style={{ backgroundColor: "#9E5F57" }}
-      >
-        {showFloral ? (
-          <FiX className="text-white text-xl" />
-        ) : (
-          <svg className="w-5 h-5" fill="#F5C9C6" viewBox="0 0 24 24">
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+      {/* Premium Geometric Background */}
+      <div className="fixed inset-0 pointer-events-none z-0 opacity-10">
+        {[...Array(15)].map((_, i) => (
+          <svg
+            key={i}
+            className="absolute geometric-element"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              width: `${80 + Math.random() * 120}px`,
+              fill: "none",
+              stroke: "#000000",
+              strokeWidth: "0.5px",
+              opacity: 0
+            }}
+            viewBox="0 0 24 24"
+          >
+            <path d={geometricPatterns[i % geometricPatterns.length]} />
           </svg>
-        )}
-      </button>
+        ))}
+      </div>
 
-      {/* Logout Button - SIMPLIFIED REDIRECT */}
+      {/* Premium Watermark */}
+      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-0 opacity-[0.02] pointer-events-none">
+        <h1 className="text-[20rem] font-bold tracking-widest" style={{ fontFamily: "'Playfair Display', serif" }}>
+          PREMIUM
+        </h1>
+      </div>
+
+      {/* Logout Button */}
       <a 
         href="/logout"
-        className="fixed top-4 right-4 z-10 px-4 py-2 rounded-full shadow-md flex items-center gap-2 transition-all hover:scale-105"
+        className="fixed top-6 right-6 z-30 px-5 py-2.5 rounded-full flex items-center gap-2 transition-all group"
         style={{ 
-          backgroundColor: "#9E5F57", 
-          color: "#EFE2B2"
+          backgroundColor: "#000000",
+          color: "#FFFFFF",
+          fontWeight: 500
         }}
       >
-        Logout
+        <span>Logout</span>
+        <FiLogOut className="transition-transform group-hover:translate-x-0.5" />
       </a>
 
-      <div className="max-w-6xl mx-auto relative z-10">
-        {/* Tab Navigation */}
-        <div className="flex mb-8 border-b" style={{ borderColor: "#97A276" }}>
-          {["profile", "orders", "settings"].map((tab, i) => (
-            <button
-              key={tab}
-              ref={el => tabsRef.current[i] = el}
-              onClick={() => setActiveTab(tab)}
-              className={`px-6 py-3 font-medium rounded-t-lg transition-all ${
-                activeTab === tab 
-                  ? "text-white" 
-                  : "text-gray-700 hover:text-gray-900"
-              }`}
-              style={{
-                backgroundColor: activeTab === tab ? "#9E5F57" : "transparent",
-                marginBottom: "-1px"
-              }}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
+      <div className="max-w-6xl mx-auto relative z-10 pt-4">
+        {/* Premium Header */}
+        <div className="text-center mb-16">
+          <h1 className="text-5xl md:text-6xl font-bold mb-4 tracking-tight" style={{ 
+            letterSpacing: "-0.03em"
+          }}>
+            Your Exclusive Profile
+          </h1>
+          <div className="h-0.5 w-24 bg-black mx-auto"></div>
         </div>
 
-        {/* User Profile Section */}
+        {/* Tab Navigation - Premium Style */}
+        <div className="flex justify-center mb-16">
+          <div className="flex rounded-full border border-black overflow-hidden">
+            {["profile", "orders", "settings"].map((tab, i) => (
+              <button
+                key={tab}
+                ref={el => tabsRef.current[i] = el}
+                onClick={() => setActiveTab(tab)}
+                className={`px-8 py-3 font-medium transition-all duration-300 ${
+                  activeTab === tab 
+                    ? "text-white bg-black" 
+                    : "text-black bg-transparent hover:bg-gray-100"
+                }`}
+                style={{
+                  fontWeight: 500,
+                  letterSpacing: "0.03em"
+                }}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* User Profile Section - Premium */}
         {activeTab === "profile" && profileData && (
           <div 
-            className="rounded-2xl shadow-lg p-8 mb-12 profile-section relative overflow-hidden"
-            style={{ backgroundColor: "#F5C9C6" }}
+            className="rounded-2xl border border-black mb-24 profile-section relative overflow-hidden"
+            style={{ backgroundColor: "rgba(255, 255, 255, 0.8)" }}
           >
-            <div className="flex flex-col md:flex-row items-center gap-6 mb-6">
-              <div 
-                className="p-4 rounded-full flex-shrink-0"
-                style={{ backgroundColor: "rgba(151, 162, 118, 0.2)" }}
-              >
-                <FiUser 
-                  className="text-4xl" 
-                  style={{ color: "#814B4A" }} 
-                />
-              </div>
-              <div className="text-center md:text-left">
-                <h2 
-                  className="text-3xl font-bold mb-2"
-                  style={{ color: "#814B4A" }}
-                >
-                  {profileData.fullname}
-                </h2>
-                <p 
-                  className="text-lg mb-1"
-                  style={{ color: "#9E5F57" }}
-                >
-                  {profileData.email}
-                </p>
-                <p 
-                  className="text-lg"
-                  style={{ color: "#9E5F57" }}
-                >
-                  {profileData.phonenumber}
-                </p>
-              </div>
+            <div className="absolute inset-0 z-0">
+              <div className="absolute top-0 right-0 w-64 h-64 border-t border-r border-black opacity-10"></div>
+              <div className="absolute bottom-0 left-0 w-64 h-64 border-b border-l border-black opacity-10"></div>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-4 text-center mt-8">
-              <div 
-                className="p-6 rounded-xl transition-all hover:scale-[1.02] cursor-pointer"
-                style={{ backgroundColor: "rgba(239, 226, 178, 0.7)" }}
-              >
-                <p 
-                  className="text-sm mb-1"
-                  style={{ color: "#567A4B" }}
-                >
-                  Member Since
-                </p>
-                <p 
-                  className="text-2xl font-bold"
-                  style={{ color: "#814B4A" }}
-                >
-                  {new Date(profileData.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-              
-              <div 
-                className="p-6 rounded-xl transition-all hover:scale-[1.02] cursor-pointer"
-                style={{ backgroundColor: "rgba(239, 226, 178, 0.7)" }}
-              >
-                <p 
-                  className="text-sm mb-1"
-                  style={{ color: "#567A4B" }}
-                >
-                  Account Status
-                </p>
-                <p 
-                  className="text-2xl font-bold"
-                  style={{ color: "#567A4B" }}
-                >
-                  {profileData.isActive ? 'Active' : 'Inactive'}
-                </p>
-              </div>
-            </div>
-            
-            {/* Animated Divider */}
-            <div className="flex items-center my-8">
-              <div 
-                className="h-1 rounded-full flex-grow"
-                style={{ backgroundColor: "#97A276" }}
-              ></div>
-              <div 
-                className="mx-4 text-sm italic"
-                style={{ color: "#814B4A" }}
-              >
-                Premium Member
-              </div>
-              <div 
-                className="h-1 rounded-full flex-grow"
-                style={{ backgroundColor: "#97A276" }}
-              ></div>
-            </div>
-            
-            {/* Action Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { 
-                  title: "Edit Profile", 
-                  action: () => toast.info("Edit profile feature coming soon!") 
-                },
-                { 
-                  title: "Order History", 
-                  action: () => setActiveTab("orders") 
-                },
-                { 
-                  title: "Security Settings", 
-                  action: () => setActiveTab("settings") 
-                }
-              ].map((item, i) => (
+            <div className="relative z-10">
+              <div className="flex flex-col md:flex-row items-center gap-8 p-10">
                 <div 
-                  key={i}
-                  className="p-5 rounded-xl cursor-pointer transition-all hover:scale-[1.02] group"
-                  style={{ backgroundColor: "rgba(151, 162, 118, 0.2)" }}
-                  onClick={item.action}
+                  className="w-32 h-32 rounded-full flex items-center justify-center border-2 border-black"
                 >
-                  <div className="flex justify-between items-center">
-                    <span 
-                      className="font-medium"
-                      style={{ color: "#814B4A" }}
+                  <FiUser 
+                    className="text-5xl text-black" 
+                  />
+                </div>
+                <div className="text-center md:text-left">
+                  <h2 
+                    className="text-4xl font-bold mb-3"
+                  >
+                    {profileData.fullname}
+                  </h2>
+                  <div className="space-y-1">
+                    <p 
+                      className="text-lg mb-1 flex items-center justify-center md:justify-start gap-2"
                     >
-                      {item.title}
-                    </span>
-                    <FiChevronRight 
-                      className="transition-transform group-hover:translate-x-1"
-                      style={{ color: "#9E5F57" }} 
-                    />
+                      <span className="bg-black text-white px-2 py-0.5 text-xs tracking-widest">EMAIL</span>
+                      <span className="text-gray-700">{profileData.email}</span>
+                    </p>
+                    <p 
+                      className="text-lg flex items-center justify-center md:justify-start gap-2"
+                    >
+                      <span className="bg-black text-white px-2 py-0.5 text-xs tracking-widest">PHONE</span>
+                      <span className="text-gray-700">{profileData.phonenumber}</span>
+                    </p>
                   </div>
                 </div>
-              ))}
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-6 p-8 border-t border-black border-opacity-10">
+                <div 
+                  className="p-8 rounded-xl border border-black border-opacity-10 transition-all hover:border-opacity-30 cursor-pointer"
+                >
+                  <p 
+                    className="text-sm mb-1 tracking-widest text-gray-500"
+                  >
+                    MEMBER SINCE
+                  </p>
+                  <p 
+                    className="text-2xl font-bold"
+                  >
+                    {new Date(profileData.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </p>
+                </div>
+                
+                <div 
+                  className="p-8 rounded-xl border border-black border-opacity-10 transition-all hover:border-opacity-30 cursor-pointer"
+                >
+                  <p 
+                    className="text-sm mb-1 tracking-widest text-gray-500"
+                  >
+                    ACCOUNT STATUS
+                  </p>
+                  <p 
+                    className="text-2xl font-bold flex items-center gap-2"
+                  >
+                    <span className={`w-3 h-3 rounded-full ${profileData.isActive ? 'bg-green-600' : 'bg-red-600'}`}></span>
+                    {profileData.isActive ? 'Active' : 'Inactive'}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Premium Divider */}
+              <div className="flex items-center py-8 px-10 border-y border-black border-opacity-10">
+                <div className="h-px bg-black bg-opacity-10 flex-grow"></div>
+                <div 
+                  className="mx-4 text-sm italic tracking-widest text-gray-500"
+                >
+                  PREMIUM MEMBER
+                </div>
+                <div className="h-px bg-black bg-opacity-10 flex-grow"></div>
+              </div>
+              
+              {/* Action Cards - Premium */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-10 pt-0">
+                {[
+                  { 
+                    title: "Edit Profile", 
+                    action: () => toast.info("Edit profile feature coming soon!") 
+                  },
+                  { 
+                    title: "Order History", 
+                    action: () => setActiveTab("orders") 
+                  },
+                  { 
+                    title: "Security Settings", 
+                    action: () => setActiveTab("settings") 
+                  }
+                ].map((item, i) => (
+                  <div 
+                    key={i}
+                    className="p-6 rounded-xl cursor-pointer transition-all hover:bg-gray-50 group border border-black border-opacity-0 hover:border-opacity-10"
+                    onClick={item.action}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span 
+                        className="font-medium text-lg"
+                      >
+                        {item.title}
+                      </span>
+                      <FiChevronRight 
+                        className="transition-transform group-hover:translate-x-2 text-xl"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
 
-        {/* Order Tracking Section */}
+        {/* Order Tracking Section - Premium */}
         {activeTab === "orders" && (
           <div className="profile-section">
             <div 
               ref={formRef} 
-              className="rounded-2xl shadow-lg p-8 mb-12 relative overflow-hidden"
-              style={{ backgroundColor: "rgba(245, 201, 198, 0.85)" }}
+              className="rounded-2xl border border-black p-10 mb-16 relative"
             >
               <h2 
-                className="text-2xl font-bold mb-6 flex items-center gap-2"
-                style={{ color: "#814B4A" }}
+                className="text-3xl font-bold mb-8 flex items-center gap-3"
               >
-                <FiPackage style={{ color: "#9E5F57" }} /> Track Your Order
+                <FiPackage className="text-2xl" /> Track Your Order
               </h2>
               
-              <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex flex-col md:flex-row gap-4 max-w-3xl">
                 <input
                   type="text"
                   value={orderId}
                   onChange={(e) => setOrderId(e.target.value)}
                   placeholder="Enter Your Order ID"
-                  className="flex-1 px-6 py-4 rounded-xl focus:ring-4 transition-all placeholder-gray-500"
-                  style={{ 
-                    backgroundColor: "#EFE2B2",
-                    border: "2px solid #97A276",
-                    color: "#814B4A",
-                    focusBorderColor: "#567A4B",
-                    focusRingColor: "rgba(86, 122, 75, 0.2)"
-                  }}
+                  className="flex-1 px-6 py-4 rounded-xl border-2 border-black focus:outline-none transition-all placeholder-gray-500 text-lg"
                 />
                 
                 <button
                   onClick={handleTrackOrder}
                   disabled={loading}
-                  className="px-8 py-4 rounded-xl font-semibold transition-all flex items-center gap-2 justify-center disabled:opacity-70"
-                  style={{ 
-                    backgroundColor: "#9E5F57",
-                    color: "#EFE2B2",
-                    hoverBackgroundColor: "#567A4B"
-                  }}
+                  className="px-8 py-4 rounded-xl font-semibold transition-all flex items-center gap-2 justify-center disabled:opacity-70 text-lg border-2 border-black bg-black text-white hover:bg-gray-900"
                 >
                   {loading ? (
                     <>
                       <svg 
                         className="animate-spin h-5 w-5" 
-                        style={{ color: "#EFE2B2" }}
+                        style={{ color: "#FFFFFF" }}
                         xmlns="http://www.w3.org/2000/svg" 
                         fill="none" 
                         viewBox="0 0 24 24"
@@ -518,94 +526,89 @@ const MyProfile = () => {
             </div>
 
             {order && (
-              <div className="space-y-8">
-                {/* Order Details */}
+              <div className="space-y-10">
+                {/* Order Details - Premium */}
                 <div 
                   ref={detailsRef} 
-                  className="rounded-2xl shadow-lg p-8"
-                  style={{ backgroundColor: "rgba(239, 226, 178, 0.9)" }}
+                  className="rounded-2xl border border-black p-10"
                 >
                   <h3 
-                    className="text-xl font-bold mb-6 flex items-center gap-2"
-                    style={{ color: "#814B4A" }}
+                    className="text-2xl font-bold mb-8 flex items-center gap-3"
                   >
-                    <FiPackage style={{ color: "#9E5F57" }} /> Order Details
+                    <FiPackage className="text-2xl" /> Order Details
                   </h3>
                   
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3">
+                  <div className="grid md:grid-cols-2 gap-8 text-lg">
+                    <div className="space-y-5">
+                      <div className="flex items-start gap-4">
                         <span 
-                          className="w-24 font-semibold"
-                          style={{ color: "#567A4B" }}
+                          className="font-semibold min-w-[120px] flex items-center gap-2"
                         >
+                          <span className="bg-black h-px w-6"></span>
                           Order ID:
                         </span>
                         <span 
-                          className="font-mono"
-                          style={{ color: "#9E5F57" }}
+                          className="font-mono break-all"
                         >
                           {order._id}
                         </span>
                       </div>
                       
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-start gap-4">
                         <span 
-                          className="w-24 font-semibold"
-                          style={{ color: "#567A4B" }}
+                          className="font-semibold min-w-[120px] flex items-center gap-2"
                         >
+                          <span className="bg-black h-px w-6"></span>
                           Address:
                         </span>
-                        <span style={{ color: "#814B4A" }}>{order.address}</span>
+                        <span>{order.address}</span>
                       </div>
                       
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-start gap-4">
                         <span 
-                          className="w-24 font-semibold"
-                          style={{ color: "#567A4B" }}
+                          className="font-semibold min-w-[120px] flex items-center gap-2"
                         >
+                          <span className="bg-black h-px w-6"></span>
                           Jela:
                         </span>
-                        <span style={{ color: "#814B4A" }}>{order.jela}</span>
+                        <span>{order.jela}</span>
                       </div>
                     </div>
                     
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3">
+                    <div className="space-y-5">
+                      <div className="flex items-start gap-4">
                         <span 
-                          className="w-24 font-semibold"
-                          style={{ color: "#567A4B" }}
+                          className="font-semibold min-w-[120px] flex items-center gap-2"
                         >
+                          <span className="bg-black h-px w-6"></span>
                           Payment:
                         </span>
                         <span 
                           className="capitalize"
-                          style={{ color: "#814B4A" }}
                         >
                           {order.paymentMethod}
                         </span>
                       </div>
                       
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-start gap-4">
                         <span 
-                          className="w-24 font-semibold"
-                          style={{ color: "#567A4B" }}
+                          className="font-semibold min-w-[120px] flex items-center gap-2"
                         >
+                          <span className="bg-black h-px w-6"></span>
                           Upazela:
                         </span>
-                        <span style={{ color: "#814B4A" }}>{order.upazela}</span>
+                        <span>{order.upazela}</span>
                       </div>
                       
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-start gap-4">
                         <span 
-                          className="w-24 font-semibold"
-                          style={{ color: "#567A4B" }}
+                          className="font-semibold min-w-[120px] flex items-center gap-2"
                         >
+                          <span className="bg-black h-px w-6"></span>
                           Total:
                         </span>
                         <span 
-                          className="font-bold"
-                          style={{ color: "#9E5F57" }}
+                          className="font-bold text-xl"
                         >
                           TK. {order.totalAmount}
                         </span>
@@ -614,30 +617,24 @@ const MyProfile = () => {
                   </div>
                 </div>
 
-                {/* Order Status */}
+                {/* Order Status - Premium */}
                 <div 
                   ref={statusRef} 
-                  className="rounded-2xl shadow-lg p-8"
-                  style={{ backgroundColor: "rgba(239, 226, 178, 0.9)" }}
+                  className="rounded-2xl border border-black p-10"
                 >
                   <h3 
-                    className="text-xl font-bold mb-6 flex items-center gap-2"
-                    style={{ color: "#814B4A" }}
+                    className="text-2xl font-bold mb-8 flex items-center gap-3"
                   >
-                    <FiClock style={{ color: "#9E5F57" }} /> Order Status
+                    <FiClock className="text-2xl" /> Order Status
                   </h3>
                   
                   <div className="relative pt-8">
                     <div 
-                      className="absolute h-2 w-full top-8 left-0 rounded-full"
-                      style={{ backgroundColor: "#97A276" }}
+                      className="absolute h-1 w-full top-8 left-0 rounded-full bg-gray-200"
                     >
                       <div
-                        className="h-full rounded-full transition-all duration-1000 ease-out"
-                        style={{ 
-                          width: `${getStatusProgress()}%`,
-                          background: "linear-gradient(90deg, #9E5F57, #567A4B)"
-                        }}
+                        className="h-full rounded-full transition-all duration-1000 ease-out bg-black"
+                        style={{ width: `${getStatusProgress()}%` }}
                       />
                     </div>
                     
@@ -645,30 +642,22 @@ const MyProfile = () => {
                       {["Pending", "Confirm", "Shipped", "Delivered"].map((status) => (
                         <div key={status} className="flex flex-col items-center relative">
                           <div
-                            className={`w-10 h-10 rounded-full mb-2 flex items-center justify-center transition-all ${
+                            className={`w-12 h-12 rounded-full mb-3 flex items-center justify-center transition-all border-2 ${
                               order.status === status
-                                ? "shadow-lg"
-                                : "border-4"
+                                ? "border-black bg-black text-white"
+                                : "border-gray-300 bg-white text-gray-400"
                             }`}
-                            style={{
-                              backgroundColor: order.status === status ? "#9E5F57" : "#EFE2B2",
-                              borderColor: "#97A276",
-                              color: order.status === status ? "#EFE2B2" : "#814B4A"
-                            }}
                           >
                             {order.status === status ? (
                               <FiCheckCircle className="text-xl" />
                             ) : (
-                              ["Pending", "Confirm", "Shipped", "Delivered"].indexOf(status) + 1
+                              <span className="text-sm font-bold">{["Pending", "Confirm", "Shipped", "Delivered"].indexOf(status) + 1}</span>
                             )}
                           </div>
                           <span 
                             className={`text-sm font-medium ${
-                              order.status === status ? "font-bold" : ""
+                              order.status === status ? "font-bold text-black" : "text-gray-500"
                             }`}
-                            style={{ 
-                              color: order.status === status ? "#9E5F57" : "#814B4A" 
-                            }}
                           >
                             {status}
                           </span>
@@ -678,68 +667,60 @@ const MyProfile = () => {
                   </div>
                 </div>
 
-                {/* Tracking Information */}
+                {/* Tracking Information - Premium */}
                 <div 
-                  className="rounded-2xl shadow-lg p-8"
-                  style={{ backgroundColor: "rgba(239, 226, 178, 0.9)" }}
+                  className="rounded-2xl border border-black p-10"
                 >
                   <h3 
-                    className="text-xl font-bold mb-4 flex items-center gap-2"
-                    style={{ color: "#814B4A" }}
+                    className="text-2xl font-bold mb-6 flex items-center gap-3"
                   >
-                    <FiTruck style={{ color: "#9E5F57" }} /> Live Tracking Information
+                    <FiTruck className="text-2xl" /> Live Tracking Information
                   </h3>
                   
                   <p 
-                    className="text-lg"
-                    style={{ color: "#814B4A" }}
+                    className="text-lg mb-8 max-w-3xl"
                   >
                     Your order tracking link will be sent via SMS to {profileData?.phonenumber} once the shipment is on its way. Please check your messages for real-time updates.
                   </p>
                   
-                  {/* Fake Tracking Map */}
+                  {/* Premium Tracking Map */}
                   <div 
-                    className="mt-6 h-48 rounded-xl overflow-hidden relative bg-gradient-to-br from-[#97A276] to-[#9E5F57]"
+                    className="mt-6 h-96 rounded-xl overflow-hidden relative border border-black"
                     onClick={() => toast.info("Live tracking will activate once your order ships!")}
                   >
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div 
-                        className="animate-pulse w-8 h-8 rounded-full"
-                        style={{ backgroundColor: "#F5C9C6" }}
-                      ></div>
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                      <div className="text-center">
+                        <div className="mb-4">
+                          <div className="inline-block animate-pulse w-16 h-16 rounded-full border-4 border-black border-opacity-20"></div>
+                        </div>
+                        <p className="text-lg font-medium">Tracking will activate when order ships</p>
+                        <p className="text-gray-500 mt-2">Premium GPS tracking enabled</p>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Cancellation Section */}
+                {/* Cancellation Section - Premium */}
                 {order && !["Shipped", "Delivered", "CancellationRequested"].includes(order.status) && (
                   <div 
                     ref={deleteRef} 
-                    className="rounded-2xl shadow-lg p-8 text-center"
-                    style={{ backgroundColor: "rgba(245, 201, 198, 0.9)" }}
+                    className="rounded-2xl border border-black p-10 text-center"
                   >
                     <h3 
-                      className="text-xl font-bold mb-4"
-                      style={{ color: "#814B4A" }}
+                      className="text-2xl font-bold mb-6"
                     >
                       Need to Cancel Order?
                     </h3>
                     
                     <p 
-                      className="text-lg mb-6"
-                      style={{ color: "#814B4A" }}
+                      className="text-lg mb-8 max-w-2xl mx-auto"
                     >
                       You can request cancellation before shipping. Contact support for immediate assistance.
                     </p>
                     
                     <button
                       onClick={handleCancelRequest}
-                      className="px-6 py-3 rounded-xl font-semibold transition-all hover:scale-105"
-                      style={{ 
-                        backgroundColor: "#9E5F57",
-                        color: "#EFE2B2",
-                        hoverBackgroundColor: "#567A4B"
-                      }}
+                      className="px-8 py-4 rounded-xl font-semibold transition-all border-2 border-black bg-white text-black hover:bg-black hover:text-white text-lg"
                     >
                       Request Cancellation
                     </button>
@@ -750,20 +731,18 @@ const MyProfile = () => {
           </div>
         )}
 
-        {/* Settings Tab */}
+        {/* Settings Tab - Premium */}
         {activeTab === "settings" && (
           <div 
-            className="rounded-2xl shadow-lg p-8 profile-section"
-            style={{ backgroundColor: "rgba(245, 201, 198, 0.85)" }}
+            className="rounded-2xl border border-black profile-section p-10"
           >
             <h2 
-              className="text-2xl font-bold mb-8"
-              style={{ color: "#814B4A" }}
+              className="text-3xl font-bold mb-10"
             >
               Account Settings
             </h2>
             
-            <div className="space-y-6">
+            <div className="space-y-6 max-w-3xl">
               {[
                 { 
                   title: "Change Password", 
@@ -783,33 +762,34 @@ const MyProfile = () => {
               ].map((item, i) => (
                 <div 
                   key={i}
-                  className="p-6 rounded-xl transition-all hover:scale-[1.02] cursor-pointer flex justify-between items-start"
-                  style={{ backgroundColor: "rgba(239, 226, 178, 0.7)" }}
+                  className="p-6 transition-all hover:bg-gray-50 cursor-pointer flex justify-between items-start border-b border-black border-opacity-10 group"
                   onClick={item.action}
                 >
                   <div>
                     <h3 
-                      className="text-xl font-medium mb-2"
-                      style={{ color: "#814B4A" }}
+                      className="text-xl font-medium mb-2 group-hover:underline"
                     >
                       {item.title}
                     </h3>
                     <p 
-                      className="text-sm"
-                      style={{ color: "#9E5F57" }}
+                      className="text-gray-600"
                     >
                       {item.description}
                     </p>
                   </div>
                   <FiChevronRight 
-                    className="text-2xl mt-1 transition-transform hover:translate-x-1"
-                    style={{ color: "#9E5F57" }} 
+                    className="text-2xl mt-1 transition-transform group-hover:translate-x-2"
                   />
                 </div>
               ))}
             </div>
           </div>
         )}
+      </div>
+
+      {/* Premium Footer */}
+      <div className="text-center py-12 text-gray-500 text-sm tracking-widest">
+        PREMIUM EXPERIENCE • EXCLUSIVE MEMBER • {new Date().getFullYear()}
       </div>
     </div>
   );

@@ -6,18 +6,8 @@ import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import Navbar from "../Navigations/Navbar";
 import Footer from "../Footer/Footer";
-import { LockClosedIcon, CreditCardIcon, ShoppingBagIcon, ShieldCheckIcon, XMarkIcon, TruckIcon } from "@heroicons/react/24/outline";
+import { LockClosedIcon, CreditCardIcon, ShoppingBagIcon, XMarkIcon, TruckIcon } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
-
-// Color palette constants
-const COLORS = {
-  parchment: "#EFE2B2",
-  terracotta: "#9E5F57",
-  moss: "#567A4B",
-  rust: "#814B4A",
-  sage: "#97A276",
-  blush: "#F5C9C6"
-};
 
 const stripePromise = loadStripe("pk_test_51RSv6HQu2XY94ocpyNXlGLygbvTCIBSFrODrGTvAtAxnQQM0bFDNpC36pJ4EH9cb1GJEKSHigVz6xVWZFeHMZJSV001CPevlli");
 
@@ -28,15 +18,15 @@ const FloatingInput = ({ label, name, type = 'text', required = false, textarea 
     <motion.div 
       className="relative mb-8 group"
       whileHover={{ y: -3 }}
-      transition={{ type: "spring", stiffness: 300 }}
+      transition={{ type: "spring", stiffness: 400 }}
     >
       {textarea ? (
         <textarea
-          className="peer h-24 w-full rounded-xl border-2 px-6 py-4 focus:outline-none bg-transparent transition-all duration-300 shadow-sm"
+          className="peer h-24 w-full rounded-xl border border-gray-300 px-6 py-4 focus:outline-none bg-transparent transition-all duration-300 shadow-sm"
           style={{ 
-            borderColor: isFocused ? COLORS.terracotta : COLORS.sage,
-            color: COLORS.rust,
-            backgroundColor: `${COLORS.parchment}80`
+            borderColor: isFocused ? '#000' : '#e5e7eb',
+            color: '#000',
+            backgroundColor: 'transparent'
           }}
           placeholder=" "
           name={name}
@@ -49,11 +39,10 @@ const FloatingInput = ({ label, name, type = 'text', required = false, textarea 
         />
       ) : (
         <input
-          className="peer h-14 w-full rounded-xl border-2 px-6 py-2 focus:outline-none bg-transparent transition-all duration-300 shadow-sm"
+          className="peer h-14 w-full rounded-xl border border-gray-300 px-6 py-2 focus:outline-none bg-transparent transition-all duration-300 shadow-sm"
           style={{ 
-            borderColor: isFocused ? COLORS.terracotta : COLORS.sage,
-            color: COLORS.rust,
-            backgroundColor: `${COLORS.parchment}80`
+            borderColor: isFocused ? '#000' : '#e5e7eb',
+            color: '#000',
           }}
           type={type}
           placeholder=" "
@@ -68,16 +57,17 @@ const FloatingInput = ({ label, name, type = 'text', required = false, textarea 
       <motion.label 
         className={`absolute left-4 transition-all duration-300 px-2 ${
           isFocused || value 
-            ? 'top-0 text-sm -translate-y-1/2' 
+            ? 'top-0 text-xs -translate-y-1/2 tracking-wider' 
             : 'top-1/2 -translate-y-1/2'
         }`}
         style={{ 
-          backgroundColor: COLORS.parchment,
-          color: isFocused ? COLORS.terracotta : COLORS.rust 
+          backgroundColor: '#fff',
+          color: isFocused ? '#000' : '#9ca3af',
+          letterSpacing: '0.05em'
         }}
         animate={{ 
           y: isFocused || value ? -10 : 0,
-          scale: isFocused || value ? 0.95 : 1
+          scale: isFocused || value ? 0.9 : 1
         }}
       >
         {label}
@@ -222,7 +212,7 @@ const CheckoutForm = () => {
   };
 
   return (
-    <div className="min-h-screen relative" style={{ backgroundColor: COLORS.parchment }}>
+    <div className="min-h-screen relative bg-white">
       <Navbar />
       
       {/* Space below navbar */}
@@ -239,17 +229,15 @@ const CheckoutForm = () => {
             <motion.div
               initial={{ scale: 0.5, rotate: -10 }}
               animate={{ scale: 1, rotate: 0 }}
-              className="p-8 rounded-2xl shadow-xl text-center"
-              style={{ backgroundColor: COLORS.parchment }}
+              className="p-8 rounded-2xl shadow-xl text-center bg-white"
             >
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="h-16 w-16 rounded-full border-t-4 mx-auto mb-6"
-                style={{ borderColor: COLORS.terracotta }}
+                className="h-16 w-16 rounded-full border-t-2 border-b-2 border-black mx-auto mb-6"
               ></motion.div>
-              <h3 className="text-2xl font-bold mb-4" style={{ color: COLORS.rust }}>Processing Payment</h3>
-              <p className="text-lg" style={{ color: COLORS.terracotta }}>Your order is being securely processed</p>
+              <h3 className="text-2xl font-light tracking-tight mb-4 text-gray-900">Processing Payment</h3>
+              <p className="text-lg text-gray-600">Your order is being securely processed</p>
             </motion.div>
           </motion.div>
         )}
@@ -267,25 +255,22 @@ const CheckoutForm = () => {
               initial={{ scale: 0.8, y: 50 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.8, y: 50 }}
-              className="w-full max-w-md relative rounded-2xl p-8 shadow-2xl"
-              style={{ backgroundColor: COLORS.parchment }}
+              className="w-full max-w-md relative rounded-2xl p-8 shadow-2xl bg-white border border-gray-200"
             >
               <button
                 onClick={() => setShowPaymentModal(false)}
-                className="absolute top-4 right-4 p-2 rounded-full hover:scale-110 transition-transform"
-                style={{ backgroundColor: COLORS.blush }}
+                className="absolute top-4 right-4 p-2 rounded-full hover:scale-110 transition-transform bg-gray-100"
               >
-                <XMarkIcon className="w-6 h-6" style={{ color: COLORS.rust }} />
+                <XMarkIcon className="w-6 h-6 text-gray-800" />
               </button>
 
               <motion.h3 
-                className="text-2xl font-bold mb-6 flex items-center gap-2"
-                style={{ color: COLORS.rust }}
+                className="text-2xl font-light tracking-tight mb-6 flex items-center gap-2 text-gray-900"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                <CreditCardIcon className="w-8 h-8" style={{ color: COLORS.terracotta }} />
+                <CreditCardIcon className="w-8 h-8 text-gray-800" />
                 Secure Payment
               </motion.h3>
 
@@ -301,13 +286,13 @@ const CheckoutForm = () => {
                       style: {
                         base: {
                           fontSize: '16px',
-                          color: COLORS.rust,
+                          color: '#000',
                           fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
                           '::placeholder': { 
-                            color: COLORS.terracotta,
+                            color: '#9ca3af',
                             fontWeight: '400'
                           },
-                          iconColor: COLORS.terracotta
+                          iconColor: '#000'
                         },
                         invalid: { 
                           color: '#dc2626',
@@ -315,31 +300,26 @@ const CheckoutForm = () => {
                         }
                       }
                     }}
-                    className="p-4 border-2 rounded-xl"
-                    style={{ borderColor: COLORS.sage }}
+                    className="p-4 border border-gray-300 rounded-xl"
                   />
                 </motion.div>
 
                 <motion.button
                   whileHover={{ 
                     scale: 1.03,
-                    boxShadow: `0 10px 25px -5px ${COLORS.terracotta}40`
+                    boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)"
                   }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handlePayment}
-                  className="w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center"
+                  className="w-full py-4 rounded-xl font-medium text-lg bg-black text-white shadow-[0_4px_0_0_rgba(0,0,0,0.2)] hover:shadow-[0_6px_0_0_rgba(0,0,0,0.2)] active:shadow-[0_2px_0_0_rgba(0,0,0,0.2)] transition-all duration-200 flex items-center justify-center"
                   disabled={processing}
-                  style={{ 
-                    backgroundColor: COLORS.terracotta, 
-                    color: COLORS.parchment 
-                  }}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
                   {processing ? (
                     <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: COLORS.parchment }} />
+                      <div className="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin" />
                       Processing...
                     </div>
                   ) : (
@@ -362,26 +342,17 @@ const CheckoutForm = () => {
           <div className="flex flex-col lg:flex-row gap-12">
             {/* Shipping Details */}
             <motion.div 
-              className="lg:w-7/12 rounded-3xl p-8 shadow-xl"
-              style={{ 
-                backgroundColor: `${COLORS.parchment}cc`, 
-                border: `1px solid ${COLORS.sage}80`,
-                backdropFilter: 'blur(10px)'
-              }}
+              className="lg:w-7/12 rounded-2xl p-8 bg-white border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.02)]"
               layout
-              transition={{ type: "spring", damping: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
             >
               <form onSubmit={handleSubmit} className="space-y-10">
                 <motion.div layout>
                   <motion.h2 
-                    className="text-2xl font-bold mb-8 flex items-center gap-3 pb-2 border-b"
-                    style={{ 
-                      color: COLORS.rust,
-                      borderColor: COLORS.sage
-                    }}
+                    className="text-2xl font-light tracking-tight mb-8 flex items-center gap-3 pb-4 border-b border-gray-100"
                     layout
                   >
-                    <LockClosedIcon className="w-7 h-7" style={{ color: COLORS.terracotta }} />
+                    <LockClosedIcon className="w-7 h-7 text-gray-800" />
                     Shipping Information
                   </motion.h2>
                   <div className="grid gap-8 md:grid-cols-2">
@@ -398,23 +369,14 @@ const CheckoutForm = () => {
 
                 <motion.div layout>
                   <motion.h2 
-                    className="text-2xl font-bold mb-8 flex items-center gap-3 pb-2 border-b"
-                    style={{ 
-                      color: COLORS.rust,
-                      borderColor: COLORS.sage
-                    }}
+                    className="text-2xl font-light tracking-tight mb-8 flex items-center gap-3 pb-4 border-b border-gray-100"
                     layout
                   >
-                    <CreditCardIcon className="w-7 h-7" style={{ color: COLORS.terracotta }} />
+                    <CreditCardIcon className="w-7 h-7 text-gray-800" />
                     Payment Method
                   </motion.h2>
                   <select
-                    className="w-full rounded-xl border-2 px-6 py-4 focus:ring-4 transition-all shadow-sm"
-                    style={{ 
-                      borderColor: COLORS.sage,
-                      color: COLORS.rust,
-                      backgroundColor: `${COLORS.parchment}80`
-                    }}
+                    className="w-full rounded-xl border border-gray-300 px-6 py-4 focus:outline-none transition-all shadow-sm bg-white"
                     value={userDetails.paymentMethod}
                     onChange={handleInputChange}
                     name="paymentMethod"
@@ -427,15 +389,11 @@ const CheckoutForm = () => {
                 <motion.button
                   whileHover={{ 
                     scale: 1.02,
-                    boxShadow: `0 10px 25px -5px ${COLORS.terracotta}40`
+                    boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)"
                   }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  className="w-full py-5 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all relative overflow-hidden"
-                  style={{ 
-                    backgroundColor: COLORS.terracotta, 
-                    color: COLORS.parchment 
-                  }}
+                  className="w-full py-5 rounded-xl font-medium text-lg bg-black text-white shadow-[0_4px_0_0_rgba(0,0,0,0.2)] hover:shadow-[0_6px_0_0_rgba(0,0,0,0.2)] active:shadow-[0_2px_0_0_rgba(0,0,0,0.2)] transition-all duration-200 relative overflow-hidden"
                   disabled={processing}
                   layout
                 >
@@ -447,9 +405,9 @@ const CheckoutForm = () => {
                     )}
                   </span>
                   <motion.div 
-                    className="absolute inset-0 bg-black opacity-0"
+                    className="absolute inset-0 bg-gray-800 opacity-0"
                     animate={{ 
-                      opacity: processing ? 0.2 : 0 
+                      opacity: processing ? 0.4 : 0 
                     }}
                     transition={{ duration: 0.3 }}
                   ></motion.div>
@@ -461,26 +419,17 @@ const CheckoutForm = () => {
             <motion.div 
               className="lg:w-5/12"
               layout
-              transition={{ type: "spring", damping: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
             >
               <motion.div 
-                className="sticky top-8 rounded-3xl p-8 shadow-xl overflow-hidden"
-                style={{ 
-                  backgroundColor: `${COLORS.parchment}cc`, 
-                  border: `1px solid ${COLORS.sage}80`,
-                  backdropFilter: 'blur(10px)'
-                }}
+                className="sticky top-8 rounded-2xl p-8 bg-white border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.02)] overflow-hidden"
                 layout
               >
                 <motion.h2 
-                  className="text-2xl font-bold mb-8 flex items-center gap-3 pb-2 border-b"
-                  style={{ 
-                    color: COLORS.rust,
-                    borderColor: COLORS.sage
-                  }}
+                  className="text-2xl font-light tracking-tight mb-8 flex items-center gap-3 pb-4 border-b border-gray-100"
                   layout
                 >
-                  <ShoppingBagIcon className="w-7 h-7" style={{ color: COLORS.terracotta }} />
+                  <ShoppingBagIcon className="w-7 h-7 text-gray-800" />
                   Order Summary
                 </motion.h2>
                 
@@ -493,31 +442,29 @@ const CheckoutForm = () => {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 20 }}
                         transition={{ delay: index * 0.05 }}
-                        className="flex gap-4 items-start p-5 rounded-xl relative overflow-hidden"
-                        style={{ backgroundColor: COLORS.blush }}
+                        className="flex gap-4 items-start p-5 rounded-xl relative overflow-hidden border border-gray-100"
                         layout
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white opacity-10"></div>
                         <motion.img 
                           src={item.images[0]} 
                           alt={item.productName}
-                          className="w-20 h-20 rounded-lg object-cover border-2 shadow-sm flex-shrink-0"
-                          style={{ borderColor: COLORS.parchment }}
+                          className="w-20 h-20 rounded-lg object-cover border border-gray-200 shadow-sm flex-shrink-0"
                           whileHover={{ rotate: 2 }}
                           transition={{ type: "spring" }}
                         />
                         <div className="flex-1">
-                          <h3 className="font-semibold" style={{ color: COLORS.rust }}>{item.productName}</h3>
-                          <p className="text-sm mt-1" style={{ color: COLORS.terracotta }}>
+                          <h3 className="font-medium text-gray-900">{item.productName}</h3>
+                          <p className="text-sm mt-1 text-gray-600">
                             {item.selectedColor} / {item.selectedSize}
                           </p>
                           <div className="flex justify-between items-center mt-3">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium px-2 py-1 rounded" style={{ backgroundColor: COLORS.sage, color: COLORS.parchment }}>
+                              <span className="text-xs font-medium px-2 py-1 rounded border border-gray-200 bg-gray-50 text-gray-800">
                                 Qty: {item.quantity}
                               </span>
                             </div>
-                            <span className="font-bold" style={{ color: COLORS.rust }}>
+                            <span className="font-medium text-gray-900">
                               ৳{(item.price * item.quantity).toFixed(2)}
                             </span>
                           </div>
@@ -528,43 +475,37 @@ const CheckoutForm = () => {
                 </div>
 
                 <motion.div 
-                  className="space-y-4 border-t pt-6 pb-4"
-                  style={{ borderColor: COLORS.sage }}
+                  className="space-y-4 border-t border-gray-100 pt-6 pb-4"
                   layout
                 >
-                  <div className="flex justify-between text-lg" style={{ color: COLORS.rust }}>
+                  <div className="flex justify-between text-base text-gray-800">
                     <span>Subtotal:</span>
-                    <span className="font-semibold">৳{subtotal.toFixed(2)}</span>
+                    <span className="font-medium">৳{subtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-lg" style={{ color: COLORS.rust }}>
+                  <div className="flex justify-between text-base text-gray-800">
                     <span>Delivery:</span>
-                    <span className="font-semibold">৳{deliveryCharge.toFixed(2)}</span>
+                    <span className="font-medium">৳{deliveryCharge.toFixed(2)}</span>
                   </div>
                   <motion.div 
-                    className="flex justify-between text-xl font-bold pt-4 pb-2 border-t"
-                    style={{ 
-                      color: COLORS.terracotta,
-                      borderColor: COLORS.sage
-                    }}
+                    className="flex justify-between text-lg font-medium pt-4 pb-2 border-t border-gray-100"
                     layout
                   >
-                    <span>Total:</span>
-                    <span>৳{totalPrice.toFixed(2)}</span>
+                    <span className="text-gray-900">Total:</span>
+                    <span className="text-gray-900">৳{totalPrice.toFixed(2)}</span>
                   </motion.div>
                 </motion.div>
 
                 <motion.div 
-                  className="mt-8 p-4 rounded-xl flex items-center gap-3 relative overflow-hidden"
-                  style={{ backgroundColor: COLORS.blush }}
+                  className="mt-8 p-4 rounded-xl flex items-center gap-3 relative overflow-hidden border border-gray-100"
                   whileHover={{ y: -3 }}
                   transition={{ type: "spring" }}
                   layout
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white opacity-10"></div>
-                  <TruckIcon className="w-8 h-8 flex-shrink-0" style={{ color: COLORS.rust }} />
+                  <TruckIcon className="w-8 h-8 flex-shrink-0 text-gray-800" />
                   <div>
-                    <p className="font-bold" style={{ color: COLORS.rust }}>Free Delivery</p>
-                    <p className="text-sm mt-1" style={{ color: COLORS.terracotta }}>All orders delivered within 3-7 days</p>
+                    <p className="font-medium text-gray-900">Free Delivery</p>
+                    <p className="text-sm mt-1 text-gray-600">All orders delivered within 3-7 days</p>
                   </div>
                 </motion.div>
               </motion.div>
@@ -579,10 +520,10 @@ const CheckoutForm = () => {
         autoClose={3000}
         toastStyle={{
           borderRadius: '12px',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2)',
-          backgroundColor: COLORS.parchment,
-          color: COLORS.rust,
-          border: `2px solid ${COLORS.sage}`
+          boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+          backgroundColor: '#fff',
+          color: '#000',
+          border: '1px solid #e5e7eb'
         }}
       />
     </div>
@@ -594,7 +535,7 @@ const Checkout = () => {
 
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col" style={{ backgroundColor: COLORS.parchment }}>
+      <div className="min-h-screen flex flex-col bg-white">
         <Navbar />
         <div className="h-16"></div>
         <motion.div 
@@ -615,20 +556,16 @@ const Checkout = () => {
             }}
             className="mb-8"
           >
-            <ShoppingBagIcon className="w-24 h-24 mx-auto" style={{ color: COLORS.terracotta }} />
+            <ShoppingBagIcon className="w-24 h-24 mx-auto text-gray-800" />
           </motion.div>
-          <h2 className="text-3xl font-bold text-center mb-4" style={{ color: COLORS.rust }}>Your Cart is Empty</h2>
-          <p className="text-xl text-center max-w-md mb-8" style={{ color: COLORS.terracotta }}>
+          <h2 className="text-3xl font-light tracking-tight text-center mb-4 text-gray-900">Your Cart is Empty</h2>
+          <p className="text-xl text-center max-w-md mb-8 text-gray-600">
             Looks like you haven't added anything to your cart yet
           </p>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="px-8 py-3 rounded-full font-bold"
-            style={{ 
-              backgroundColor: COLORS.terracotta,
-              color: COLORS.parchment
-            }}
+            className="px-8 py-3 rounded-lg font-medium tracking-wide border border-gray-900 bg-white text-gray-900 shadow-[0_0_0_0_#000] hover:shadow-[4px_4px_0_0_#000] transition-all duration-300"
             onClick={() => window.location.href = "/products"}
           >
             Browse Products

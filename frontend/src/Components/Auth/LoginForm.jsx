@@ -4,15 +4,15 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 import { AiOutlineMail, AiOutlineLock, AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { FaArrowRight } from "react-icons/fa";
 
-// Color palette constants
+// Black & white color palette
 const COLORS = {
-  parchment: "#EFE2B2",
-  terracotta: "#9E5F57",
-  moss: "#567A4B",
-  rust: "#814B4A",
-  sage: "#97A276",
-  blush: "#F5C9C6"
+  pureWhite: "#FFFFFF",
+  lightGray: "#F5F5F5",
+  mediumGray: "#E0E0E0",
+  darkGray: "#333333",
+  pureBlack: "#000000",
 };
 
 const FloatingInput = ({ icon, type, name, placeholder, value, onChange, showPassword, setShowPassword, isPassword = false }) => {
@@ -20,17 +20,17 @@ const FloatingInput = ({ icon, type, name, placeholder, value, onChange, showPas
   
   return (
     <motion.div 
-      className="relative mb-6 group"
+      className="relative mb-8 group"
       whileHover={{ y: -3 }}
       transition={{ type: "spring", stiffness: 300 }}
     >
-      <div className="flex items-center border-b-2 py-2" style={{ borderColor: isFocused ? COLORS.terracotta : COLORS.sage }}>
-        <div className="text-xl mr-3" style={{ color: isFocused ? COLORS.terracotta : COLORS.sage }}>
+      <div className="flex items-center border-b-2 py-3" style={{ borderColor: isFocused ? COLORS.pureBlack : COLORS.mediumGray }}>
+        <div className="text-xl mr-4" style={{ color: isFocused ? COLORS.pureBlack : COLORS.darkGray }}>
           {icon}
         </div>
         <input
-          className="w-full bg-transparent outline-none text-lg py-1"
-          style={{ color: COLORS.rust }}
+          className="w-full bg-transparent outline-none text-xl py-1 placeholder-gray-400 tracking-wide"
+          style={{ color: COLORS.pureBlack }}
           type={isPassword ? (showPassword ? "text" : "password") : type}
           placeholder={placeholder}
           name={name}
@@ -41,21 +41,22 @@ const FloatingInput = ({ icon, type, name, placeholder, value, onChange, showPas
           onBlur={() => setIsFocused(false)}
         />
         {isPassword && (
-          <button
+          <motion.button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             className="ml-2"
-            style={{ color: COLORS.terracotta }}
+            whileHover={{ scale: 1.2 }}
+            whileTap={{ scale: 0.9 }}
+            style={{ color: COLORS.pureBlack }}
           >
             {showPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
-          </button>
+          </motion.button>
         )}
       </div>
       <motion.div 
-        className="absolute bottom-0 left-0 h-0.5"
-        style={{ backgroundColor: COLORS.terracotta }}
+        className="absolute bottom-0 left-0 h-0.5 bg-black"
         animate={{ width: isFocused ? "100%" : "0%" }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.4 }}
       />
     </motion.div>
   );
@@ -66,25 +67,34 @@ const AuthButton = ({ children, onClick, disabled }) => {
     <motion.button
       whileHover={{ 
         scale: 1.02,
-        boxShadow: `0 5px 15px ${COLORS.terracotta}40`
+        boxShadow: "0 8px 25px rgba(0,0,0,0.15)"
       }}
       whileTap={{ scale: 0.98 }}
-      className="w-full py-4 rounded-xl font-bold text-lg mt-2 relative overflow-hidden"
+      className="w-full py-5 rounded-none font-bold text-xl mt-4 relative overflow-hidden flex items-center justify-center gap-4"
       style={{ 
-        backgroundColor: COLORS.terracotta,
-        color: COLORS.parchment
+        backgroundColor: COLORS.pureBlack,
+        color: COLORS.pureWhite,
+        letterSpacing: "0.1em"
       }}
       onClick={onClick}
       disabled={disabled}
     >
       <span className="relative z-10">{children}</span>
       <motion.div 
-        className="absolute inset-0 bg-black opacity-0"
+        className="absolute left-0 top-0 w-0 h-full bg-white"
         animate={{ 
-          opacity: disabled ? 0.2 : 0 
+          width: disabled ? "0%" : ["0%", "100%", "0%"],
+          left: disabled ? "0%" : ["0%", "0%", "100%"],
         }}
-        transition={{ duration: 0.3 }}
+        transition={{ 
+          duration: 3,
+          repeat: Infinity,
+          repeatDelay: 1,
+          ease: "easeInOut"
+        }}
+        style={{ opacity: 0.1 }}
       />
+      <FaArrowRight className="relative z-10" />
     </motion.button>
   );
 };
@@ -127,23 +137,19 @@ const LoginForm = () => {
   return (
     <div 
       className="min-h-screen flex items-center justify-center p-4"
-      style={{ 
-        backgroundColor: COLORS.parchment,
-        backgroundImage: "radial-gradient(#97A276 1px, transparent 1.5px)",
-        backgroundSize: "40px 40px"
-      }}
+      style={{ backgroundColor: COLORS.pureWhite }}
     >
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
         className="w-full max-w-md"
       >
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-center mb-10"
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="text-center mb-12"
         >
           <motion.div
             animate={{ 
@@ -151,22 +157,20 @@ const LoginForm = () => {
               scale: [1, 1.05, 1]
             }}
             transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse" }}
-            className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
-            style={{ backgroundColor: COLORS.terracotta }}
+            className="mx-auto w-24 h-24 rounded-full flex items-center justify-center mb-6 border-2 border-black"
           >
-            <div className="w-10 h-10 rounded-full" style={{ backgroundColor: COLORS.parchment }}></div>
+            <div className="w-12 h-12 rounded-full border-2 border-black"></div>
           </motion.div>
-          <h1 className="text-3xl font-bold" style={{ color: COLORS.rust }}>Welcome Back</h1>
-          <div className="w-20 h-1 mx-auto mt-2" style={{ backgroundColor: COLORS.terracotta }}></div>
+          <h1 className="text-4xl font-bold tracking-wide mb-3" style={{ color: COLORS.pureBlack }}>Welcome Back</h1>
+          <div className="w-24 h-0.5 mx-auto bg-black"></div>
         </motion.div>
         
         <motion.form
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
           onSubmit={handleSubmit}
-          className="bg-white p-8 rounded-2xl shadow-xl"
-          style={{ backgroundColor: `${COLORS.parchment}cc`, backdropFilter: "blur(10px)" }}
+          className="bg-white p-10 border border-black shadow-2xl"
         >
           <FloatingInput
             icon={<AiOutlineMail />}
@@ -194,48 +198,24 @@ const LoginForm = () => {
           </AuthButton>
           
           <motion.div 
-            className="text-center mt-6"
+            className="text-center mt-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
           >
-            <p className="text-md" style={{ color: COLORS.rust }}>
+            <p className="text-lg" style={{ color: COLORS.darkGray }}>
               Don't have an account?{" "}
               <button
                 type="button"
                 onClick={() => navigate("/signup")}
-                className="font-bold underline"
-                style={{ color: COLORS.terracotta }}
+                className="font-bold underline hover:opacity-80 transition-opacity"
+                style={{ color: COLORS.pureBlack }}
               >
                 Sign up
               </button>
             </p>
           </motion.div>
         </motion.form>
-        
-        <motion.div 
-          className="mt-8 text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-        >
-          <div className="flex justify-center space-x-4">
-            {[1, 2, 3].map((item) => (
-              <motion.div
-                key={item}
-                className="w-12 h-12 rounded-full flex items-center justify-center shadow-md cursor-pointer"
-                style={{ backgroundColor: COLORS.blush }}
-                whileHover={{ y: -5, scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <div className="w-6 h-6 rounded-full" style={{ backgroundColor: COLORS.rust }}></div>
-              </motion.div>
-            ))}
-          </div>
-          <p className="mt-4 text-sm" style={{ color: COLORS.terracotta }}>
-            Secure login with social accounts
-          </p>
-        </motion.div>
       </motion.div>
     </div>
   );

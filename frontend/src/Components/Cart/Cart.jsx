@@ -4,16 +4,6 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { motion, AnimatePresence } from "framer-motion";
 
-// Color palette
-const COLORS = {
-  parchment: "#EFE2B2",
-  terracotta: "#9E5F57",
-  moss: "#567A4B",
-  rust: "#814B4A",
-  sage: "#97A276",
-  blush: "#F5C9C6"
-};
-
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
@@ -89,13 +79,14 @@ const Cart = () => {
 
   // Animation variants
   const itemVariants = {
-    hidden: { opacity: 0, x: -50 },
+    hidden: { opacity: 0, y: -20 },
     visible: (index) => ({
       opacity: 1,
-      x: 0,
+      y: 0,
       transition: { 
-        delay: index * 0.1,
-        duration: 0.5
+        delay: index * 0.05,
+        duration: 0.4,
+        ease: [0.22, 1, 0.36, 1]
       }
     }),
     exit: { 
@@ -107,35 +98,36 @@ const Cart = () => {
 
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.parchment }}>
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center py-20 max-w-md">
           <motion.div
-            initial={{ scale: 0 }}
+            initial={{ scale: 0, opacity: 0 }}
             animate={{ 
               scale: 1,
-              rotate: [0, 10, -10, 5, 0]
+              opacity: 1,
+              rotate: [0, 3, -3, 1, 0]
             }}
             transition={{ 
               duration: 0.8,
-              times: [0, 0.2, 0.5, 0.8, 1],
               ease: "easeInOut"
             }}
             className="inline-block mb-8"
           >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-32 w-32 mx-auto"
-              style={{ color: COLORS.terracotta }}
-              viewBox="0 0 20 20" 
-              fill="currentColor"
-            >
-              <path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd" />
-            </svg>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-100 to-transparent opacity-40 animate-shimmer"></div>
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="h-32 w-32 mx-auto relative z-10"
+                viewBox="0 0 20 20" 
+                fill="currentColor"
+              >
+                <path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd" />
+              </svg>
+            </div>
           </motion.div>
           
           <motion.h2 
-            className="text-3xl font-bold mb-6"
-            style={{ color: COLORS.rust }}
+            className="text-4xl font-light tracking-tight mb-6 text-gray-900"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -144,32 +136,26 @@ const Cart = () => {
           </motion.h2>
           
           <motion.p 
-            className="mb-8"
-            style={{ color: COLORS.terracotta }}
+            className="mb-8 text-gray-500"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
           >
-            Looks like you haven't added anything to your cart yet. Start shopping to fill it with amazing products!
+            Discover our premium collection and fill your cart with exceptional pieces
           </motion.p>
           
           <motion.button 
             onClick={() => navigate('/products')}
-            className="px-8 py-3 rounded-full font-bold shadow-lg"
-            style={{ 
-              backgroundColor: COLORS.terracotta,
-              color: 'white'
-            }}
+            className="px-8 py-3 rounded-lg font-medium tracking-wide border border-gray-900 bg-white text-gray-900 shadow-[0_0_0_0_#000] hover:shadow-[4px_4px_0_0_#000] transition-all duration-300"
             whileHover={{ 
-              scale: 1.05,
-              backgroundColor: COLORS.moss
+              scale: 1.02,
             }}
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.98 }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
           >
-            Browse Products
+            Explore Collection
           </motion.button>
         </div>
       </div>
@@ -177,28 +163,26 @@ const Cart = () => {
   }
 
   return (
-    <div className="min-h-screen py-12" style={{ backgroundColor: COLORS.parchment }}>
+    <div className="min-h-screen py-12 bg-white">
       <div className="max-w-6xl mx-auto px-4">
         <motion.h2 
-          className="text-3xl font-bold mb-8 text-center"
-          style={{ color: COLORS.rust }}
+          className="text-4xl font-light tracking-tight mb-12 text-center text-gray-900"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          Your Shopping Cart
+          Your Selection
         </motion.h2>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <div className="space-y-6">
-                <AnimatePresence>
+            <div className="rounded-xl p-8 bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.02)]">
+              <div className="space-y-8">
+                <AnimatePresence mode="popLayout">
                   {cartItems.map((item, index) => (
                     <motion.div
                       key={item._id + item.selectedSize + item.selectedColor}
-                      className="flex flex-col md:flex-row justify-between items-center border-b pb-6"
-                      style={{ borderColor: COLORS.sage + "40" }}
+                      className="flex flex-col md:flex-row justify-between items-center pb-8 border-b border-gray-100"
                       variants={itemVariants}
                       initial="hidden"
                       animate="visible"
@@ -208,23 +192,23 @@ const Cart = () => {
                     >
                       <div className="flex items-center w-full md:w-auto mb-4 md:mb-0">
                         <div className="relative">
+                          <div className="absolute inset-0 bg-gradient-to-br from-white to-gray-50 border border-gray-100 rounded-lg"></div>
                           <img 
                             src={item.images[0]} 
                             alt={item.productName} 
-                            className="w-24 h-24 object-cover rounded-lg border-2"
-                            style={{ borderColor: COLORS.sage }}
+                            className="w-24 h-24 object-cover rounded-lg relative z-10 border border-gray-100"
                           />
                           {item.discount > 0 && (
-                            <div className="absolute top-0 right-0 -mt-2 -mr-2 bg-red-500 text-white text-xs font-bold rounded-full w-8 h-8 flex items-center justify-center shadow-lg">
+                            <div className="absolute top-0 right-0 z-20 -mt-2 -mr-2 bg-black text-white text-xs font-medium rounded-full w-8 h-8 flex items-center justify-center shadow-lg">
                               {item.discount}%
                             </div>
                           )}
                         </div>
-                        <div className="ml-4">
-                          <p className="font-bold" style={{ color: COLORS.rust }}>{item.productName}</p>
-                          <p className="text-sm" style={{ color: COLORS.moss }}>Size: {item.selectedSize}</p>
-                          <p className="text-sm" style={{ color: COLORS.moss }}>Color: {item.selectedColor}</p>
-                          <p className="font-semibold mt-1" style={{ color: COLORS.terracotta }}>
+                        <div className="ml-6">
+                          <p className="font-medium text-gray-900">{item.productName}</p>
+                          <p className="text-sm text-gray-500 mt-1">Size: {item.selectedSize}</p>
+                          <p className="text-sm text-gray-500">Color: {item.selectedColor}</p>
+                          <p className="font-medium mt-2 text-gray-900">
                             ৳{(item.price * (1 - item.discount / 100)).toFixed(2)}
                           </p>
                         </div>
@@ -234,38 +218,41 @@ const Cart = () => {
                         <div className="flex items-center space-x-2">
                           <motion.button
                             onClick={() => handleQuantityChange(item, -1)}
-                            className="w-10 h-10 flex items-center justify-center rounded-full"
-                            style={{ backgroundColor: COLORS.sage, color: 'white' }}
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
+                            className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700"
+                            whileHover={{ 
+                              backgroundColor: "#f9fafb",
+                              scale: 1.05
+                            }}
+                            whileTap={{ scale: 0.95 }}
                           >
                             -
                           </motion.button>
-                          <span className="text-lg font-bold min-w-[30px] text-center" style={{ color: COLORS.rust }}>
+                          <span className="text-lg font-medium min-w-[30px] text-center text-gray-900">
                             {item.quantity}
                           </span>
                           <motion.button
                             onClick={() => handleQuantityChange(item, 1)}
-                            className="w-10 h-10 flex items-center justify-center rounded-full"
-                            style={{ backgroundColor: COLORS.sage, color: 'white' }}
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
+                            className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700"
+                            whileHover={{ 
+                              backgroundColor: "#f9fafb",
+                              scale: 1.05
+                            }}
+                            whileTap={{ scale: 0.95 }}
                           >
                             +
                           </motion.button>
                         </div>
-                        <p className="text-lg font-bold" style={{ color: COLORS.moss }}>
+                        <p className="text-lg font-medium text-gray-900">
                           ৳ {(item.quantity * item.price * (1 - item.discount / 100)).toFixed(2)}
                         </p>
                         <motion.button
                           onClick={() => handleRemoveItem(item)}
-                          className="px-4 py-2 rounded-full"
-                          style={{ 
-                            backgroundColor: COLORS.blush,
-                            color: COLORS.rust
+                          className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
+                          whileHover={{ 
+                            scale: 1.02,
+                            backgroundColor: "#f9fafb"
                           }}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
+                          whileTap={{ scale: 0.98 }}
                         >
                           Remove
                         </motion.button>
@@ -279,52 +266,50 @@ const Cart = () => {
           
           <div>
             <motion.div 
-              className="bg-white rounded-2xl shadow-lg p-6 sticky top-8"
+              className="rounded-xl p-8 bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.02)] sticky top-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <h3 className="text-xl font-bold mb-6" style={{ color: COLORS.rust }}>Order Summary</h3>
+              <h3 className="text-xl font-medium mb-8 text-gray-900 border-b border-gray-100 pb-4">Order Summary</h3>
               
-              <div className="space-y-4 mb-6">
+              <div className="space-y-4 mb-8">
                 <div className="flex justify-between">
-                  <span style={{ color: COLORS.terracotta }}>Subtotal</span>
-                  <span className="font-semibold" style={{ color: COLORS.rust }}>৳{totalPrice.toFixed(2)}</span>
+                  <span className="text-gray-600">Subtotal</span>
+                  <span className="font-medium text-gray-900">৳{totalPrice.toFixed(2)}</span>
                 </div>
                 
                 <div className="flex justify-between">
-                  <span style={{ color: COLORS.terracotta }}>Shipping</span>
-                  <span className="font-semibold" style={{ color: COLORS.moss }}>৳100.00</span>
+                  <span className="text-gray-600">Shipping</span>
+                  <span className="font-medium text-gray-900">৳100.00</span>
                 </div>
                 
-                <div className="flex justify-between border-t pt-4">
-                  <span className="font-bold" style={{ color: COLORS.rust }}>Total</span>
-                  <span className="font-bold text-xl" style={{ color: COLORS.rust }}>৳{(totalPrice + 100).toFixed(2)}</span>
+                <div className="flex justify-between border-t border-gray-100 pt-4">
+                  <span className="font-medium text-gray-900">Total</span>
+                  <span className="font-medium text-xl text-gray-900">৳{(totalPrice + 100).toFixed(2)}</span>
                 </div>
               </div>
               
               <motion.button
-                className="w-full py-4 rounded-full font-bold text-lg shadow-lg"
-                style={{ 
-                  backgroundColor: COLORS.terracotta,
-                  color: 'white'
-                }}
+                className="w-full py-4 rounded-lg font-medium text-lg bg-gray-900 text-white shadow-[0_4px_0_0_rgba(0,0,0,0.2)] hover:shadow-[0_6px_0_0_rgba(0,0,0,0.2)] active:shadow-[0_2px_0_0_rgba(0,0,0,0.2)] transition-all duration-200"
                 whileHover={{ 
-                  scale: 1.02,
-                  backgroundColor: COLORS.moss
+                  y: -2,
                 }}
-                whileTap={{ scale: 0.98 }}
+                whileTap={{ 
+                  y: 2,
+                  scale: 0.99
+                }}
                 onClick={() => navigate("/checkout")}
               >
-                Proceed to Checkout
+                Complete Purchase
               </motion.button>
               
-              <div className="mt-6 p-4 rounded-lg" style={{ backgroundColor: COLORS.blush + "40" }}>
+              <div className="mt-6 p-4 rounded-lg bg-gray-50 border border-gray-100">
                 <div className="flex items-start">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mt-1 mr-2" style={{ color: COLORS.moss }} viewBox="0 0 20 20" fill="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mt-1 mr-2 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
-                  <p className="text-sm" style={{ color: COLORS.terracotta }}>
+                  <p className="text-sm text-gray-600">
                     Free shipping for orders over ৳2000. Additional discounts available at checkout.
                   </p>
                 </div>
@@ -336,12 +321,9 @@ const Cart = () => {
       
       <ToastContainer 
         position="bottom-right"
-        toastStyle={{ 
-          backgroundColor: COLORS.parchment,
-          color: COLORS.rust,
-          border: `2px solid ${COLORS.sage}`
-        }}
-        progressStyle={{ background: COLORS.terracotta }}
+        toastClassName="!bg-white !text-gray-900 !border !border-gray-200 !shadow-lg !rounded-xl"
+        progressClassName="!bg-gray-900"
+        bodyClassName="!text-gray-700"
       />
     </div>
   );
