@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -7,82 +7,85 @@ gsap.registerPlugin(ScrollTrigger);
 const HomeBanner = () => {
   const videoRef = useRef(null);
   const textContainerRef = useRef(null);
-  const exquisiteRef = useRef(null);
-  const collectionsRef = useRef(null);
-  const overlayRef = useRef(null);
-  const blob1Ref = useRef(null);
-  const blob2Ref = useRef(null);
+  const jonabRef = useRef(null);
+  const fashionsRef = useRef(null);
+  const dividerRef = useRef(null);
+  const containerRef = useRef(null);
+  const [showPlayButton, setShowPlayButton] = useState(false);
 
   useEffect(() => {
-    // Create floating particles with premium effects
-    const createParticle = (i) => {
-      const particle = document.createElement('div');
-      particle.className = 'floating-particle';
+    const video = videoRef.current;
+
+    // Function to attempt video playback
+    const playVideo = () => {
+      const playPromise = video.play();
       
-      const colors = ['#9E5F57', '#567A4B', '#814B4A'];
-      const sizes = ['w-2 h-2', 'w-3 h-3', 'w-1.5 h-1.5'];
-      
-      particle.className = `absolute rounded-full ${sizes[i % 3]} floating-particle`;
-      particle.style.backgroundColor = colors[i % 3];
-      particle.style.top = `${Math.random() * 100}%`;
-      particle.style.left = `${Math.random() * 100}%`;
-      particle.style.opacity = `${Math.random() * 0.4 + 0.1}`;
-      particle.style.animationDuration = `${Math.random() * 15 + 10}s`;
-      particle.style.animationDelay = `${Math.random() * 5}s`;
-      
-      document.querySelector('.particles-container').appendChild(particle);
-      return particle;
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Show play button if autoplay fails
+          setShowPlayButton(true);
+        });
+      }
     };
 
-    const particles = Array.from({ length: 20 }, (_, i) => createParticle(i));
+    // Set up video event listeners
+    const handleLoadedMetadata = () => {
+      playVideo();
+    };
 
-    // Video scale animation
-    gsap.to(videoRef.current, {
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    
+    // Try playing immediately if metadata already loaded
+    if (video.readyState >= 1) {
+      playVideo();
+    }
+
+    // Video scale and corner animation
+    gsap.to(video, {
       scale: 0.9,
       borderRadius: "24px",
       scrollTrigger: {
-        trigger: videoRef.current,
+        trigger: containerRef.current,
         start: "top top",
-        end: "+=500",
+        end: "bottom 30%",
         scrub: 1.5,
-      },
-    });
-
-    // Overlay animation
-    gsap.to(overlayRef.current, {
-      opacity: 0.6,
-      duration: 1.8,
-      scrollTrigger: {
-        trigger: videoRef.current,
-        start: "top center",
-        end: "bottom center",
-        scrub: true,
-      },
-    });
-
-    // Text animations with premium entrance
-    const tl = gsap.timeline({
-      defaults: { duration: 1.8, ease: "expo.out" },
-      scrollTrigger: {
-        trigger: textContainerRef.current,
-        start: "top 85%",
-        toggleActions: "play none none none",
+        pin: true,
+        anticipatePin: 1
       }
     });
 
-    tl.fromTo(exquisiteRef.current, 
-      { opacity: 0, y: 80, filter: "blur(10px)" },
+    // Text animations
+    const tl = gsap.timeline({
+      defaults: { duration: 2, ease: "expo.out" },
+      scrollTrigger: {
+        trigger: textContainerRef.current,
+        start: "top 85%",
+        toggleActions: "play none none none"
+      }
+    });
+
+    tl.fromTo(
+      jonabRef.current,
+      { opacity: 0, y: 60, filter: "blur(8px)" },
       { opacity: 1, y: 0, filter: "blur(0px)" }
     );
 
-    tl.fromTo(collectionsRef.current, 
-      { opacity: 0, y: 80, filter: "blur(10px)" },
+    tl.fromTo(
+      dividerRef.current,
+      { opacity: 0, width: 0 },
+      { opacity: 1, width: "160px" },
+      "-=1.5"
+    );
+
+    tl.fromTo(
+      fashionsRef.current,
+      { opacity: 0, y: 60, filter: "blur(8px)" },
       { opacity: 1, y: 0, filter: "blur(0px)" },
-      "-=1.2"
+      "-=1.5"
     );
 
     // Floating animation for text
-    gsap.to([exquisiteRef.current, collectionsRef.current], {
+    gsap.to([jonabRef.current, fashionsRef.current], {
       y: 15,
       duration: 4,
       repeat: -1,
@@ -90,87 +93,97 @@ const HomeBanner = () => {
       ease: "sine.inOut"
     });
 
-    // Animate decorative blobs
-    gsap.to(blob1Ref.current, {
-      x: 40,
-      y: -40,
-      duration: 25,
-      repeat: -1,
-      yoyo: true,
-      ease: "sine.inOut"
-    });
-
-    gsap.to(blob2Ref.current, {
-      x: -60,
-      y: 50,
-      duration: 30,
-      repeat: -1,
-      yoyo: true,
-      ease: "sine.inOut"
-    });
-
     // Cleanup
     return () => {
-      particles.forEach(p => p.remove());
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     };
   }, []);
 
+  const handlePlayClick = () => {
+    videoRef.current.play()
+      .then(() => setShowPlayButton(false))
+      .catch(e => console.error("Playback failed:", e));
+  };
+
   return (
-    <div className="relative w-full h-screen overflow-hidden flex items-center justify-center">
-      {/* Video */}
+    <div 
+      ref={containerRef} 
+      className="relative w-full min-h-screen overflow-hidden flex items-center justify-center bg-black"
+    >
+      {/* Video element */}
       <video
         ref={videoRef}
-        src="/Videos/Original-Collections.mp4"
-        autoPlay
+        src="/Videos/Jonab.mp4"
         loop
         muted
         playsInline
-        className="absolute top-0 left-0 w-full h-full object-cover z-0 scale-100"
-      ></video>
+        preload="auto"
+        className="absolute top-0 left-0 w-full h-full object-cover z-0"
+      />
 
-      {/* Gradient overlay */}
-      <div 
-        ref={overlayRef}
-        className="absolute inset-0 bg-gradient-to-b from-[#9E5F57]/50 to-[#EFE2B2]/30 z-10"
-      ></div>
+      {/* Play Button Overlay - Only shows if autoplay blocked */}
+      {showPlayButton && (
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/40 cursor-pointer"
+          onClick={handlePlayClick}
+        >
+          <div className="w-24 h-24 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-12 h-12 ml-2">
+              <path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653z" clipRule="evenodd" />
+            </svg>
+          </div>
+        </div>
+      )}
 
-      {/* Particles container */}
-      <div className="particles-container absolute inset-0 z-10"></div>
-
-      {/* Text */}
-      <div 
+      {/* Text Container */}
+      <div
         ref={textContainerRef}
-        className="absolute flex flex-col sm:flex-row gap-4 sm:gap-6 z-20"
+        className="absolute flex flex-col items-center z-20 px-4"
       >
         <span
-          ref={exquisiteRef}
-          className="text-4xl sm:text-5xl md:text-6xl xl:text-7xl font-bold opacity-0 tracking-tight"
-          style={{ 
-            color: '#EFE2B2',
-            fontFamily: 'Cormorant Garamond, serif',
-            fontWeight: 600,
-            textShadow: '0 4px 20px rgba(129, 75, 74, 0.6)'
+          ref={jonabRef}
+          className="text-5xl sm:text-6xl md:text-7xl xl:text-8xl font-light tracking-tight opacity-0"
+          style={{
+            color: "#fff",
+            fontFamily: "EB Garamond, serif",
+            fontWeight: 400,
+            letterSpacing: "-0.03em",
+            textShadow: "0 2px 10px rgba(0,0,0,0.4)"
           }}
         >
-          Ruhana's
+          Jonab's
         </span>
+
+        <div
+          ref={dividerRef}
+          className="h-px bg-gradient-to-r from-transparent via-white to-transparent my-6 opacity-0"
+          style={{ width: "0px" }}
+        />
+
         <span
-          ref={collectionsRef}
-          className="text-4xl sm:text-5xl md:text-6xl xl:text-7xl font-bold opacity-0 tracking-tight"
-          style={{ 
-            color: '#EFE2B2',
-            fontFamily: 'Cormorant Garamond, serif',
-            fontWeight: 600,
-            textShadow: '0 4px 20px rgba(86, 122, 75, 0.6)'
+          ref={fashionsRef}
+          className="text-4xl sm:text-5xl md:text-6xl xl:text-7xl font-thin tracking-widest opacity-0 text-center"
+          style={{
+            color: "#fff",
+            fontFamily: "Montserrat, sans-serif",
+            fontWeight: 200,
+            letterSpacing: "0.4em",
+            paddingLeft: "0.4em",
+            textShadow: "0 2px 10px rgba(0,0,0,0.4)"
           }}
         >
-          Decorations
+          FASHIONS
         </span>
       </div>
 
-      {/* Decorative elements */}
-      <div ref={blob1Ref} className="absolute bottom-10 left-10 w-40 h-40 rounded-full bg-[#9E5F57] opacity-15 blur-[100px] z-0"></div>
-      <div ref={blob2Ref} className="absolute top-10 right-10 w-60 h-60 rounded-full bg-[#567A4B] opacity-15 blur-[120px] z-0"></div>
+      {/* Scroll indicator */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 flex flex-col items-center">
+        <span className="text-white text-sm mb-2 font-light tracking-widest opacity-80">
+          SCROLL
+        </span>
+        <div className="w-px h-12 bg-gradient-to-b from-white to-transparent" />
+      </div>
     </div>
   );
 };

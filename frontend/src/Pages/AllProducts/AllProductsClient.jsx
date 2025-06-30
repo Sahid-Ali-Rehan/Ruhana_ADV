@@ -36,6 +36,35 @@ const AllProductsClient = () => {
   const filterRef = useRef(null);
   const maxPriceRef = useRef(10000);
 
+  // Color mapping for swatches
+  const colorMap = {
+    "White": "#FFFFFF",
+    "Black": "#000000",
+    "Red": "#FF0000",
+    "Blue": "#0000FF",
+    "Green": "#008000",
+    "Yellow": "#FFFF00",
+    "Purple": "#800080",
+    "Pink": "#FFC0CB",
+    "Orange": "#FFA500",
+    "Gray": "#808080",
+    "Brown": "#A52A2A",
+    "Beige": "#F5F5DC",
+    "Navy": "#000080",
+    "Maroon": "#800000",
+    "Turquoise": "#40E0D0",
+    "Gold": "#FFD700",
+    "Silver": "#C0C0C0",
+    "Lavender": "#E6E6FA",
+    "Teal": "#008080",
+    "Olive": "#808000",
+    "Magenta": "#FF00FF",
+    "Cyan": "#00FFFF",
+    "Coral": "#FF7F50",
+    "Indigo": "#4B0082",
+    "Violet": "#EE82EE"
+  };
+
   useEffect(() => {
     setFilters((prevFilters) => ({
       ...prevFilters,
@@ -257,12 +286,31 @@ const AllProductsClient = () => {
           cursor: pointer;
           box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
+        .color-swatch {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          border: 1px solid rgba(0,0,0,0.1);
+          cursor: pointer;
+          transition: all 0.3s ease;
+          position: relative;
+        }
+        .color-swatch.selected::after {
+          content: '✓';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          color: white;
+          font-weight: bold;
+          text-shadow: 0 0 3px rgba(0,0,0,0.5);
+        }
       `}</style>
       
       <Navbar />
       
-      {/* Main Content with Perfect Spacing */}
-      <div className="pt-24 pb-10 max-w-7xl mx-auto px-4"> {/* 100px top spacing */}
+      {/* Main Content */}
+      <div className="pt-24 pb-10 max-w-7xl mx-auto px-4">
         <div className="flex flex-col md:flex-row gap-6">
           {/* Premium Filter Panel */}
           <div 
@@ -298,31 +346,54 @@ const AllProductsClient = () => {
                   />
                 </div>
                 
-                {/* Price Range Filter */}
+                {/* Enhanced Price Range Filter */}
                 <div>
                   <label className="block text-lg mb-2" style={{ color: '#567A4B' }}>
                     Price Range: ৳{filters.priceRange[0]} - ৳{filters.priceRange[1]}
                   </label>
                   <div className="relative py-4">
-                    <div className="price-range-track absolute top-1/2 left-0 right-0 transform -translate-y-1/2"></div>
-                    <div className="flex justify-between">
-                      <input
-                        type="range"
-                        min="0"
-                        max={maxPriceRef.current}
-                        value={filters.priceRange[0]}
-                        onChange={(e) => handlePriceChange(e, 0)}
-                        className="absolute w-full -top-1 h-2 opacity-0 cursor-pointer"
-                      />
-                      <input
-                        type="range"
-                        min="0"
-                        max={maxPriceRef.current}
-                        value={filters.priceRange[1]}
-                        onChange={(e) => handlePriceChange(e, 1)}
-                        className="absolute w-full -top-1 h-2 opacity-0 cursor-pointer"
-                      />
+                    {/* Custom slider track */}
+                    <div className="relative h-2 bg-[#E1D7C6] rounded-full">
+                      {/* Active range indicator */}
+                      <div 
+                        className="absolute h-2 bg-[#9E5F57] rounded-full"
+                        style={{
+                          left: `${(filters.priceRange[0] / maxPriceRef.current) * 100}%`,
+                          width: `${((filters.priceRange[1] - filters.priceRange[0]) / maxPriceRef.current) * 100}%`
+                        }}
+                      ></div>
+                      
+                      {/* Thumb for min price */}
+                      <div 
+                        className="absolute top-1/2 -mt-2 w-5 h-5 bg-white rounded-full border-2 border-[#9E5F57] shadow-md cursor-pointer"
+                        style={{ left: `${(filters.priceRange[0] / maxPriceRef.current) * 100}%`, transform: 'translateX(-50%)' }}
+                      ></div>
+                      
+                      {/* Thumb for max price */}
+                      <div 
+                        className="absolute top-1/2 -mt-2 w-5 h-5 bg-white rounded-full border-2 border-[#9E5F57] shadow-md cursor-pointer"
+                        style={{ left: `${(filters.priceRange[1] / maxPriceRef.current) * 100}%`, transform: 'translateX(-50%)' }}
+                      ></div>
                     </div>
+                    
+                    {/* Hidden range inputs for interaction */}
+                    <input
+                      type="range"
+                      min="0"
+                      max={maxPriceRef.current}
+                      value={filters.priceRange[0]}
+                      onChange={(e) => handlePriceChange(e, 0)}
+                      className="absolute top-0 w-full h-2 opacity-0 cursor-pointer"
+                    />
+                    <input
+                      type="range"
+                      min="0"
+                      max={maxPriceRef.current}
+                      value={filters.priceRange[1]}
+                      onChange={(e) => handlePriceChange(e, 1)}
+                      className="absolute top-0 w-full h-2 opacity-0 cursor-pointer"
+                    />
+                    
                     <div className="flex justify-between mt-4">
                       <span className="text-sm text-[#9E5F57]">৳0</span>
                       <span className="text-sm text-[#9E5F57]">৳{maxPriceRef.current}</span>
@@ -364,22 +435,25 @@ const AllProductsClient = () => {
                   </select>
                 </div>
                 
+                {/* Color Swatches Filter */}
                 <div>
                   <label className="block text-lg mb-2" style={{ color: '#567A4B' }}>Color</label>
-                  <div className="flex flex-wrap gap-2">
-                    {getUniqueValues('availableColors').map((color) => (
-                      <button
-                        key={color}
-                        onClick={() => setFilters(prev => ({...prev, color: prev.color === color ? '' : color}))}
-                        className={`px-3 py-2 rounded-full text-sm transition-all ${
-                          filters.color === color 
-                            ? 'bg-[#9E5F57] text-[#EFE2B2] shadow-md' 
-                            : 'bg-[#F8F4EA] text-[#814B4A] hover:bg-[#9E5F57]/20'
-                        }`}
-                      >
-                        {color}
-                      </button>
-                    ))}
+                  <div className="flex flex-wrap gap-3">
+                    {getUniqueValues('availableColors').map((color) => {
+                      const hexColor = colorMap[color] || '#CCCCCC';
+                      return (
+                        <div 
+                          key={color}
+                          className={`color-swatch ${filters.color === color ? 'selected scale-110 shadow-lg' : 'hover:scale-110'}`}
+                          style={{ backgroundColor: hexColor }}
+                          onClick={() => setFilters(prev => ({
+                            ...prev, 
+                            color: prev.color === color ? '' : color
+                          }))}
+                          title={color}
+                        />
+                      );
+                    })}
                   </div>
                 </div>
                 
@@ -558,9 +632,19 @@ const AllProductsClient = () => {
                                   >
                                     {product.productName}
                                   </h3>
-                                  <p className="text-sm mb-3" style={{ color: '#567A4B' }}>
+                                  <p className="text-sm mb-1" style={{ color: '#567A4B' }}>
                                     Code: {product.productCode}
                                   </p>
+                                  {/* Category Path */}
+                                  <div className="text-xs mt-1 flex items-center">
+                                    <span className="bg-[#9E5F57]/10 text-[#9E5F57] px-2 py-1 rounded-full">
+                                      {product.category}
+                                    </span>
+                                    <span className="mx-2 text-[#9E5F57]/50">/</span>
+                                    <span className="bg-[#97A276]/10 text-[#97A276] px-2 py-1 rounded-full">
+                                      {product.subCategory}
+                                    </span>
+                                  </div>
                                 </div>
                                 <div className="flex flex-col items-end flex-shrink-0 ml-2">
                                   <p className="text-lg font-bold" style={{ color: '#9E5F57' }}>

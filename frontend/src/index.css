@@ -2,25 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Improved thin scrollbar */
+/* Scrollbar Track */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f5ebcd;
-  border-radius: 10px;
+  background: #000; /* Pure black track */
 }
 
+/* Scrollbar Thumb */
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(45deg, #9E5F57, #567A4B);
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(4px);
   border-radius: 10px;
-  border: 2px solid #f5ebcd;
+  border: 1px solid #fff;
 }
 
+/* On Hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(45deg, #814B4A, #97A276);
+  background: #ccc; /* Slight grey on hover */
+}
+
+/* Firefox Support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #fff #000;
 }
 
 /* Floating particles animation */
@@ -141,4 +148,15 @@ footer a {
 
 footer .social-icon {
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+
+
+/* Adds subtle texture to video */
+video {
+  background: 
+    radial-gradient(circle at center, 
+      rgba(255,255,255,0.05) 0%, 
+      rgba(0,0,0,0.8) 100%
+    );
 }

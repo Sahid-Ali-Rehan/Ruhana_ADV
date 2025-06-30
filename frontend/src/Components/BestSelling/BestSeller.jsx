@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from 'react-router-dom';
-import Loading from '../Loading/Loading';
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { faHeart as solidHeart } from "@fortawesome/free-solid-svg-icons";
@@ -49,25 +48,24 @@ const BestSellers = () => {
   useEffect(() => {
     if (!products.length) return;
 
-    // Title animation - GUARANTEED to appear
+    // Title animation
     gsap.from(titleRef.current, {
       opacity: 0,
-      y: 50,
-      duration: 1.5,
+      y: 80,
+      duration: 1.8,
       ease: "expo.out",
       scrollTrigger: {
         trigger: sectionRef.current,
         start: "top 85%",
-        toggleActions: "play none none none",
-        markers: false
+        toggleActions: "play none none none"
       }
     });
 
     // Subtitle animation
     gsap.from(subtitleRef.current, {
       opacity: 0,
-      y: 30,
-      duration: 1.2,
+      y: 50,
+      duration: 1.5,
       ease: "expo.out",
       delay: 0.3,
       scrollTrigger: {
@@ -77,21 +75,19 @@ const BestSellers = () => {
       }
     });
 
-    // Card animations with staggered entrance - FORCE visibility
+    // Card animations with staggered entrance
     cardsRef.current.forEach((card, index) => {
       gsap.from(card, {
         opacity: 0,
-        y: 80,
-        scale: 0.9,
-        duration: 1.2,
-        delay: index * 0.15,
+        y: 120,
+        scale: 0.95,
+        duration: 1.5,
+        delay: index * 0.1,
         ease: "expo.out",
         scrollTrigger: {
           trigger: card,
           start: "top 90%",
-          toggleActions: "play none none none",
-          onEnter: () => gsap.to(card, { opacity: 1, y: 0, scale: 1 }),
-          onEnterBack: () => gsap.to(card, { opacity: 1, y: 0, scale: 1 })
+          toggleActions: "play none none none"
         }
       });
 
@@ -103,53 +99,21 @@ const BestSellers = () => {
       card.addEventListener('mouseenter', () => {
         gsap.to(card, { 
           y: -15, 
-          duration: 0.5,
-          boxShadow: '0 25px 50px rgba(129, 75, 74, 0.25)'
+          duration: 0.4,
+          boxShadow: '0 25px 50px rgba(0, 0, 0, 0.15)'
         });
-        gsap.to(img, { scale: 1.05, duration: 0.5 });
-        gsap.to(details, { backgroundColor: '#F5EBE0', duration: 0.5 });
-        gsap.to(button, { 
-          backgroundColor: '#814B4A', 
-          color: '#EFE2B2',
-          duration: 0.5 
-        });
+        gsap.to(img, { scale: 1.03, duration: 0.4 });
       });
 
       card.addEventListener('mouseleave', () => {
         gsap.to(card, { 
           y: 0, 
-          duration: 0.5,
-          boxShadow: '0 15px 40px rgba(129, 75, 74, 0.15)'
+          duration: 0.4,
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)'
         });
-        gsap.to(img, { scale: 1, duration: 0.5 });
-        gsap.to(details, { backgroundColor: '#EFE2B2', duration: 0.5 });
-        gsap.to(button, { 
-          backgroundColor: '#9E5F57', 
-          color: '#EFE2B2',
-          duration: 0.5 
-        });
+        gsap.to(img, { scale: 1, duration: 0.4 });
       });
     });
-
-    // Create floating particles
-    const particlesContainer = document.querySelector('.particles-container');
-    if (particlesContainer) {
-      for (let i = 0; i < 20; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'floating-particle';
-        particle.style.cssText = `
-          width: ${Math.random() * 10 + 5}px;
-          height: ${Math.random() * 10 + 5}px;
-          background: ${i % 3 === 0 ? '#9E5F57' : i % 3 === 1 ? '#567A4B' : '#814B4A'};
-          top: ${Math.random() * 100}%;
-          left: ${Math.random() * 100}%;
-          animation-duration: ${Math.random() * 15 + 15}s;
-          animation-delay: ${Math.random() * 5}s;
-          opacity: ${Math.random() * 0.4 + 0.1};
-        `;
-        particlesContainer.appendChild(particle);
-      }
-    }
 
   }, [products]);
 
@@ -171,54 +135,50 @@ const BestSellers = () => {
       toast.error(`${product.productName} removed from wishlist`, { 
         position: 'bottom-right',
         theme: 'colored',
-        style: { backgroundColor: '#9E5F57', color: '#EFE2B2' }
+        style: { backgroundColor: '#000', color: '#fff' }
       });
     } else {
       toast.success(`${product.productName} added to wishlist`, { 
         position: 'bottom-right',
         theme: 'colored',
-        style: { backgroundColor: '#567A4B', color: '#EFE2B2' }
+        style: { backgroundColor: '#000', color: '#fff' }
       });
     }
   };
 
   if (loading) {
-    return <Loading />;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-pulse text-xl tracking-widest">LOADING...</div>
+      </div>
+    );
   }
 
   return (
     <section 
       ref={sectionRef}
-      className="relative py-24 overflow-hidden"
-      style={{ backgroundColor: '#EFE2B2' }}
+      className="relative py-32 overflow-hidden bg-white"
     >
-      {/* Decorative particles */}
-      <div className="particles-container absolute inset-0 z-0"></div>
-      
-      {/* Decorative blobs */}
-      <div className="absolute top-0 left-10 w-80 h-80 rounded-full bg-[#9E5F57] opacity-10 blur-[100px] z-0"></div>
-      <div className="absolute bottom-0 right-10 w-60 h-60 rounded-full bg-[#567A4B] opacity-10 blur-[120px] z-0"></div>
-      
       <div className="container mx-auto px-4 relative z-10">
-        <div className="text-center mb-16">
+        <div className="text-center mb-24">
           <h2 
             ref={titleRef}
-            className="text-4xl md:text-5xl font-bold mb-4 opacity-100"
-            style={{ color: '#814B4A', fontFamily: 'Cormorant Garamond, serif' }}
+            className="text-5xl md:text-6xl font-bold mb-6 tracking-tighter"
+            style={{ fontFamily: 'Helvetica, Arial, sans-serif' }}
           >
-            Exquisite Best Sellers
+            ESSENTIAL SELECTIONS
           </h2>
-          <div ref={subtitleRef} className="w-24 h-1 bg-[#9E5F57] mx-auto mb-6"></div>
+          <div ref={subtitleRef} className="w-32 h-0.5 bg-black mx-auto mb-8"></div>
           <p 
-            className="text-xl md:text-2xl max-w-2xl mx-auto tracking-wide opacity-100"
-            style={{ color: '#567A4B' }}
+            className="text-xl md:text-2xl max-w-2xl mx-auto tracking-widest uppercase"
+            style={{ letterSpacing: '0.3em' }}
           >
-            Discover our most cherished collections, adored by connoisseurs worldwide
+            CURATED EXCELLENCE
           </p>
         </div>
 
         {products.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
             {products.map((product, index) => {
               const discountedPrice = product.discount 
                 ? product.price - (product.price * product.discount) / 100 
@@ -230,16 +190,13 @@ const BestSellers = () => {
                 <div
                   key={product._id}
                   ref={el => cardsRef.current[index] = el}
-                  className="product-card bg-white rounded-2xl overflow-hidden transition-all duration-500 shadow-xl flex flex-col"
+                  className="product-card bg-white overflow-hidden flex flex-col border border-gray-200"
                   style={{ 
-                    height: "480px",
-                    border: '1px solid rgba(158, 95, 87, 0.2)',
-                    boxShadow: '0 15px 40px rgba(129, 75, 74, 0.15)',
-                    opacity: 1,
-                    transform: 'translateY(0) scale(1)'
+                    height: "520px",
+                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)'
                   }}
                 >
-                  <div className="relative h-72 overflow-hidden flex-shrink-0">
+                  <div className="relative h-72 overflow-hidden flex-shrink-0 group">
                     <img
                       src={product.images[0] || 'https://via.placeholder.com/400x300?text=No+Image'}
                       alt={product.name}
@@ -249,12 +206,12 @@ const BestSellers = () => {
                       <img
                         src={product.images[1]}
                         alt={product.name}
-                        className="absolute inset-0 w-full h-full object-cover opacity-0 hover:opacity-100 transition-opacity duration-500"
+                        className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                       />
                     )}
                     {product.stock === 0 && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 text-white text-lg font-bold tracking-wider">
-                        Out of Stock
+                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-80 text-white text-sm font-bold tracking-widest p-4 text-center">
+                        CURRENTLY UNAVAILABLE
                       </div>
                     )}
                     <div className="absolute top-4 right-4 z-10">
@@ -263,64 +220,72 @@ const BestSellers = () => {
                           e.stopPropagation();
                           handleWishlist(product);
                         }}
-                        className="p-2 rounded-full bg-white bg-opacity-80 hover:bg-opacity-100 transition-all duration-300 shadow-md"
+                        className="p-3 bg-white hover:bg-black transition-all duration-300"
+                        style={{ boxShadow: '0 5px 15px rgba(0,0,0,0.1)' }}
                       >
                         <FontAwesomeIcon
                           icon={isInWishlist ? solidHeart : regularHeart}
-                          className={`text-xl ${isInWishlist ? 'text-red-500 animate-pulse' : 'text-gray-600'}`}
+                          className={`text-lg ${isInWishlist ? 'text-black' : 'text-gray-400'}`}
                         />
+                      </button>
+                    </div>
+                    
+                    {/* View Details Button */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-30">
+                      <button
+                        onClick={() => handleViewDetails(product._id)}
+                        className="px-8 py-3 bg-white text-black text-sm tracking-widest uppercase border border-black hover:bg-black hover:text-white transition-all duration-300"
+                        style={{ letterSpacing: '0.2em' }}
+                      >
+                        Explore
                       </button>
                     </div>
                   </div>
                   
                   <div 
-                    className="product-details p-6 transition-all duration-500 flex flex-col flex-grow"
-                    style={{ backgroundColor: '#EFE2B2' }}
+                    className="product-details p-6 flex flex-col flex-grow border-t border-gray-200"
                   >
-                    <div className="flex justify-between items-start mb-3 flex-grow-0">
+                    <div className="flex justify-between items-start mb-4 flex-grow">
                       <h3 
-                        className="text-xl font-semibold tracking-wide line-clamp-2"
+                        className="text-xl font-medium tracking-wide uppercase"
                         style={{ 
-                          color: '#814B4A', 
-                          fontFamily: 'Cormorant Garamond, serif',
-                          maxHeight: '3em', // Ensures only 2 lines
-                          overflow: 'hidden',
-                          display: '-webkit-box',
-                          WebkitBoxOrient: 'vertical',
-                          WebkitLineClamp: 2
+                          letterSpacing: '0.1em',
+                          maxWidth: '70%'
                         }}
                       >
                         {product.productName}
                       </h3>
                       <div className="flex flex-col items-end flex-shrink-0 ml-2">
-                        <p className="text-lg font-bold" style={{ color: '#9E5F57' }}>
+                        <p className="text-lg font-medium tracking-tight">
                           ৳{discountedPrice.toFixed(2)}
                         </p>
                         {product.discount > 0 && (
-                          <span className="text-sm line-through opacity-80" style={{ color: '#97A276' }}>
+                          <span className="text-sm line-through opacity-50">
                             ৳{product.price.toFixed(2)}
                           </span>
                         )}
                       </div>
                     </div>
                     
-                    <div className="mt-auto">
-                      <p className="text-sm mb-4 tracking-wide flex-grow-0" style={{ color: '#567A4B' }}>
-                        Code: {product.productCode}
-                      </p>
-                      
-                      <button
-      className={`view-button w-full py-3 px-4 rounded-full text-lg font-medium transition-all duration-500 ${
-        product.stock === 0 
-          ? 'bg-[#97A276] cursor-not-allowed' 
-          : 'bg-[#9E5F57] hover:bg-[#814B4A]'
-      }`}
-      style={{ color: '#EFE2B2' }}
-      disabled={product.stock === 0}
-      onClick={() => handleViewDetails(product._id)}
-    >
-      {product.stock === 0 ? 'Out of Stock' : 'View Details'}
-    </button>
+                    <div className="mt-auto pt-4 border-t border-gray-100">
+                      <div className="flex justify-between items-center">
+                        <p className="text-xs tracking-widest uppercase opacity-70" style={{ letterSpacing: '0.2em' }}>
+                          {product.productCode}
+                        </p>
+                        
+                        <button
+                          className={`view-button py-3 px-6 text-sm tracking-widest uppercase ${
+                            product.stock === 0 
+                              ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                              : 'bg-black text-white hover:bg-white hover:text-black border border-black'
+                          }`}
+                          style={{ letterSpacing: '0.2em' }}
+                          disabled={product.stock === 0}
+                          onClick={() => handleViewDetails(product._id)}
+                        >
+                          Details
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -328,9 +293,9 @@ const BestSellers = () => {
             })}
           </div>
         ) : (
-          <div className="text-center py-20">
-            <p className="text-xl" style={{ color: '#814B4A' }}>
-              No best seller products available at the moment
+          <div className="text-center py-32">
+            <p className="text-xl tracking-widest" style={{ letterSpacing: '0.2em' }}>
+              NO SELECTIONS CURRENTLY AVAILABLE
             </p>
           </div>
         )}

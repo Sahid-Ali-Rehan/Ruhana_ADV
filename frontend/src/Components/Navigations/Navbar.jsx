@@ -13,54 +13,53 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
-  const [particles, setParticles] = useState([]);
 
-  // Updated categories structure
+  // Updated categories for luxury men's clothing
   const categories = {
-    showpieces: [
-      { name: "Matir Fuldani", link: "/category/matir-fuldani" },
-      { name: "Mirror Bottle", link: "/category/mirror-bottle" },
-      { name: "Premium Showpieces", link: "/category/premium-showpieces" },
-      { name: "Traditional Art", link: "/category/traditional-art" },
+    suits: [
+      { name: "Tuxedos", link: "/category/tuxedos" },
+      { name: "Business Suits", link: "/category/business-suits" },
+      { name: "Wedding Suits", link: "/category/wedding-suits" },
+      { name: "Designer Suits", link: "/category/designer-suits" },
     ],
-    candles: [
-      { name: "Scented Candles", link: "/category/scented-candles" },
-      { name: "Decorative Candles", link: "/category/decorative-candles" },
-      { name: "Tea Light Candles", link: "/category/tea-light-candles" },
-      { name: "Aromatic Candles", link: "/category/aromatic-candles" },
+    shirts: [
+      { name: "Dress Shirts", link: "/category/dress-shirts" },
+      { name: "Casual Shirts", link: "/category/casual-shirts" },
+      { name: "Luxury Fabrics", link: "/category/luxury-fabrics" },
+      { name: "Limited Editions", link: "/category/limited-editions-shirts" },
     ],
-    walmart: [
-      { name: "Home Decor", link: "/category/walmart-home-decor" },
-      { name: "Kitchen Essentials", link: "/category/walmart-kitchen" },
-      { name: "Seasonal Specials", link: "/category/walmart-seasonal" },
-      { name: "Walmart Exclusives", link: "/category/walmart-exclusives" },
+    trousers: [
+      { name: "Formal Trousers", link: "/category/formal-trousers" },
+      { name: "Chinos", link: "/category/chinos" },
+      { name: "Designer Pants", link: "/category/designer-pants" },
+      { name: "Linen Trousers", link: "/category/linen-trousers" },
     ],
-    totebags: [
-      { name: "Canvas Totes", link: "/category/canvas-totes" },
-      { name: "Eco-friendly Bags", link: "/category/eco-bags" },
-      { name: "Printed Totes", link: "/category/printed-totes" },
-      { name: "Premium Tote Bags", link: "/category/premium-totes" },
+    shoes: [
+      { name: "Oxfords", link: "/category/oxfords" },
+      { name: "Loafers", link: "/category/loafers" },
+      { name: "Boots", link: "/category/boots" },
+      { name: "Sneakers", link: "/category/sneakers" },
     ],
-    tshirts: [
-      { name: "Graphic Tees", link: "/category/graphic-tees" },
-      { name: "Premium Cotton", link: "/category/premium-cotton" },
-      { name: "Oversized T-shirts", link: "/category/oversized-tees" },
-      { name: "Minimalist Designs", link: "/category/minimalist-tees" },
+    accessories: [
+      { name: "Ties & Bow Ties", link: "/category/ties" },
+      { name: "Belts", link: "/category/belts" },
+      { name: "Wallets", link: "/category/wallets" },
+      { name: "Cufflinks", link: "/category/cufflinks" },
     ],
     collections: [
       { name: "New Arrivals", link: "/category/new-arrivals" },
       { name: "Best Sellers", link: "/category/best-sellers" },
       { name: "Limited Editions", link: "/category/limited-editions" },
-      { name: "Festive Collection", link: "/category/festive-collection" },
+      { name: "Seasonal Collection", link: "/category/seasonal-collection" },
     ],
   };
 
   const categoryLabels = {
-    showpieces: "Show Pieces",
-    candles: "Candles",
-    walmart: "Walmart",
-    totebags: "Tote Bags",
-    tshirts: "T-Shirts",
+    suits: "Suits",
+    shirts: "Shirts",
+    trousers: "Trousers",
+    shoes: "Shoes",
+    accessories: "Accessories",
     collections: "Collections"
   };
 
@@ -145,70 +144,17 @@ const Navbar = () => {
     setIsMenuOpen(false);
   };
 
-  // Generate particles (React-based solution)
-  useEffect(() => {
-    if (!scrolled) {
-      const interval = setInterval(() => {
-        if (particles.length > 20) return;
-        
-        const newParticle = {
-          id: Math.random().toString(36).substr(2, 9),
-          size: Math.random() * 5 + 2,
-          left: Math.random() * 100,
-          duration: Math.random() * 10 + 10,
-          delay: Math.random() * 5,
-          opacity: Math.random() * 0.4 + 0.1
-        };
-        
-        setParticles(prev => [...prev, newParticle]);
-        
-        // Remove particle after animation
-        setTimeout(() => {
-          setParticles(prev => prev.filter(p => p.id !== newParticle.id));
-        }, newParticle.duration * 1000);
-      }, 500);
-      
-      return () => clearInterval(interval);
-    }
-  }, [scrolled, particles.length]);
-
   return (
     <nav 
       className={`fixed w-full z-50 transition-all duration-500 ${
         scrolled 
-          ? "bg-[#EFE2B2]/90 backdrop-blur-md shadow-lg py-2" 
+          ? "bg-white/95 backdrop-blur-md shadow-lg py-2" 
           : "bg-transparent py-4"
       }`}
+      style={{
+        fontFamily: "'Cormorant Garamond', serif"
+      }}
     >
-      {/* Floating particles - React-based implementation */}
-      {!scrolled && particles.map(particle => (
-        <motion.div
-          key={particle.id}
-          className="absolute bottom-0 rounded-full pointer-events-none z-0"
-          style={{
-            width: `${particle.size}px`,
-            height: `${particle.size}px`,
-            left: `${particle.left}%`,
-            background: "#9E5F57",
-          }}
-          initial={{ 
-            y: "100vh",
-            opacity: 0,
-            scale: 0
-          }}
-          animate={{ 
-            y: "-100px",
-            opacity: particle.opacity,
-            scale: 1
-          }}
-          transition={{ 
-            duration: particle.duration,
-            delay: particle.delay,
-            ease: "linear"
-          }}
-        />
-      ))}
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           {/* Logo */}
@@ -219,28 +165,43 @@ const Navbar = () => {
             transition={{ duration: 0.7, ease: "easeOut" }}
           >
             <Link to="/" onClick={closeAllDropdowns}>
-              <div className="flex items-center space-x-2">
-                <div className="p-1 rounded-full">
-                  <motion.img 
-                    src='/Images/Navlogo.png'
-                    alt="Logo" 
-                    className="h-10 w-10 object-contain rounded-full"
-                    whileHover={{ rotate: 15 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  />
-                </div>
-                <motion.span 
-                  className="text-2xl font-serif font-bold text-[#814B4A]"
-                  animate={{
-                    textShadow: ["0 0 0px rgba(129,75,74,0)", "0 0 8px rgba(129,75,74,0.8)", "0 0 0px rgba(129,75,74,0)"]
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity
-                  }}
+              <div className="flex items-center space-x-3">
+                <motion.div 
+                  className="p-1 rounded-full bg-white"
+                  whileHover={{ rotate: 15, scale: 1.1 }}
+                  transition={{ type: "spring", stiffness: 300 }}
                 >
-                  Ruhana
-                </motion.span>
+                  <motion.img 
+                    src='/Images/logo.png'
+                    alt="Luxury Men's Brand" 
+                    className="h-12 w-12 object-contain"
+                    whileHover={{ rotate: -15 }}
+                  />
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <motion.img 
+                    src="/Images/J.gif"
+                    alt="Jonab Logo"
+                    className="h-8 w-auto object-contain"
+                    animate={{
+                      filter: [
+                        "drop-shadow(0 0 0px rgba(0, 0, 0, 0))",
+                        "drop-shadow(0 0 5px rgba(0, 0, 0, 0.3))",
+                        "drop-shadow(0 0 0px rgba(0, 0, 0, 0))"
+                      ]
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+                </motion.div>
               </div>
             </Link>
           </motion.div>
@@ -255,13 +216,17 @@ const Navbar = () => {
                 onMouseLeave={() => setActiveDropdown(null)}
               >
                 <motion.button 
-                  className="text-[#814B4A] hover:text-[#567A4B] transition-all duration-300 font-light tracking-wider uppercase text-sm relative group"
+                  className="text-black hover:text-gray-600 transition-all duration-300 tracking-wider uppercase text-sm relative group"
                   whileHover={{ y: -2 }}
                   whileTap={{ y: 1 }}
+                  style={{
+                    fontWeight: 500,
+                    letterSpacing: "1px"
+                  }}
                 >
                   {categoryLabels[key]}
                   <motion.span 
-                    className="absolute bottom-0 left-0 w-0 h-px bg-[#567A4B]"
+                    className="absolute bottom-0 left-0 w-0 h-px bg-black"
                     initial={{ width: 0 }}
                     animate={{ width: activeDropdown === key ? '100%' : '0%' }}
                     transition={{ duration: 0.4 }}
@@ -275,7 +240,10 @@ const Navbar = () => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
                       transition={{ duration: 0.3, ease: "easeOut" }}
-                      className="absolute left-0 mt-2 w-56 origin-top-left rounded-md bg-[#EFE2B2] shadow-2xl ring-1 ring-[#97A276] z-50"
+                      className="absolute left-0 mt-2 w-56 origin-top-left rounded-md bg-white shadow-2xl ring-1 ring-gray-300 z-50"
+                      style={{
+                        fontFamily: "'Inter', sans-serif"
+                      }}
                     >
                       <div className="py-1">
                         {items.map((item) => (
@@ -283,7 +251,7 @@ const Navbar = () => {
                             to={`/products?category=${key}&subcategory=${item.name}`}
                             key={item.name}
                             onClick={closeAllDropdowns}
-                            className="block px-4 py-3 text-sm text-[#814B4A] hover:bg-[#97A276]/30 hover:text-[#567A4B] transition-all duration-200 border-b border-[#97A276]/30 last:border-b-0"
+                            className="block px-4 py-3 text-sm text-gray-800 hover:bg-gray-100 transition-all duration-200 border-b border-gray-100 last:border-b-0"
                           >
                             {item.name}
                           </Link>
@@ -301,13 +269,17 @@ const Navbar = () => {
             <div className="hidden lg:flex items-center space-x-5">
               <motion.button 
                 onClick={navigateToProducts}
-                className="text-[#814B4A] hover:text-[#567A4B] transition-all duration-300 font-light tracking-wider uppercase text-sm relative group"
+                className="text-black hover:text-gray-600 transition-all duration-300 tracking-wider uppercase text-sm relative group"
                 whileHover={{ y: -2 }}
                 whileTap={{ y: 1 }}
+                style={{
+                  fontWeight: 500,
+                  letterSpacing: "1px"
+                }}
               >
                 All Collections
                 <motion.span 
-                  className="absolute bottom-0 left-0 w-0 h-px bg-[#567A4B]"
+                  className="absolute bottom-0 left-0 w-0 h-px bg-black"
                   initial={{ width: 0 }}
                   animate={{ width: "100%" }}
                   transition={{ duration: 0.4 }}
@@ -321,7 +293,7 @@ const Navbar = () => {
                 >
                   <Link 
                     to="/wish-list" 
-                    className="relative text-[#814B4A] hover:text-[#567A4B] transition-all duration-300"
+                    className="relative text-black hover:text-gray-600 transition-all duration-300"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -329,7 +301,7 @@ const Navbar = () => {
                     <AnimatePresence>
                       {wishlistCount > 0 && (
                         <motion.span 
-                          className="absolute -top-1 -right-1 bg-[#9E5F57] text-white text-xs rounded-full h-4 w-4 flex items-center justify-center"
+                          className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center"
                           initial={{ scale: 0, rotate: -45 }}
                           animate={{ scale: 1, rotate: 0 }}
                           exit={{ scale: 0, rotate: 45 }}
@@ -350,7 +322,7 @@ const Navbar = () => {
               >
                 <Link 
                   to="/cart" 
-                  className="relative text-[#814B4A] hover:text-[#567A4B] transition-all duration-300"
+                  className="relative text-black hover:text-gray-600 transition-all duration-300"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -358,7 +330,7 @@ const Navbar = () => {
                   <AnimatePresence>
                     {cartCount > 0 && (
                       <motion.span 
-                        className="absolute -top-1 -right-1 bg-[#9E5F57] text-white text-xs rounded-full h-4 w-4 flex items-center justify-center"
+                        className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full h-4 w-4 flex items-center justify-center"
                         initial={{ scale: 0, rotate: -45 }}
                         animate={{ scale: 1, rotate: 0 }}
                         exit={{ scale: 0, rotate: 45 }}
@@ -384,29 +356,25 @@ const Navbar = () => {
                     whileHover={{ rotate: 5 }}
                     transition={{ type: "spring" }}
                   >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#9E5F57] to-[#814B4A] p-0.5">
-                      <div className="bg-[#EFE2B2] rounded-full w-full h-full flex items-center justify-center">
-                        <span className="text-[#814B4A] font-medium">
+                    <div className="w-8 h-8 rounded-full border border-black p-0.5">
+                      <div className="bg-gray-200 rounded-full w-full h-full flex items-center justify-center">
+                        <span className="text-black font-medium">
                           {user?.fullname?.[0]?.toUpperCase()}
                         </span>
                       </div>
                     </div>
-                    <div className="absolute -bottom-1 -right-1 bg-[#9E5F57] rounded-full p-0.5">
+                    <div className="absolute -bottom-1 -right-1 bg-black rounded-full p-0.5">
                       <div className="bg-white rounded-full p-0.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-[#814B4A]" viewBox="0 0 20 20" fill="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-black" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
                       </div>
                     </div>
                   </motion.div>
                   <motion.span 
-                    className="text-[#814B4A] group-hover:text-[#567A4B] transition-colors duration-300 text-sm font-light"
-                    animate={{
-                      textShadow: ["0 0 0px rgba(86,122,75,0)", "0 0 8px rgba(86,122,75,0.8)", "0 0 0px rgba(86,122,75,0)"]
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity
+                    className="text-black group-hover:text-gray-600 transition-colors duration-300 text-sm"
+                    style={{
+                      fontWeight: 500
                     }}
                   >
                     {user?.fullname?.split(' ')[0]}
@@ -420,7 +388,10 @@ const Navbar = () => {
                   >
                     <Link
                       to="/login"
-                      className="text-[#814B4A] hover:text-[#567A4B] transition-all duration-300 text-sm font-light"
+                      className="text-black hover:text-gray-600 transition-all duration-300 text-sm"
+                      style={{
+                        fontWeight: 500
+                      }}
                     >
                       Sign In
                     </Link>
@@ -431,7 +402,10 @@ const Navbar = () => {
                   >
                     <Link
                       to="/signup"
-                      className="px-4 py-2 bg-gradient-to-r from-[#9E5F57] to-[#814B4A] text-white rounded-full text-sm font-light tracking-wider transition-all duration-300 shadow-lg shadow-[#97A276]/30"
+                      className="px-4 py-2 bg-black text-white rounded-full text-sm tracking-wider transition-all duration-300 shadow-lg shadow-black/20 hover:bg-gray-800"
+                      style={{
+                        fontWeight: 500
+                      }}
                     >
                       Join
                     </Link>
@@ -442,13 +416,13 @@ const Navbar = () => {
 
             {/* Mobile menu button */}
             <motion.button
-              className="lg:hidden text-[#814B4A] focus:outline-none"
+              className="lg:hidden text-black focus:outline-none"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
               {isMenuOpen ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-[#567A4B]" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               ) : (
@@ -468,15 +442,22 @@ const Navbar = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.4 }}
-            className="lg:hidden bg-[#EFE2B2] border-t border-[#97A276]"
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="lg:hidden bg-white border-t border-gray-200"
+            style={{
+              fontFamily: "'Inter', sans-serif"
+            }}
           >
             <div className="px-4 py-5 space-y-6">
               {Object.entries(categories).map(([key, items]) => (
-                <div key={key} className="border-b border-[#97A276] pb-4">
+                <div key={key} className="border-b border-gray-200 pb-4">
                   <button
-                    className="w-full flex justify-between items-center text-[#814B4A] hover:text-[#567A4B] transition-colors duration-300 text-sm uppercase tracking-wider"
+                    className="w-full flex justify-between items-center text-black hover:text-gray-600 transition-colors duration-300 text-sm uppercase tracking-wider"
                     onClick={() => toggleDropdown(key)}
+                    style={{
+                      fontWeight: 500,
+                      letterSpacing: "1px"
+                    }}
                   >
                     <span>{categoryLabels[key]}</span>
                     <svg 
@@ -503,7 +484,7 @@ const Navbar = () => {
                             to={`/products?category=${key}&subcategory=${item.name}`}
                             key={item.name}
                             onClick={closeAllDropdowns}
-                            className="block py-2 text-[#814B4A] hover:text-[#567A4B] transition-colors duration-300 text-sm"
+                            className="block py-2 text-black hover:text-gray-600 transition-colors duration-300 text-sm"
                           >
                             {item.name}
                           </Link>
@@ -520,16 +501,20 @@ const Navbar = () => {
                     navigateToProducts();
                     closeAllDropdowns();
                   }}
-                  className="text-left text-[#814B4A] hover:text-[#567A4B] transition-colors duration-300 text-sm uppercase tracking-wider"
+                  className="text-left text-black hover:text-gray-600 transition-colors duration-300 text-sm uppercase tracking-wider"
+                  style={{
+                    fontWeight: 500,
+                    letterSpacing: "1px"
+                  }}
                 >
                   All Collections
                 </button>
                 
-                <div className="flex items-center space-x-6 pt-4 border-t border-[#97A276]">
+                <div className="flex items-center space-x-6 pt-4 border-t border-gray-200">
                   {isLoggedIn && (
                     <Link 
                       to="/wish-list" 
-                      className="flex items-center space-x-2 text-[#814B4A] hover:text-[#567A4B] transition-colors duration-300"
+                      className="flex items-center space-x-2 text-black hover:text-gray-600 transition-colors duration-300"
                       onClick={closeAllDropdowns}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -541,7 +526,7 @@ const Navbar = () => {
                   
                   <Link 
                     to="/cart" 
-                    className="flex items-center space-x-2 text-[#814B4A] hover:text-[#567A4B] transition-colors duration-300"
+                    className="flex items-center space-x-2 text-black hover:text-gray-600 transition-colors duration-300"
                     onClick={closeAllDropdowns}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -551,7 +536,7 @@ const Navbar = () => {
                   </Link>
                 </div>
                 
-                <div className="pt-4 border-t border-[#97A276]">
+                <div className="pt-4 border-t border-gray-200">
                   {isLoggedIn ? (
                     <button 
                       onClick={() => {
@@ -561,38 +546,38 @@ const Navbar = () => {
                       className="flex items-center space-x-3 group w-full"
                     >
                       <div className="relative">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#9E5F57] to-[#814B4A] p-0.5">
-                          <div className="bg-[#EFE2B2] rounded-full w-full h-full flex items-center justify-center">
-                            <span className="text-[#814B4A] font-medium text-lg">
+                        <div className="w-10 h-10 rounded-full border border-black p-0.5">
+                          <div className="bg-gray-200 rounded-full w-full h-full flex items-center justify-center">
+                            <span className="text-black font-medium text-lg">
                               {user?.fullname?.[0]?.toUpperCase()}
                             </span>
                           </div>
                         </div>
-                        <div className="absolute -bottom-1 -right-1 bg-[#9E5F57] rounded-full p-0.5">
+                        <div className="absolute -bottom-1 -right-1 bg-black rounded-full p-0.5">
                           <div className="bg-white rounded-full p-0.5">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-[#814B4A]" viewBox="0 0 20 20" fill="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-black" viewBox="0 0 20 20" fill="currentColor">
                               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                             </svg>
                           </div>
                         </div>
                       </div>
                       <div className="text-left">
-                        <p className="text-[#814B4A] text-sm font-light">{user?.fullname}</p>
-                        <p className="text-[#567A4B] text-xs">View Profile</p>
+                        <p className="text-black text-sm font-medium">{user?.fullname}</p>
+                        <p className="text-gray-600 text-xs">View Profile</p>
                       </div>
                     </button>
                   ) : (
                     <div className="flex flex-col space-y-4">
                       <Link
                         to="/login"
-                        className="text-[#814B4A] hover:text-[#567A4B] transition-colors duration-300 text-sm font-light text-center py-2 border border-[#97A276] rounded-lg"
+                        className="text-black hover:text-gray-600 transition-colors duration-300 text-sm font-medium text-center py-2 border border-black rounded-lg"
                         onClick={closeAllDropdowns}
                       >
                         Sign In
                       </Link>
                       <Link
                         to="/signup"
-                        className="px-4 py-3 bg-gradient-to-r from-[#9E5F57] to-[#814B4A] text-white rounded-full text-sm font-light tracking-wider transition-all duration-300 shadow-lg shadow-[#97A276]/30 text-center"
+                        className="px-4 py-3 bg-black text-white rounded-full text-sm font-medium tracking-wider transition-all duration-300 shadow-lg shadow-black/20 text-center hover:bg-gray-800"
                         onClick={closeAllDropdowns}
                       >
                         Create Account
