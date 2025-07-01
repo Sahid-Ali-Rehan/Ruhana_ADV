@@ -1,3 +1,4 @@
+// src/components/AdminComponents/DashboardStats.js
 import React, { useEffect, useState } from 'react';
 import { 
   Chart as ChartJS, 
@@ -7,23 +8,23 @@ import {
   CategoryScale, 
   LinearScale, 
   PointElement, 
-  LineElement, 
-  Title,
-  BarElement
+  LineElement,
+  BarElement,
+  Title
 } from 'chart.js';
-import { Doughnut, Line } from 'react-chartjs-2';
+import { Doughnut, Line, Bar } from 'react-chartjs-2';
 import { motion } from 'framer-motion';
-import { FaShoppingCart, FaBox, FaUsers, FaMoneyBillWave, FaArrowUp, FaArrowDown } from 'react-icons/fa';
-
-// Color palette constants
-const COLORS = {
-  parchment: "#EFE2B2",
-  terracotta: "#9E5F57",
-  moss: "#567A4B",
-  rust: "#814B4A",
-  sage: "#97A276",
-  blush: "#F5C9C6"
-};
+import { 
+  FaShoppingCart, 
+  FaBox, 
+  FaUsers, 
+  FaChartLine, 
+  FaArrowUp, 
+  FaArrowDown,
+  FaStar,
+  FaFire
+} from 'react-icons/fa';
+import { COLORS, FONTS } from '../../constants';
 
 // Register Chart.js components
 ChartJS.register(
@@ -34,39 +35,46 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
-  Title,
-  BarElement
+  BarElement,
+  Title
 );
 
 const StatCard = ({ title, value, icon, change, isPositive, isLoading }) => {
   return (
     <motion.div 
-      className="rounded-xl p-6 shadow-lg"
-      style={{ backgroundColor: COLORS.blush }}
-      whileHover={{ y: -5, boxShadow: `0 10px 25px ${COLORS.terracotta}20` }}
+      className="rounded-xl p-5 bg-white shadow-sm border border-gray-100"
+      whileHover={{ 
+        y: -5, 
+        boxShadow: "0 10px 25px rgba(0,0,0,0.05)",
+        borderColor: COLORS.highlight
+      }}
       transition={{ duration: 0.3 }}
     >
       <div className="flex justify-between items-start">
         <div>
-          <p className="text-lg font-medium mb-2" style={{ color: COLORS.rust }}>{title}</p>
+          <p className="text-sm font-medium mb-2" style={{ color: COLORS.secondary }}>{title}</p>
           {isLoading ? (
             <div className="h-8 w-24 bg-gray-200 rounded animate-pulse"></div>
           ) : (
-            <h3 className="text-2xl font-bold" style={{ color: COLORS.rust }}>{value}</h3>
+            <h3 className="text-2xl font-bold" style={{ color: COLORS.primary }}>{value}</h3>
           )}
         </div>
-        <div className="p-3 rounded-full" style={{ backgroundColor: COLORS.terracotta }}>
+        <div className="p-3 rounded-lg bg-gray-100 text-gray-600">
           {icon}
         </div>
       </div>
       
       {!isLoading && change !== undefined && (
         <div className="flex items-center mt-4">
-          <span className={`flex items-center ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+          <span 
+            className={`flex items-center text-sm font-medium ${
+              isPositive ? 'text-green-600' : 'text-red-600'
+            }`}
+          >
             {isPositive ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
             {change}%
           </span>
-          <span className="ml-2 text-sm" style={{ color: COLORS.rust }}>from last month</span>
+          <span className="ml-2 text-xs" style={{ color: COLORS.secondary }}>from last month</span>
         </div>
       )}
     </motion.div>
@@ -76,19 +84,29 @@ const StatCard = ({ title, value, icon, change, isPositive, isLoading }) => {
 const DashboardStats = () => {
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [bestSellers, setBestSellers] = useState([]);
+  const [salesPerformance, setSalesPerformance] = useState(null);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('https://ruhana-adv.onrender.com/api/dashboard/stats');
-        const data = await response.json();
         
-        if (data) {
-          setStats(data);
-        } else {
-          console.error("No data returned from API.");
-        }
+        // Fetch main stats
+        const statsResponse = await fetch('https://ruhana-adv.onrender.com/api/dashboard/stats');
+        const statsData = await statsResponse.json();
+        
+        // Fetch best selling products
+        const bestSellersResponse = await fetch('https://ruhana-adv.onrender.com/api/dashboard/best-sellers');
+        const bestSellersData = await bestSellersResponse.json();
+        
+        // Fetch sales performance
+        const salesResponse = await fetch('https://ruhana-adv.onrender.com/api/dashboard/sales-performance');
+        const salesData = await salesResponse.json();
+        
+        setStats(statsData);
+        setBestSellers(bestSellersData);
+        setSalesPerformance(salesData);
       } catch (error) {
         console.error('Error fetching stats:', error);
       } finally {
@@ -98,6 +116,9 @@ const DashboardStats = () => {
 
     fetchStats();
   }, []);
+
+  // Format numbers with commas
+  const formatNumber = num => num?.toLocaleString() || '0';
 
   // Animation variants
   const containerVariants = {
@@ -121,26 +142,23 @@ const DashboardStats = () => {
     }
   };
 
-  // Format numbers with commas
-  const formatNumber = num => num?.toLocaleString() || '0';
-
   return (
     <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-8"
+      className="space-y-6"
     >
       {/* Stats Cards */}
       <motion.div 
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5"
         variants={containerVariants}
       >
         <motion.div variants={itemVariants}>
           <StatCard 
             title="Total Orders" 
             value={stats ? formatNumber(stats.orders) : "0"} 
-            icon={<FaShoppingCart className="text-white" />} 
+            icon={<FaShoppingCart className="text-xl" />} 
             isLoading={isLoading}
           />
         </motion.div>
@@ -149,7 +167,7 @@ const DashboardStats = () => {
           <StatCard 
             title="Products" 
             value={stats ? formatNumber(stats.products) : "0"} 
-            icon={<FaBox className="text-white" />} 
+            icon={<FaBox className="text-xl" />} 
             isLoading={isLoading}
           />
         </motion.div>
@@ -158,7 +176,7 @@ const DashboardStats = () => {
           <StatCard 
             title="Customers" 
             value={stats ? formatNumber(stats.users) : "0"} 
-            icon={<FaUsers className="text-white" />} 
+            icon={<FaUsers className="text-xl" />} 
             isLoading={isLoading}
           />
         </motion.div>
@@ -167,7 +185,7 @@ const DashboardStats = () => {
           <StatCard 
             title="Revenue" 
             value={stats ? `৳${formatNumber(stats.totalRevenue)}` : "৳0"} 
-            icon={<FaMoneyBillWave className="text-white" />} 
+            icon={<FaChartLine className="text-xl" />} 
             change={stats?.revenueChange}
             isPositive={stats?.revenueChange >= 0}
             isLoading={isLoading}
@@ -175,74 +193,288 @@ const DashboardStats = () => {
         </motion.div>
       </motion.div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <motion.div 
-          className="bg-white rounded-2xl p-6 shadow-xl"
-          variants={itemVariants}
-        >
-          <h3 className="text-xl font-bold mb-4" style={{ color: COLORS.rust }}>Sales Distribution</h3>
-          {isLoading ? (
-            <div className="h-64 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2" style={{ borderColor: COLORS.terracotta }}></div>
+      {/* Charts and Best Sellers */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column */}
+        <div className="lg:col-span-2 grid grid-cols-1 gap-6">
+          {/* Revenue Chart */}
+          <motion.div 
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+            variants={itemVariants}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold" style={{ color: COLORS.primary }}>
+                Revenue Trend (Last 6 Months)
+              </h3>
+              <div className="flex items-center text-sm" style={{ color: COLORS.secondary }}>
+                <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                Current Year
+                <div className="w-3 h-3 rounded-full bg-gray-300 ml-4 mr-2"></div>
+                Previous Year
+              </div>
             </div>
-          ) : (
-            <Doughnut 
-              data={{
-                labels: ['Orders', 'Products', 'Customers'],
-                datasets: [
-                  {
-                    data: [stats.orders, stats.products, stats.users],
-                    backgroundColor: [COLORS.terracotta, COLORS.moss, COLORS.sage],
-                    borderWidth: 0,
+            
+            {isLoading ? (
+              <div className="h-64 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-300"></div>
+              </div>
+            ) : (
+              <Line 
+                data={{
+                  labels: stats.salesData.months,
+                  datasets: [
+                    {
+                      label: 'Revenue (৳)',
+                      data: stats.salesData.values,
+                      borderColor: COLORS.highlight,
+                      backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                      tension: 0.4,
+                      fill: true,
+                      pointBackgroundColor: COLORS.highlight,
+                      pointBorderColor: '#fff',
+                      pointBorderWidth: 2,
+                      pointRadius: 4,
+                      pointHoverRadius: 6
+                    },
+                    {
+                      label: 'Previous Year',
+                      data: stats.salesData.previousYearValues,
+                      borderColor: '#E5E7EB',
+                      borderDash: [5, 5],
+                      tension: 0.4,
+                      pointRadius: 0
+                    }
+                  ]
+                }}
+                options={{
+                  responsive: true,
+                  plugins: {
+                    legend: {
+                      display: false
+                    }
                   },
-                ],
-              }}
-              options={{
-                responsive: true,
-                plugins: {
-                  legend: {
-                    position: 'bottom',
-                    labels: {
-                      font: {
-                        size: 14
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      grid: {
+                        color: 'rgba(0, 0, 0, 0.03)'
                       },
-                      padding: 20
+                      ticks: {
+                        callback: function(value) {
+                          return '৳' + (value/1000).toFixed(0) + 'K';
+                        }
+                      }
+                    },
+                    x: {
+                      grid: {
+                        display: false
+                      }
                     }
                   }
-                },
-                cutout: '65%'
-              }}
-            />
+                }}
+              />
+            )}
+          </motion.div>
+
+          {/* Performance Metrics */}
+          <motion.div 
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+            variants={itemVariants}
+          >
+            <h3 className="text-lg font-bold mb-4" style={{ color: COLORS.primary }}>
+              Sales Performance Metrics
+            </h3>
+            
+            {isLoading || !salesPerformance ? (
+              <div className="h-64 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-300"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { title: 'Conversion Rate', value: salesPerformance.conversionRate + '%', change: salesPerformance.conversionChange },
+                  { title: 'Avg. Order Value', value: '৳' + salesPerformance.avgOrderValue, change: salesPerformance.avgOrderValueChange },
+                  { title: 'Customer Retention', value: salesPerformance.retentionRate + '%', change: salesPerformance.retentionChange },
+                  { title: 'Cart Abandonment', value: salesPerformance.abandonmentRate + '%', change: salesPerformance.abandonmentChange }
+                ].map((metric, index) => (
+                  <div key={index} className="p-4 bg-gray-50 rounded-lg">
+                    <p className="text-sm font-medium mb-1" style={{ color: COLORS.secondary }}>
+                      {metric.title}
+                    </p>
+                    <p className="text-xl font-bold" style={{ color: COLORS.primary }}>
+                      {metric.value}
+                    </p>
+                    <div className="flex items-center mt-2">
+                      <span 
+                        className={`text-xs font-medium ${
+                          metric.change >= 0 ? 'text-green-600' : 'text-red-600'
+                        }`}
+                      >
+                        {metric.change >= 0 ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
+                        {Math.abs(metric.change)}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        </div>
+
+        {/* Right Column - Best Sellers */}
+        <motion.div 
+          className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+          variants={itemVariants}
+        >
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold" style={{ color: COLORS.primary }}>
+              Best Selling Products
+            </h3>
+            <span className="text-sm flex items-center" style={{ color: COLORS.highlight }}>
+              <FaFire className="mr-1" /> This Month
+            </span>
+          </div>
+          
+          {isLoading || !bestSellers.length ? (
+            <div className="h-64 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-300"></div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {bestSellers.map((product, index) => (
+                <motion.div 
+                  key={product.id}
+                  className="flex items-center p-3 border-b border-gray-100 hover:bg-gray-50 rounded-lg transition-colors"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <div className="w-10 h-10 flex items-center justify-center bg-gray-200 rounded-lg mr-3">
+                    <span className="font-bold" style={{ color: COLORS.primary }}>
+                      {index + 1}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium truncate" style={{ color: COLORS.primary }}>
+                      {product.name}
+                    </p>
+                    <div className="flex items-center text-xs mt-1">
+                      <span className="text-gray-500 mr-2">৳{product.price}</span>
+                      <div className="flex items-center">
+                        <FaStar className="text-yellow-400 mr-1" />
+                        <span>{product.rating}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium" style={{ color: COLORS.primary }}>
+                      {product.sold} sold
+                    </p>
+                    <p className="text-xs" style={{ color: COLORS.secondary }}>
+                      ৳{product.revenue}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </motion.div>
+      </div>
+
+      {/* Additional Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <motion.div 
+          className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+          variants={itemVariants}
+        >
+          <h3 className="text-lg font-bold mb-4" style={{ color: COLORS.primary }}>
+            Sales Distribution
+          </h3>
+          {isLoading ? (
+            <div className="h-64 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-300"></div>
+            </div>
+          ) : (
+            <div className="flex items-center">
+              <div className="w-1/2">
+                <Doughnut 
+                  data={{
+                    labels: ['Completed', 'Pending', 'Cancelled'],
+                    datasets: [
+                      {
+                        data: [68, 22, 10],
+                        backgroundColor: [COLORS.primary, COLORS.secondary, COLORS.accent],
+                        borderWidth: 0,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    plugins: {
+                      legend: {
+                        position: 'bottom',
+                        labels: {
+                          font: {
+                            size: 12
+                          },
+                          padding: 20,
+                          usePointStyle: true,
+                          pointStyle: 'circle'
+                        }
+                      }
+                    },
+                    cutout: '75%'
+                  }}
+                />
+              </div>
+              <div className="w-1/2 pl-6">
+                {[
+                  { label: 'Completed', value: '68%', color: COLORS.primary },
+                  { label: 'Pending', value: '22%', color: COLORS.secondary },
+                  { label: 'Cancelled', value: '10%', color: COLORS.accent }
+                ].map((item, index) => (
+                  <div key={index} className="mb-4">
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm" style={{ color: COLORS.secondary }}>{item.label}</span>
+                      <span className="font-medium" style={{ color: COLORS.primary }}>{item.value}</span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full rounded-full" 
+                        style={{ 
+                          backgroundColor: item.color,
+                          width: item.value
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </motion.div>
 
         <motion.div 
-          className="bg-white rounded-2xl p-6 shadow-xl"
+          className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
           variants={itemVariants}
         >
-          <h3 className="text-xl font-bold mb-4" style={{ color: COLORS.rust }}>Revenue Trend (Last 6 Months)</h3>
+          <h3 className="text-lg font-bold mb-4" style={{ color: COLORS.primary }}>
+            Sales by Category
+          </h3>
           {isLoading ? (
             <div className="h-64 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2" style={{ borderColor: COLORS.terracotta }}></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-300"></div>
             </div>
           ) : (
-            <Line 
+            <Bar 
               data={{
-                labels: stats.salesData.months,
+                labels: ['Clothing', 'Electronics', 'Home', 'Beauty', 'Sports'],
                 datasets: [
                   {
                     label: 'Revenue (৳)',
-                    data: stats.salesData.values,
-                    borderColor: COLORS.terracotta,
-                    backgroundColor: `${COLORS.terracotta}20`,
-                    tension: 0.4,
-                    fill: true,
-                    pointBackgroundColor: COLORS.terracotta,
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 5,
-                    pointHoverRadius: 7
+                    data: [1250000, 890000, 760000, 540000, 320000],
+                    backgroundColor: COLORS.highlight,
+                    borderRadius: 6,
                   }
                 ]
               }}
@@ -257,11 +489,11 @@ const DashboardStats = () => {
                   y: {
                     beginAtZero: true,
                     grid: {
-                      color: 'rgba(0, 0, 0, 0.05)'
+                      color: 'rgba(0, 0, 0, 0.03)'
                     },
                     ticks: {
                       callback: function(value) {
-                        return '৳' + value.toLocaleString();
+                        return '৳' + (value/1000).toFixed(0) + 'K';
                       }
                     }
                   },
