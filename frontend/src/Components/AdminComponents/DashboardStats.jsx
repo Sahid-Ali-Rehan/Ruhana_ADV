@@ -1,4 +1,3 @@
-// src/components/AdminComponents/DashboardStats.js
 import React, { useEffect, useState } from 'react';
 import { 
   Chart as ChartJS, 
@@ -26,7 +25,6 @@ import {
 } from 'react-icons/fa';
 import { COLORS, FONTS } from '../../constants';
 
-// Register Chart.js components
 ChartJS.register(
   ArcElement,
   Tooltip,
@@ -86,27 +84,34 @@ const DashboardStats = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [bestSellers, setBestSellers] = useState([]);
   const [salesPerformance, setSalesPerformance] = useState(null);
+  const [salesDistribution, setSalesDistribution] = useState([]);
+  const [salesByCategory, setSalesByCategory] = useState([]);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setIsLoading(true);
         
-        // Fetch main stats
-        const statsResponse = await fetch('https://ruhana-adv.onrender.com/api/dashboard/stats');
-        const statsData = await statsResponse.json();
+        // Fetch all stats in parallel
+        const [
+          statsResponse, 
+          bestSellersResponse, 
+          salesPerformanceResponse,
+          salesDistributionResponse,
+          salesByCategoryResponse
+        ] = await Promise.all([
+          fetch('https://ruhana-adv.onrender.com/api/dashboard/stats'),
+          fetch('https://ruhana-adv.onrender.com/api/dashboard/best-sellers'),
+          fetch('https://ruhana-adv.onrender.com/api/dashboard/sales-performance'),
+          fetch('https://ruhana-adv.onrender.com/api/dashboard/sales-distribution'),
+          fetch('https://ruhana-adv.onrender.com/api/dashboard/sales-by-category')
+        ]);
         
-        // Fetch best selling products
-        const bestSellersResponse = await fetch('https://ruhana-adv.onrender.com/api/dashboard/best-sellers');
-        const bestSellersData = await bestSellersResponse.json();
-        
-        // Fetch sales performance
-        const salesResponse = await fetch('https://ruhana-adv.onrender.com/api/dashboard/sales-performance');
-        const salesData = await salesResponse.json();
-        
-        setStats(statsData);
-        setBestSellers(bestSellersData);
-        setSalesPerformance(salesData);
+        setStats(await statsResponse.json());
+        setBestSellers(await bestSellersResponse.json());
+        setSalesPerformance(await salesPerformanceResponse.json());
+        setSalesDistribution((await salesDistributionResponse.json()).data);
+        setSalesByCategory(await salesByCategoryResponse.json());
       } catch (error) {
         console.error('Error fetching stats:', error);
       } finally {
@@ -141,6 +146,11 @@ const DashboardStats = () => {
       }
     }
   };
+
+  // Calculate total orders for distribution percentages
+  const totalDistribution = salesDistribution.reduce(
+    (total, item) => total + item.count, 0
+  );
 
   return (
     <motion.div
@@ -209,8 +219,6 @@ const DashboardStats = () => {
               <div className="flex items-center text-sm" style={{ color: COLORS.secondary }}>
                 <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
                 Current Year
-                <div className="w-3 h-3 rounded-full bg-gray-300 ml-4 mr-2"></div>
-                Previous Year
               </div>
             </div>
             
@@ -235,14 +243,6 @@ const DashboardStats = () => {
                       pointBorderWidth: 2,
                       pointRadius: 4,
                       pointHoverRadius: 6
-                    },
-                    {
-                      label: 'Previous Year',
-                      data: stats.salesData.previousYearValues,
-                      borderColor: '#E5E7EB',
-                      borderDash: [5, 5],
-                      tension: 0.4,
-                      pointRadius: 0
                     }
                   ]
                 }}
@@ -292,10 +292,10 @@ const DashboardStats = () => {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { title: 'Conversion Rate', value: salesPerformance.conversionRate + '%', change: salesPerformance.conversionChange },
-                  { title: 'Avg. Order Value', value: '৳' + salesPerformance.avgOrderValue, change: salesPerformance.avgOrderValueChange },
-                  { title: 'Customer Retention', value: salesPerformance.retentionRate + '%', change: salesPerformance.retentionChange },
-                  { title: 'Cart Abandonment', value: salesPerformance.abandonmentRate + '%', change: salesPerformance.abandonmentChange }
+                  { title: 'Conversion Rate', value: salesPerformance.conversionRate + '%' },
+                  { title: 'Avg. Order Value', value: '৳' + salesPerformance.avgOrderValue },
+                  { title: 'Customer Retention', value: salesPerformance.retentionRate + '%' },
+                  { title: 'Cart Abandonment', value: salesPerformance.abandonmentRate + '%' }
                 ].map((metric, index) => (
                   <div key={index} className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-sm font-medium mb-1" style={{ color: COLORS.secondary }}>
@@ -304,16 +304,6 @@ const DashboardStats = () => {
                     <p className="text-xl font-bold" style={{ color: COLORS.primary }}>
                       {metric.value}
                     </p>
-                    <div className="flex items-center mt-2">
-                      <span 
-                        className={`text-xs font-medium ${
-                          metric.change >= 0 ? 'text-green-600' : 'text-red-600'
-                        }`}
-                      >
-                        {metric.change >= 0 ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
-                        {Math.abs(metric.change)}%
-                      </span>
-                    </div>
                   </div>
                 ))}
               </div>
@@ -343,7 +333,7 @@ const DashboardStats = () => {
             <div className="space-y-4">
               {bestSellers.map((product, index) => (
                 <motion.div 
-                  key={product.id}
+                  key={index}
                   className="flex items-center p-3 border-b border-gray-100 hover:bg-gray-50 rounded-lg transition-colors"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -362,7 +352,7 @@ const DashboardStats = () => {
                       <span className="text-gray-500 mr-2">৳{product.price}</span>
                       <div className="flex items-center">
                         <FaStar className="text-yellow-400 mr-1" />
-                        <span>{product.rating}</span>
+                        <span>{product.rating.toFixed(1)}</span>
                       </div>
                     </div>
                   </div>
@@ -383,6 +373,7 @@ const DashboardStats = () => {
 
       {/* Additional Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Sales Distribution */}
         <motion.div 
           className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
           variants={itemVariants}
@@ -390,7 +381,8 @@ const DashboardStats = () => {
           <h3 className="text-lg font-bold mb-4" style={{ color: COLORS.primary }}>
             Sales Distribution
           </h3>
-          {isLoading ? (
+          
+          {isLoading || !salesDistribution.length ? (
             <div className="h-64 flex items-center justify-center">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-300"></div>
             </div>
@@ -399,10 +391,10 @@ const DashboardStats = () => {
               <div className="w-1/2">
                 <Doughnut 
                   data={{
-                    labels: ['Completed', 'Pending', 'Cancelled'],
+                    labels: salesDistribution.map(item => item.status),
                     datasets: [
                       {
-                        data: [68, 22, 10],
+                        data: salesDistribution.map(item => item.percent),
                         backgroundColor: [COLORS.primary, COLORS.secondary, COLORS.accent],
                         borderWidth: 0,
                       },
@@ -428,22 +420,18 @@ const DashboardStats = () => {
                 />
               </div>
               <div className="w-1/2 pl-6">
-                {[
-                  { label: 'Completed', value: '68%', color: COLORS.primary },
-                  { label: 'Pending', value: '22%', color: COLORS.secondary },
-                  { label: 'Cancelled', value: '10%', color: COLORS.accent }
-                ].map((item, index) => (
+                {salesDistribution.map((item, index) => (
                   <div key={index} className="mb-4">
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm" style={{ color: COLORS.secondary }}>{item.label}</span>
-                      <span className="font-medium" style={{ color: COLORS.primary }}>{item.value}</span>
+                      <span className="text-sm" style={{ color: COLORS.secondary }}>{item.status}</span>
+                      <span className="font-medium" style={{ color: COLORS.primary }}>{item.percent}%</span>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div 
                         className="h-full rounded-full" 
                         style={{ 
-                          backgroundColor: item.color,
-                          width: item.value
+                          backgroundColor: [COLORS.primary, COLORS.secondary, COLORS.accent][index],
+                          width: `${item.percent}%`
                         }}
                       ></div>
                     </div>
@@ -454,6 +442,7 @@ const DashboardStats = () => {
           )}
         </motion.div>
 
+        {/* Sales by Category */}
         <motion.div 
           className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
           variants={itemVariants}
@@ -461,18 +450,18 @@ const DashboardStats = () => {
           <h3 className="text-lg font-bold mb-4" style={{ color: COLORS.primary }}>
             Sales by Category
           </h3>
-          {isLoading ? (
+          {isLoading || !salesByCategory.length ? (
             <div className="h-64 flex items-center justify-center">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-300"></div>
             </div>
           ) : (
             <Bar 
               data={{
-                labels: ['Clothing', 'Electronics', 'Home', 'Beauty', 'Sports'],
+                labels: salesByCategory.map(item => item._id || 'Uncategorized'),
                 datasets: [
                   {
                     label: 'Revenue (৳)',
-                    data: [1250000, 890000, 760000, 540000, 320000],
+                    data: salesByCategory.map(item => item.totalSales),
                     backgroundColor: COLORS.highlight,
                     borderRadius: 6,
                   }

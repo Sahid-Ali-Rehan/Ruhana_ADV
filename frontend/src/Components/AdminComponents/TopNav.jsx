@@ -35,12 +35,15 @@ const TopNav = ({
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center">
+           {/* Replaced text with logo */}
           <motion.div 
-            className="text-2xl font-bold tracking-tight"
-            style={{ color: COLORS.primary }}
             whileHover={{ scale: 1.05 }}
           >
-            ADMIN PANEL
+            <img 
+              src="/Images/logo.png" 
+              alt="Admin Logo" 
+              className="h-10 w-auto"
+            />
           </motion.div>
           
           <div className="ml-12 hidden lg:flex items-center space-x-8">
