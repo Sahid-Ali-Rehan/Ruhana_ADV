@@ -83,7 +83,6 @@ const DashboardStats = () => {
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [bestSellers, setBestSellers] = useState([]);
-  const [salesPerformance, setSalesPerformance] = useState(null);
   const [salesDistribution, setSalesDistribution] = useState([]);
   const [salesByCategory, setSalesByCategory] = useState([]);
 
@@ -95,21 +94,18 @@ const DashboardStats = () => {
         // Fetch all stats in parallel
         const [
           statsResponse, 
-          bestSellersResponse, 
-          salesPerformanceResponse,
+          bestSellersResponse,
           salesDistributionResponse,
           salesByCategoryResponse
         ] = await Promise.all([
           fetch('https://ruhana-adv.onrender.com/api/dashboard/stats'),
           fetch('https://ruhana-adv.onrender.com/api/dashboard/best-sellers'),
-          fetch('https://ruhana-adv.onrender.com/api/dashboard/sales-performance'),
           fetch('https://ruhana-adv.onrender.com/api/dashboard/sales-distribution'),
           fetch('https://ruhana-adv.onrender.com/api/dashboard/sales-by-category')
         ]);
         
         setStats(await statsResponse.json());
         setBestSellers(await bestSellersResponse.json());
-        setSalesPerformance(await salesPerformanceResponse.json());
         setSalesDistribution((await salesDistributionResponse.json()).data);
         setSalesByCategory(await salesByCategoryResponse.json());
       } catch (error) {
@@ -214,11 +210,11 @@ const DashboardStats = () => {
           >
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold" style={{ color: COLORS.primary }}>
-                Revenue Trend (Last 6 Months)
+                Revenue Trend (All Time)
               </h3>
               <div className="flex items-center text-sm" style={{ color: COLORS.secondary }}>
                 <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
-                Current Year
+                All Time
               </div>
             </div>
             
@@ -227,85 +223,63 @@ const DashboardStats = () => {
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-300"></div>
               </div>
             ) : (
-              <Line 
-                data={{
-                  labels: stats.salesData.months,
-                  datasets: [
-                    {
-                      label: 'Revenue (৳)',
-                      data: stats.salesData.values,
-                      borderColor: COLORS.highlight,
-                      backgroundColor: 'rgba(59, 130, 246, 0.05)',
-                      tension: 0.4,
-                      fill: true,
-                      pointBackgroundColor: COLORS.highlight,
-                      pointBorderColor: '#fff',
-                      pointBorderWidth: 2,
-                      pointRadius: 4,
-                      pointHoverRadius: 6
-                    }
-                  ]
-                }}
-                options={{
-                  responsive: true,
-                  plugins: {
-                    legend: {
-                      display: false
-                    }
-                  },
-                  scales: {
-                    y: {
-                      beginAtZero: true,
-                      grid: {
-                        color: 'rgba(0, 0, 0, 0.03)'
+              <div className="overflow-x-auto">
+                <div style={{ minWidth: `${stats.salesData.months.length * 50}px`, height: '400px' }}>
+                  <Line 
+                    data={{
+                      labels: stats.salesData.months,
+                      datasets: [
+                        {
+                          label: 'Revenue (৳)',
+                          data: stats.salesData.values,
+                          borderColor: COLORS.highlight,
+                          backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                          tension: 0.4,
+                          fill: true,
+                          pointBackgroundColor: COLORS.highlight,
+                          pointBorderColor: '#fff',
+                          pointBorderWidth: 2,
+                          pointRadius: 4,
+                          pointHoverRadius: 6
+                        }
+                      ]
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          display: false
+                        },
+                        tooltip: {
+                          callbacks: {
+                            label: function(context) {
+                              return `৳${context.parsed.y.toLocaleString()}`;
+                            }
+                          }
+                        }
                       },
-                      ticks: {
-                        callback: function(value) {
-                          return '৳' + (value/1000).toFixed(0) + 'K';
+                      scales: {
+                        y: {
+                          beginAtZero: true,
+                          grid: {
+                            color: 'rgba(0, 0, 0, 0.03)'
+                          },
+                          ticks: {
+                            callback: function(value) {
+                              return '৳' + (value/1000).toFixed(0) + 'K';
+                            }
+                          }
+                        },
+                        x: {
+                          grid: {
+                            display: false
+                          }
                         }
                       }
-                    },
-                    x: {
-                      grid: {
-                        display: false
-                      }
-                    }
-                  }
-                }}
-              />
-            )}
-          </motion.div>
-
-          {/* Performance Metrics */}
-          <motion.div 
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
-            variants={itemVariants}
-          >
-            <h3 className="text-lg font-bold mb-4" style={{ color: COLORS.primary }}>
-              Sales Performance Metrics
-            </h3>
-            
-            {isLoading || !salesPerformance ? (
-              <div className="h-64 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-300"></div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { title: 'Conversion Rate', value: salesPerformance.conversionRate + '%' },
-                  { title: 'Avg. Order Value', value: '৳' + salesPerformance.avgOrderValue },
-                  { title: 'Customer Retention', value: salesPerformance.retentionRate + '%' },
-                  { title: 'Cart Abandonment', value: salesPerformance.abandonmentRate + '%' }
-                ].map((metric, index) => (
-                  <div key={index} className="p-4 bg-gray-50 rounded-lg">
-                    <p className="text-sm font-medium mb-1" style={{ color: COLORS.secondary }}>
-                      {metric.title}
-                    </p>
-                    <p className="text-xl font-bold" style={{ color: COLORS.primary }}>
-                      {metric.value}
-                    </p>
-                  </div>
-                ))}
+                    }}
+                  />
+                </div>
               </div>
             )}
           </motion.div>
@@ -412,6 +386,15 @@ const DashboardStats = () => {
                           padding: 20,
                           usePointStyle: true,
                           pointStyle: 'circle'
+                        },
+                        tooltip: {
+                          callbacks: {
+                            label: function(context) {
+                              const index = context.dataIndex;
+                              const count = salesDistribution[index].count;
+                              return `${context.label}: ${context.parsed}% (${count} orders)`;
+                            }
+                          }
                         }
                       }
                     },
@@ -435,6 +418,9 @@ const DashboardStats = () => {
                         }}
                       ></div>
                     </div>
+                    <p className="text-xs mt-1" style={{ color: COLORS.secondary }}>
+                      {item.count} orders
+                    </p>
                   </div>
                 ))}
               </div>
@@ -460,8 +446,8 @@ const DashboardStats = () => {
                 labels: salesByCategory.map(item => item._id || 'Uncategorized'),
                 datasets: [
                   {
-                    label: 'Revenue (৳)',
-                    data: salesByCategory.map(item => item.totalSales),
+                    label: 'Sales Percentage',
+                    data: salesByCategory.map(item => item.percent),
                     backgroundColor: COLORS.highlight,
                     borderRadius: 6,
                   }
@@ -472,6 +458,15 @@ const DashboardStats = () => {
                 plugins: {
                   legend: {
                     display: false
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        const index = context.dataIndex;
+                        const amount = salesByCategory[index].totalSales;
+                        return `${context.parsed}% (৳${amount.toLocaleString()})`;
+                      }
+                    }
                   }
                 },
                 scales: {
@@ -482,7 +477,7 @@ const DashboardStats = () => {
                     },
                     ticks: {
                       callback: function(value) {
-                        return '৳' + (value/1000).toFixed(0) + 'K';
+                        return value + '%';
                       }
                     }
                   },
