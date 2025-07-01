@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { 
   Chart as ChartJS, 
   ArcElement, 
@@ -143,10 +143,49 @@ const DashboardStats = () => {
     }
   };
 
-  // Calculate total orders for distribution percentages
-  const totalDistribution = salesDistribution.reduce(
-    (total, item) => total + item.count, 0
-  );
+  // Define all required statuses
+  const allStatuses = useMemo(() => [
+    'Pending',
+    'Confirmed',
+    'Shipped',
+    'Delivered',
+    'Cancelled'
+  ], []);
+
+  // Create a color palette for all statuses
+  const statusColors = useMemo(() => [
+    COLORS.primary,        // Pending
+    '#FFA500',             // Confirmed (orange)
+    COLORS.accent,         // Shipped
+    '#10B981',             // Delivered (green)
+    '#EF4444'              // Canceled (red)
+  ], []);
+
+  // Transform sales distribution to include all statuses with proper percentages
+  const transformedDistribution = useMemo(() => {
+    // Calculate total orders for percentage calculation
+    const totalOrders = salesDistribution.reduce(
+      (total, item) => total + item.count, 0
+    );
+    
+    // Create a map of existing status counts for quick lookup
+    const statusMap = new Map();
+    salesDistribution.forEach(item => {
+      statusMap.set(item.status, item.count);
+    });
+    
+    // Create distribution array with all required statuses
+    return allStatuses.map(status => {
+      const count = statusMap.get(status) || 0;
+      const percent = totalOrders > 0 ? Math.round((count / totalOrders) * 100) : 0;
+      
+      return {
+        status,
+        count,
+        percent
+      };
+    });
+  }, [salesDistribution, allStatuses]);
 
   return (
     <motion.div
@@ -356,7 +395,7 @@ const DashboardStats = () => {
             Sales Distribution
           </h3>
           
-          {isLoading || !salesDistribution.length ? (
+          {isLoading ? (
             <div className="h-64 flex items-center justify-center">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-300"></div>
             </div>
@@ -365,11 +404,11 @@ const DashboardStats = () => {
               <div className="w-1/2">
                 <Doughnut 
                   data={{
-                    labels: salesDistribution.map(item => item.status),
+                    labels: transformedDistribution.map(item => item.status),
                     datasets: [
                       {
-                        data: salesDistribution.map(item => item.percent),
-                        backgroundColor: [COLORS.primary, COLORS.secondary, COLORS.accent],
+                        data: transformedDistribution.map(item => item.percent),
+                        backgroundColor: statusColors,
                         borderWidth: 0,
                       },
                     ],
@@ -386,14 +425,14 @@ const DashboardStats = () => {
                           padding: 20,
                           usePointStyle: true,
                           pointStyle: 'circle'
-                        },
-                        tooltip: {
-                          callbacks: {
-                            label: function(context) {
-                              const index = context.dataIndex;
-                              const count = salesDistribution[index].count;
-                              return `${context.label}: ${context.parsed}% (${count} orders)`;
-                            }
+                        }
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: function(context) {
+                            const index = context.dataIndex;
+                            const count = transformedDistribution[index].count;
+                            return `${context.label}: ${context.parsed}% (${count} orders)`;
                           }
                         }
                       }
@@ -403,8 +442,8 @@ const DashboardStats = () => {
                 />
               </div>
               <div className="w-1/2 pl-6">
-                {salesDistribution.map((item, index) => (
-                  <div key={index} className="mb-4">
+                {transformedDistribution.map((item, index) => (
+                  <div key={item.status} className="mb-4">
                     <div className="flex justify-between mb-1">
                       <span className="text-sm" style={{ color: COLORS.secondary }}>{item.status}</span>
                       <span className="font-medium" style={{ color: COLORS.primary }}>{item.percent}%</span>
@@ -413,7 +452,7 @@ const DashboardStats = () => {
                       <div 
                         className="h-full rounded-full" 
                         style={{ 
-                          backgroundColor: [COLORS.primary, COLORS.secondary, COLORS.accent][index],
+                          backgroundColor: statusColors[index],
                           width: `${item.percent}%`
                         }}
                       ></div>
