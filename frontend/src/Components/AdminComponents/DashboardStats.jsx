@@ -1,18 +1,17 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { 
   Chart as ChartJS, 
-  ArcElement, 
-  Tooltip, 
-  Legend, 
   CategoryScale, 
   LinearScale, 
   PointElement, 
   LineElement,
   BarElement,
-  Title
+  Title,
+  Tooltip,
+  Legend
 } from 'chart.js';
-import { Doughnut, Line, Bar } from 'react-chartjs-2';
-import { motion } from 'framer-motion';
+import { Line, Bar } from 'react-chartjs-2';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FaShoppingCart, 
   FaBox, 
@@ -21,20 +20,20 @@ import {
   FaArrowUp, 
   FaArrowDown,
   FaStar,
-  FaFire
+  FaFire,
+  FaExchangeAlt
 } from 'react-icons/fa';
 import { COLORS, FONTS } from '../../constants';
 
 ChartJS.register(
-  ArcElement,
-  Tooltip,
-  Legend,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
   BarElement,
-  Title
+  Title,
+  Tooltip,
+  Legend
 );
 
 const StatCard = ({ title, value, icon, change, isPositive, isLoading }) => {
@@ -79,11 +78,179 @@ const StatCard = ({ title, value, icon, change, isPositive, isLoading }) => {
   );
 };
 
+const ThreeDMetricCard = ({ title, value, icon, color, isLoading }) => {
+  return (
+    <motion.div
+      className="relative rounded-xl p-6 overflow-hidden h-full"
+      whileHover={{ 
+        y: -5,
+        scale: 1.02,
+        boxShadow: "0 15px 30px rgba(0,0,0,0.1)"
+      }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      style={{
+        background: `linear-gradient(135deg, ${color}10, ${color}05)`,
+        border: `1px solid ${color}20`,
+        perspective: "1000px",
+        transformStyle: "preserve-3d"
+      }}
+    >
+      {/* 3D Edge Effect */}
+      <div 
+        className="absolute top-0 left-0 w-full h-1"
+        style={{ 
+          background: `linear-gradient(90deg, ${color}, ${color}80)`,
+          transform: "translateZ(10px)"
+        }}
+      ></div>
+      
+      {/* Glossy Overlay */}
+      <div 
+        className="absolute top-0 left-0 w-full h-1/2 opacity-10"
+        style={{ 
+          background: "linear-gradient(to bottom, white, transparent)",
+          transform: "translateZ(5px)"
+        }}
+      ></div>
+      
+      <div className="relative flex flex-col h-full" style={{ transform: "translateZ(20px)" }}>
+        {isLoading ? (
+          <>
+            <div className="h-6 w-24 bg-gray-200 rounded animate-pulse mb-4"></div>
+            <div className="h-8 w-32 bg-gray-200 rounded animate-pulse mt-2"></div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center mb-4">
+              <div 
+                className="p-3 rounded-lg mr-3"
+                style={{ background: `${color}15` }}
+              >
+                {React.cloneElement(icon, { 
+                  className: "text-xl",
+                  style: { color: color } 
+                })}
+              </div>
+              <p className="text-md font-medium" style={{ color: COLORS.secondary }}>{title}</p>
+            </div>
+            <h3 className="text-3xl font-bold mt-auto" style={{ color: color }}>{value}</h3>
+          </>
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
+const DynamicMetricCard = ({ metrics, isLoading }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  
+  useEffect(() => {
+    if (metrics.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentIndex(prev => (prev + 1) % metrics.length);
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [metrics.length]);
+
+  const currentMetric = metrics[currentIndex];
+
+  return (
+    <motion.div 
+      className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 h-full flex flex-col"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-bold" style={{ color: COLORS.primary }}>
+          Key Performance Metrics
+        </h3>
+        <div className="flex items-center text-sm" style={{ color: COLORS.secondary }}>
+          <FaExchangeAlt className="mr-2 animate-pulse" />
+          Auto-rotating
+        </div>
+      </div>
+      
+      {isLoading ? (
+        <div className="h-64 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-300"></div>
+        </div>
+      ) : (
+        <div className="flex flex-col h-full">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentIndex}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+              className="flex-grow flex flex-col justify-center"
+            >
+              <div className="flex items-center mb-4">
+                <div 
+                  className="p-3 rounded-lg mr-3"
+                  style={{ background: `${currentMetric.color}15` }}
+                >
+                  {React.cloneElement(currentMetric.icon, { 
+                    className: "text-xl",
+                    style: { color: currentMetric.color } 
+                  })}
+                </div>
+                <p className="text-md font-medium" style={{ color: COLORS.secondary }}>
+                  {currentMetric.title}
+                </p>
+              </div>
+              
+              <div className="flex items-baseline">
+                <h3 
+                  className="text-4xl font-bold" 
+                  style={{ color: currentMetric.color }}
+                >
+                  {currentMetric.value}
+                </h3>
+                {currentMetric.change !== undefined && (
+                  <span 
+                    className={`ml-4 flex items-center text-sm font-medium px-2 py-1 rounded-full ${
+                      currentMetric.isPositive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {currentMetric.isPositive ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
+                    {currentMetric.change}%
+                  </span>
+                )}
+              </div>
+              
+              <p className="mt-3 text-sm" style={{ color: COLORS.secondary }}>
+                {currentMetric.description}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+          
+          <div className="flex justify-center mt-4 space-x-1">
+            {metrics.map((_, index) => (
+              <button
+                key={index}
+                className={`w-2 h-2 rounded-full ${
+                  index === currentIndex 
+                    ? 'bg-blue-500 scale-125' 
+                    : 'bg-gray-300'
+                }`}
+                onClick={() => setCurrentIndex(index)}
+                aria-label={`Show metric ${index + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
 const DashboardStats = () => {
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [bestSellers, setBestSellers] = useState([]);
-  const [salesDistribution, setSalesDistribution] = useState([]);
   const [salesByCategory, setSalesByCategory] = useState([]);
 
   useEffect(() => {
@@ -91,22 +258,15 @@ const DashboardStats = () => {
       try {
         setIsLoading(true);
         
-        // Fetch all stats in parallel
-        const [
-          statsResponse, 
-          bestSellersResponse,
-          salesDistributionResponse,
-          salesByCategoryResponse
-        ] = await Promise.all([
+        // Fetch only needed data to reduce payload
+        const [statsResponse, bestSellersResponse, salesByCategoryResponse] = await Promise.all([
           fetch('https://ruhana-adv.onrender.com/api/dashboard/stats'),
           fetch('https://ruhana-adv.onrender.com/api/dashboard/best-sellers'),
-          fetch('https://ruhana-adv.onrender.com/api/dashboard/sales-distribution'),
           fetch('https://ruhana-adv.onrender.com/api/dashboard/sales-by-category')
         ]);
         
         setStats(await statsResponse.json());
         setBestSellers(await bestSellersResponse.json());
-        setSalesDistribution((await salesDistributionResponse.json()).data);
         setSalesByCategory(await salesByCategoryResponse.json());
       } catch (error) {
         console.error('Error fetching stats:', error);
@@ -116,6 +276,11 @@ const DashboardStats = () => {
     };
 
     fetchStats();
+    
+    // Cleanup function to abort requests if component unmounts
+    return () => {
+      // Implement abort controller if needed for large requests
+    };
   }, []);
 
   // Format numbers with commas
@@ -143,49 +308,57 @@ const DashboardStats = () => {
     }
   };
 
-  // Define all required statuses
-  const allStatuses = useMemo(() => [
-    'Pending',
-    'Confirmed',
-    'Shipped',
-    'Delivered',
-    'Cancelled'
-  ], []);
-
-  // Create a color palette for all statuses
-  const statusColors = useMemo(() => [
-    COLORS.primary,        // Pending
-    '#FFA500',             // Confirmed (orange)
-    COLORS.accent,         // Shipped
-    '#10B981',             // Delivered (green)
-    '#EF4444'              // Canceled (red)
-  ], []);
-
-  // Transform sales distribution to include all statuses with proper percentages
-  const transformedDistribution = useMemo(() => {
-    // Calculate total orders for percentage calculation
-    const totalOrders = salesDistribution.reduce(
-      (total, item) => total + item.count, 0
-    );
+  // Calculate dynamic metrics
+  const dynamicMetrics = useMemo(() => {
+    if (!stats) return [];
     
-    // Create a map of existing status counts for quick lookup
-    const statusMap = new Map();
-    salesDistribution.forEach(item => {
-      statusMap.set(item.status, item.count);
-    });
-    
-    // Create distribution array with all required statuses
-    return allStatuses.map(status => {
-      const count = statusMap.get(status) || 0;
-      const percent = totalOrders > 0 ? Math.round((count / totalOrders) * 100) : 0;
+    const avgOrderValue = stats.orders > 0 
+      ? stats.totalRevenue / stats.orders 
+      : 0;
       
-      return {
-        status,
-        count,
-        percent
-      };
-    });
-  }, [salesDistribution, allStatuses]);
+    const conversionRate = stats.visitors > 0 
+      ? (stats.orders / stats.visitors) * 100 
+      : 0;
+    
+    return [
+      {
+        title: "Revenue Growth",
+        value: `৳${formatNumber(stats.totalRevenue)}`,
+        change: stats?.revenueChange,
+        isPositive: stats?.revenueChange >= 0,
+        description: "Total revenue generated this period",
+        icon: <FaChartLine />,
+        color: COLORS.highlight
+      },
+      {
+        title: "Avg. Order Value",
+        value: `৳${formatNumber(avgOrderValue.toFixed(2))}`,
+        change: stats?.avgOrderValueChange,
+        isPositive: stats?.avgOrderValueChange >= 0,
+        description: "Average value per customer order",
+        icon: <FaShoppingCart />,
+        color: "#10B981"
+      },
+      {
+        title: "Conversion Rate",
+        value: `${conversionRate.toFixed(1)}%`,
+        change: stats?.conversionRateChange,
+        isPositive: stats?.conversionRateChange >= 0,
+        description: "Visitors to paying customers",
+        icon: <FaUsers />,
+        color: "#8B5CF6"
+      },
+      {
+        title: "Customer Retention",
+        value: `${stats?.retentionRate || 0}%`,
+        change: stats?.retentionChange,
+        isPositive: stats?.retentionChange >= 0,
+        description: "Repeat customers this period",
+        icon: <FaStar />,
+        color: "#F59E0B"
+      }
+    ];
+  }, [stats]);
 
   return (
     <motion.div
@@ -242,85 +415,12 @@ const DashboardStats = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column */}
         <div className="lg:col-span-2 grid grid-cols-1 gap-6">
-          {/* Revenue Chart */}
-          <motion.div 
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
-            variants={itemVariants}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold" style={{ color: COLORS.primary }}>
-                Revenue Trend (All Time)
-              </h3>
-              <div className="flex items-center text-sm" style={{ color: COLORS.secondary }}>
-                <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
-                All Time
-              </div>
-            </div>
-            
-            {isLoading ? (
-              <div className="h-64 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-300"></div>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <div style={{ minWidth: `${stats.salesData.months.length * 50}px`, height: '400px' }}>
-                  <Line 
-                    data={{
-                      labels: stats.salesData.months,
-                      datasets: [
-                        {
-                          label: 'Revenue (৳)',
-                          data: stats.salesData.values,
-                          borderColor: COLORS.highlight,
-                          backgroundColor: 'rgba(59, 130, 246, 0.05)',
-                          tension: 0.4,
-                          fill: true,
-                          pointBackgroundColor: COLORS.highlight,
-                          pointBorderColor: '#fff',
-                          pointBorderWidth: 2,
-                          pointRadius: 4,
-                          pointHoverRadius: 6
-                        }
-                      ]
-                    }}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          display: false
-                        },
-                        tooltip: {
-                          callbacks: {
-                            label: function(context) {
-                              return `৳${context.parsed.y.toLocaleString()}`;
-                            }
-                          }
-                        }
-                      },
-                      scales: {
-                        y: {
-                          beginAtZero: true,
-                          grid: {
-                            color: 'rgba(0, 0, 0, 0.03)'
-                          },
-                          ticks: {
-                            callback: function(value) {
-                              return '৳' + (value/1000).toFixed(0) + 'K';
-                            }
-                          }
-                        },
-                        x: {
-                          grid: {
-                            display: false
-                          }
-                        }
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-            )}
+          {/* Dynamic Metrics Card */}
+          <motion.div variants={itemVariants}>
+            <DynamicMetricCard 
+              metrics={dynamicMetrics} 
+              isLoading={isLoading}
+            />
           </motion.div>
         </div>
 
@@ -386,85 +486,40 @@ const DashboardStats = () => {
 
       {/* Additional Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Sales Distribution */}
+        {/* Core Metrics - 3D Cards */}
         <motion.div 
           className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
           variants={itemVariants}
         >
           <h3 className="text-lg font-bold mb-4" style={{ color: COLORS.primary }}>
-            Sales Distribution
+            Core Metrics
           </h3>
           
-          {isLoading ? (
-            <div className="h-64 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-300"></div>
-            </div>
-          ) : (
-            <div className="flex items-center">
-              <div className="w-1/2">
-                <Doughnut 
-                  data={{
-                    labels: transformedDistribution.map(item => item.status),
-                    datasets: [
-                      {
-                        data: transformedDistribution.map(item => item.percent),
-                        backgroundColor: statusColors,
-                        borderWidth: 0,
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    plugins: {
-                      legend: {
-                        position: 'bottom',
-                        labels: {
-                          font: {
-                            size: 12
-                          },
-                          padding: 20,
-                          usePointStyle: true,
-                          pointStyle: 'circle'
-                        }
-                      },
-                      tooltip: {
-                        callbacks: {
-                          label: function(context) {
-                            const index = context.dataIndex;
-                            const count = transformedDistribution[index].count;
-                            return `${context.label}: ${context.parsed}% (${count} orders)`;
-                          }
-                        }
-                      }
-                    },
-                    cutout: '75%'
-                  }}
-                />
-              </div>
-              <div className="w-1/2 pl-6">
-                {transformedDistribution.map((item, index) => (
-                  <div key={item.status} className="mb-4">
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm" style={{ color: COLORS.secondary }}>{item.status}</span>
-                      <span className="font-medium" style={{ color: COLORS.primary }}>{item.percent}%</span>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full rounded-full" 
-                        style={{ 
-                          backgroundColor: statusColors[index],
-                          width: `${item.percent}%`
-                        }}
-                      ></div>
-                    </div>
-                    <p className="text-xs mt-1" style={{ color: COLORS.secondary }}>
-                      {item.count} orders
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="grid grid-cols-3 gap-4 h-48">
+            <ThreeDMetricCard 
+              title="Orders" 
+              value={stats ? formatNumber(stats.orders) : "0"} 
+              icon={<FaShoppingCart />}
+              color={COLORS.highlight}
+              isLoading={isLoading}
+            />
+            
+            <ThreeDMetricCard 
+              title="Products" 
+              value={stats ? formatNumber(stats.products) : "0"} 
+              icon={<FaBox />}
+              color="#10B981"
+              isLoading={isLoading}
+            />
+            
+            <ThreeDMetricCard 
+              title="Customers" 
+              value={stats ? formatNumber(stats.users) : "0"} 
+              icon={<FaUsers />}
+              color="#8B5CF6"
+              isLoading={isLoading}
+            />
+          </div>
         </motion.div>
 
         {/* Sales by Category */}

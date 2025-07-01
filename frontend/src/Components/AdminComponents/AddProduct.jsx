@@ -3,14 +3,16 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Color palette constants
+// Modern Black and White Premium Color Palette
 const COLORS = {
-  background: "#EFE2B2",
-  primary: "#9E5F57",
-  accent: "#567A4B",
-  text: "#814B4A",
-  subtle: "#97A276",
-  highlight: "#F5C9C6"
+  background: "#FFFFFF",          // Pure white background
+  primary: "#000000",             // Deep black for primary elements
+  accent: "#333333",              // Dark gray for accents
+  text: "#222222",                // Almost black for text
+  subtle: "#E0E0E0",              // Light gray for subtle elements
+  highlight: "#F5F5F5",           // Very light gray for highlights
+  border: "#D1D1D1",              // Border color
+  buttonHover: "#1A1A1A"          // Slightly lighter black for hover
 };
 
 // Categories structure from Navbar
@@ -207,8 +209,11 @@ const AddProduct = () => {
         
         <motion.form 
           onSubmit={handleSubmit} 
-          className="p-6 rounded-xl shadow-2xl"
-          style={{ backgroundColor: COLORS.highlight }}
+          className="p-6 rounded-xl shadow-lg"
+          style={{ 
+            backgroundColor: COLORS.background,
+            border: `1px solid ${COLORS.border}`,
+          }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
@@ -229,11 +234,10 @@ const AddProduct = () => {
                 placeholder="Enter product name"
                 value={formData.productName}
                 onChange={handleChange}
-                className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-1"
                 style={{ 
-                  borderColor: COLORS.primary, 
+                  borderColor: COLORS.border, 
                   color: COLORS.text,
-                  boxShadow: `0 2px 4px ${COLORS.subtle}20`
                 }}
                 required
               />
@@ -254,11 +258,10 @@ const AddProduct = () => {
                 placeholder="Enter product code"
                 value={formData.productCode}
                 onChange={handleChange}
-                className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-1"
                 style={{ 
-                  borderColor: COLORS.primary, 
+                  borderColor: COLORS.border, 
                   color: COLORS.text,
-                  boxShadow: `0 2px 4px ${COLORS.subtle}20`
                 }}
                 required
               />
@@ -279,11 +282,10 @@ const AddProduct = () => {
                 placeholder="Enter product description"
                 value={formData.description}
                 onChange={handleChange}
-                className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-1"
                 style={{ 
-                  borderColor: COLORS.primary, 
+                  borderColor: COLORS.border, 
                   color: COLORS.text,
-                  boxShadow: `0 2px 4px ${COLORS.subtle}20`,
                   minHeight: '100px'
                 }}
                 required
@@ -307,11 +309,10 @@ const AddProduct = () => {
                   placeholder="Product price"
                   value={formData.price}
                   onChange={handleChange}
-                  className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                  className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-1"
                   style={{ 
-                    borderColor: COLORS.primary, 
+                    borderColor: COLORS.border, 
                     color: COLORS.text,
-                    boxShadow: `0 2px 4px ${COLORS.subtle}20`
                   }}
                   required
                 />
@@ -327,11 +328,10 @@ const AddProduct = () => {
                   placeholder="Discount percentage"
                   value={formData.discount}
                   onChange={handleChange}
-                  className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                  className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-1"
                   style={{ 
-                    borderColor: COLORS.primary, 
+                    borderColor: COLORS.border, 
                     color: COLORS.text,
-                    boxShadow: `0 2px 4px ${COLORS.subtle}20`
                   }}
                   required
                 />
@@ -343,8 +343,8 @@ const AddProduct = () => {
               className="text-lg font-semibold md:col-span-2 text-center py-2 rounded-lg"
               style={{ 
                 color: COLORS.text,
-                backgroundColor: COLORS.subtle + '20',
-                border: `1px solid ${COLORS.subtle}`
+                backgroundColor: COLORS.highlight,
+                border: `1px solid ${COLORS.border}`
               }}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -368,11 +368,10 @@ const AddProduct = () => {
                 placeholder="Available stock"
                 value={formData.stock}
                 onChange={handleChange}
-                className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-1"
                 style={{ 
-                  borderColor: COLORS.primary, 
+                  borderColor: COLORS.border, 
                   color: COLORS.text,
-                  boxShadow: `0 2px 4px ${COLORS.subtle}20`
                 }}
                 required
               />
@@ -392,11 +391,10 @@ const AddProduct = () => {
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  className="w-full p-3 rounded-lg border bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                  className="w-full p-3 rounded-lg border bg-white appearance-none focus:outline-none focus:ring-1"
                   style={{ 
-                    borderColor: COLORS.primary, 
+                    borderColor: COLORS.border, 
                     color: COLORS.text,
-                    boxShadow: `0 2px 4px ${COLORS.subtle}20`
                   }}
                   required
                 >
@@ -408,7 +406,7 @@ const AddProduct = () => {
                   ))}
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                  <svg className="h-4 w-4 text-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
                 </div>
@@ -429,11 +427,10 @@ const AddProduct = () => {
                   name="subCategory"
                   value={formData.subCategory}
                   onChange={handleChange}
-                  className="w-full p-3 rounded-lg border bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                  className="w-full p-3 rounded-lg border bg-white appearance-none focus:outline-none focus:ring-1"
                   style={{ 
-                    borderColor: COLORS.primary, 
+                    borderColor: COLORS.border, 
                     color: COLORS.text,
-                    boxShadow: `0 2px 4px ${COLORS.subtle}20`
                   }}
                   disabled={!formData.category}
                   required
@@ -446,7 +443,7 @@ const AddProduct = () => {
                   ))}
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                  <svg className="h-4 w-4 text-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
                 </div>
@@ -468,11 +465,10 @@ const AddProduct = () => {
                 placeholder="Size chart image URL"
                 value={formData.sizeChart}
                 onChange={handleChange}
-                className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-1"
                 style={{ 
-                  borderColor: COLORS.primary, 
+                  borderColor: COLORS.border, 
                   color: COLORS.text,
-                  boxShadow: `0 2px 4px ${COLORS.subtle}20`
                 }}
               />
             </motion.div>
@@ -492,11 +488,10 @@ const AddProduct = () => {
                 placeholder="Product video URL"
                 value={formData.videoUrl || ''}
                 onChange={handleChange}
-                className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-1"
                 style={{ 
-                  borderColor: COLORS.primary, 
+                  borderColor: COLORS.border, 
                   color: COLORS.text,
-                  boxShadow: `0 2px 4px ${COLORS.subtle}20`
                 }}
               />
             </motion.div>
@@ -517,12 +512,15 @@ const AddProduct = () => {
                 <motion.button
                   type="button"
                   onClick={addImageField}
-                  className="flex items-center text-sm px-3 py-1 rounded-lg"
+                  className="flex items-center text-sm px-3 py-1 rounded-lg border border-black"
                   style={{ 
-                    backgroundColor: COLORS.primary,
-                    color: 'white'
+                    backgroundColor: COLORS.background,
+                    color: COLORS.text
                   }}
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={{ 
+                    backgroundColor: COLORS.buttonHover,
+                    color: "#FFFFFF"
+                  }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -547,23 +545,22 @@ const AddProduct = () => {
                     placeholder={`Image URL ${index + 1}`}
                     value={image}
                     onChange={(e) => handleImageChange(index, e.target.value)}
-                    className="flex-1 p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                    className="flex-1 p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-1"
                     style={{ 
-                      borderColor: COLORS.primary, 
+                      borderColor: COLORS.border, 
                       color: COLORS.text,
-                      boxShadow: `0 2px 4px ${COLORS.subtle}20`
                     }}
                   />
                   {formData.images.length > 1 && (
                     <motion.button
                       type="button"
                       onClick={() => removeImageField(index)}
-                      className="p-2 rounded-lg"
-                      style={{ backgroundColor: COLORS.primary }}
-                      whileHover={{ scale: 1.1 }}
+                      className="p-2 rounded-lg border border-black"
+                      style={{ backgroundColor: COLORS.background }}
+                      whileHover={{ backgroundColor: COLORS.buttonHover, color: "#FFFFFF" }}
                       whileTap={{ scale: 0.9 }}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                       </svg>
                     </motion.button>
@@ -588,11 +585,10 @@ const AddProduct = () => {
               placeholder="e.g. Red, Blue, Green"
               value={formData.availableColors.join(', ')}
               onChange={handleColorsChange}
-              className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50"
+              className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-1"
               style={{ 
-                borderColor: COLORS.primary, 
+                borderColor: COLORS.border, 
                 color: COLORS.text,
-                boxShadow: `0 2px 4px ${COLORS.subtle}20`
               }}
             />
           </motion.div>
@@ -611,12 +607,15 @@ const AddProduct = () => {
               <motion.button
                 type="button"
                 onClick={addSizeField}
-                className="flex items-center text-sm px-3 py-1 rounded-lg"
+                className="flex items-center text-sm px-3 py-1 rounded-lg border border-black"
                 style={{ 
-                  backgroundColor: COLORS.accent,
-                  color: 'white'
+                  backgroundColor: COLORS.background,
+                  color: COLORS.text
                 }}
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ 
+                  backgroundColor: COLORS.buttonHover,
+                  color: "#FFFFFF"
+                }}
                 whileTap={{ scale: 0.95 }}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -644,11 +643,10 @@ const AddProduct = () => {
                       placeholder="Size name"
                       value={sizeEntry.size}
                       onChange={(e) => handleSizeChange(index, 'size', e.target.value)}
-                      className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                      className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-1"
                       style={{ 
-                        borderColor: COLORS.primary, 
+                        borderColor: COLORS.border, 
                         color: COLORS.text,
-                        boxShadow: `0 2px 4px ${COLORS.subtle}20`
                       }}
                     />
                   </div>
@@ -662,11 +660,10 @@ const AddProduct = () => {
                       placeholder="Price"
                       value={sizeEntry.sizePrice}
                       onChange={(e) => handleSizeChange(index, 'sizePrice', e.target.value)}
-                      className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                      className="w-full p-3 rounded-lg border bg-white placeholder-gray-400 focus:outline-none focus:ring-1"
                       style={{ 
-                        borderColor: COLORS.primary, 
+                        borderColor: COLORS.border, 
                         color: COLORS.text,
-                        boxShadow: `0 2px 4px ${COLORS.subtle}20`
                       }}
                     />
                   </div>
@@ -675,12 +672,12 @@ const AddProduct = () => {
                     <motion.button
                       type="button"
                       onClick={() => removeSizeField(index)}
-                      className="p-2 rounded-lg self-end"
-                      style={{ backgroundColor: COLORS.primary }}
-                      whileHover={{ scale: 1.1 }}
+                      className="p-2 rounded-lg self-end border border-black"
+                      style={{ backgroundColor: COLORS.background }}
+                      whileHover={{ backgroundColor: COLORS.buttonHover, color: "#FFFFFF" }}
                       whileTap={{ scale: 0.9 }}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                       </svg>
                     </motion.button>
@@ -693,7 +690,7 @@ const AddProduct = () => {
           {/* Best Seller */}
           <motion.div 
             className="mt-6 flex items-center gap-3 p-3 rounded-lg"
-            style={{ backgroundColor: COLORS.subtle + '20' }}
+            style={{ backgroundColor: COLORS.highlight }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 1.1 }}
@@ -723,7 +720,6 @@ const AddProduct = () => {
               className="px-8 py-4 rounded-xl text-white font-medium text-lg relative overflow-hidden"
               style={{ 
                 backgroundColor: COLORS.primary,
-                boxShadow: `0 10px 25px ${COLORS.subtle}50`
               }}
               whileHover={{ 
                 scale: 1.03,
@@ -737,7 +733,7 @@ const AddProduct = () => {
                 initial={{ scale: 0 }}
                 whileHover={{ scale: 1 }}
                 style={{ 
-                  background: `radial-gradient(circle, ${COLORS.highlight} 0%, transparent 70%)`,
+                  background: `radial-gradient(circle, ${COLORS.subtle} 0%, transparent 70%)`,
                 }}
               />
             </motion.button>

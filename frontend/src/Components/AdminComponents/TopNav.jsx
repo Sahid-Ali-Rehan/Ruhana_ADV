@@ -79,7 +79,7 @@ const TopNav = ({
             </span>
           </motion.div>
           
-          <motion.button 
+          {/* <motion.button 
             className="relative p-1 text-gray-500 hover:text-black transition-colors"
             onClick={() => setShowNotifications(true)}
             whileHover={{ scale: 1.1 }}
@@ -106,7 +106,7 @@ const TopNav = ({
               style={{ fontFamily: FONTS.primary }}
             />
             <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          </div>
+          </div> */}
           
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">

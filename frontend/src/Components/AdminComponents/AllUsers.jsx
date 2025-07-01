@@ -2,14 +2,16 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 
-// Color palette constants
+// Modern Black and White Premium Color Palette
 const COLORS = {
-  background: "#EFE2B2",
-  primary: "#9E5F57",
-  accent: "#567A4B",
-  text: "#814B4A",
-  subtle: "#97A276",
-  highlight: "#F5C9C6"
+  background: "#FFFFFF",          // Pure white background
+  primary: "#000000",             // Deep black for primary elements
+  accent: "#333333",              // Dark gray for accents
+  text: "#222222",                // Almost black for text
+  subtle: "#E0E0E0",              // Light gray for subtle elements
+  highlight: "#F5F5F5",           // Very light gray for highlights
+  border: "#D1D1D1",              // Border color
+  buttonHover: "#1A1A1A"          // Slightly lighter black for hover
 };
 
 const AllUsers = () => {
@@ -88,41 +90,43 @@ const AllUsers = () => {
       </motion.h2>
       
       <motion.div 
-        className="overflow-x-auto rounded-lg shadow-xl"
+        className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
       >
-        <table className="min-w-full" style={{ backgroundColor: COLORS.highlight }}>
+        <table className="min-w-full bg-white">
           <thead>
-            <tr style={{ backgroundColor: COLORS.primary }}>
-              <th className="border-b px-4 py-3 text-white">User ID</th>
-              <th className="border-b px-4 py-3 text-white">Username</th>
-              <th className="border-b px-4 py-3 text-white">Email</th>
-              <th className="border-b px-4 py-3 text-white">Role</th>
-              <th className="border-b px-4 py-3 text-white">Actions</th>
+            <tr className="bg-gray-50">
+              <th className="border-b px-4 py-3 text-left font-medium" style={{ color: COLORS.text, borderColor: COLORS.border }}>User ID</th>
+              <th className="border-b px-4 py-3 text-left font-medium" style={{ color: COLORS.text, borderColor: COLORS.border }}>Username</th>
+              <th className="border-b px-4 py-3 text-left font-medium" style={{ color: COLORS.text, borderColor: COLORS.border }}>Email</th>
+              <th className="border-b px-4 py-3 text-left font-medium" style={{ color: COLORS.text, borderColor: COLORS.border }}>Role</th>
+              <th className="border-b px-4 py-3 text-left font-medium" style={{ color: COLORS.text, borderColor: COLORS.border }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {users.map((user, index) => (
               <motion.tr 
                 key={user.uid} 
-                style={{ color: COLORS.text, borderColor: COLORS.subtle }}
+                className="hover:bg-gray-50"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.1 + index * 0.05 }}
-                whileHover={{ backgroundColor: COLORS.highlight }}
               >
-                <td className="border-b px-4 py-3">{user.uid}</td>
-                <td className="border-b px-4 py-3">{user.username}</td>
-                <td className="border-b px-4 py-3">{user.email}</td>
-                <td className="border-b px-4 py-3">{user.role}</td>
-                <td className="border-b px-4 py-3 flex justify-center gap-2">
+                <td className="border-b px-4 py-3" style={{ color: COLORS.text, borderColor: COLORS.border }}>{user.uid}</td>
+                <td className="border-b px-4 py-3" style={{ color: COLORS.text, borderColor: COLORS.border }}>{user.username}</td>
+                <td className="border-b px-4 py-3" style={{ color: COLORS.text, borderColor: COLORS.border }}>{user.email}</td>
+                <td className="border-b px-4 py-3" style={{ color: COLORS.text, borderColor: COLORS.border }}>{user.role}</td>
+                <td className="border-b px-4 py-3 flex gap-2" style={{ borderColor: COLORS.border }}>
                   <motion.button
                     onClick={() => changeRole(user.uid)}
-                    className="px-4 py-2 rounded-lg"
-                    style={{ backgroundColor: COLORS.subtle, color: 'white' }}
-                    whileHover={{ scale: 1.05, backgroundColor: COLORS.primary }}
+                    className="px-4 py-2 rounded-lg border border-black"
+                    style={{ backgroundColor: COLORS.background, color: COLORS.text }}
+                    whileHover={{ 
+                      backgroundColor: COLORS.buttonHover,
+                      color: "#FFFFFF"
+                    }}
                     whileTap={{ scale: 0.95 }}
                   >
                     Change Role
@@ -130,8 +134,11 @@ const AllUsers = () => {
                   <motion.button
                     onClick={() => deleteUser(user.uid)}
                     className="px-4 py-2 rounded-lg"
-                    style={{ backgroundColor: COLORS.primary, color: 'white' }}
-                    whileHover={{ scale: 1.05, backgroundColor: COLORS.accent }}
+                    style={{ backgroundColor: COLORS.primary, color: "#FFFFFF" }}
+                    whileHover={{ 
+                      scale: 1.05, 
+                      backgroundColor: COLORS.accent 
+                    }}
                     whileTap={{ scale: 0.95 }}
                   >
                     Delete
