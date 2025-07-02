@@ -156,35 +156,35 @@ const Success = () => {
     addImages();
 
     // Add Header
-    const addHeader = () => {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(18);
-      doc.setTextColor("#000000");
-      doc.text(`INVOICE`, pageWidth / 2, 120, { align: "center" });
+   const addHeader = () => {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor("#000000");
+    doc.text(`INVOICE`, pageWidth / 2, 120, { align: "center" });
 
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
 
-      // Use sequential invoice ID based on order count
-      const invoiceId = `Invoice ID: #${count}`;
-      const invoiceDate = `Invoice Date: ${new Date().toLocaleDateString()}`;
-      const deliveryDateText = `Delivery Date: ${deliveryDate.toDateString()}`;
+    // Updated invoice number text
+    const invoiceNo = `Invoice No: #${count}`;
+    const orderId = `Order ID: ${order._id.slice(-8).toUpperCase()}`;
+    const invoiceDate = `Invoice Date: ${new Date().toLocaleDateString()}`;
+    const deliveryDateText = `Delivery Date: ${deliveryDate.toDateString()}`;
 
-      // Right align text
-      const rightMargin = 20;
-      const invoiceIdWidth = doc.getTextWidth(invoiceId);
-      const invoiceDateWidth = doc.getTextWidth(invoiceDate);
-      const deliveryDateWidth = doc.getTextWidth(deliveryDateText);
-      const maxWidth = Math.max(invoiceIdWidth, invoiceDateWidth, deliveryDateWidth);
-      const startX = pageWidth - maxWidth - rightMargin;
+    // Right align text
+    const rightMargin = 20;
+    const strings = [invoiceNo, orderId, invoiceDate, deliveryDateText];
+    const widths = strings.map(str => doc.getTextWidth(str));
+    const maxWidth = Math.max(...widths);
+    const startX = pageWidth - maxWidth - rightMargin;
 
-      doc.setTextColor("#000000");
-      doc.text(invoiceId, startX, 150);
-      doc.text(invoiceDate, startX, 170);
-      doc.text(deliveryDateText, startX, 190);
-    };
-    addHeader();
-
+    doc.setTextColor("#000000");
+    doc.text(invoiceNo, startX, 150);
+    doc.text(orderId, startX, 170);
+    doc.text(invoiceDate, startX, 190);
+    doc.text(deliveryDateText, startX, 210);
+  };
+  addHeader();
     // Add Customer Details (Black theme)
     const addCustomerDetails = () => {
       doc.setFont("helvetica", "bold");

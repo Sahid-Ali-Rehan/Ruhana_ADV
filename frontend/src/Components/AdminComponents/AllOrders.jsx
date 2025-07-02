@@ -1,10 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { motion, AnimatePresence } from "framer-motion";
+import { FaTruck, FaDownload, FaFileExcel, FaTrash, FaEdit, FaSearch } from "react-icons/fa";
+import JSZip from "jszip";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 
 // Premium monochrome palette
 const COLORS = {
@@ -89,9 +93,10 @@ const AllOrders = () => {
   const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedOrders, setSelectedOrders] = useState([]);
   
-  useEffect(() => {
-    const fetchOrders = async () => {
+useEffect(() => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) {
@@ -100,12 +105,28 @@ const AllOrders = () => {
           return;
         }
 
-        const response = await axios.get(
+        // Fetch orders
+        const ordersResponse = await axios.get(
           "https://ruhana-adv.onrender.com/api/orders/all-orders",
           { headers: { Authorization: `Bearer ${token}` } }
         );
         
-        const ordersWithImages = response.data.map(order => ({
+   // In your fetchData function
+const sortedOrders = ordersResponse.data.sort((a, b) => {
+ const dateA = a.createdAt || a._id ? new Date(parseInt(a._id.substring(0, 8), 16) * 1000) : new Date(0);
+const dateB = b.createdAt || b._id ? new Date(parseInt(b._id.substring(0, 8), 16) * 1000) : new Date(0);
+  return dateB - dateA;
+});
+        
+        // Create sequential order numbers (1 = oldest, N = newest)
+        const ordersWithSequentialNumbers = sortedOrders.map((order, index, array) => {
+          return {
+            ...order,
+            sequentialNumber: array.length - index
+          };
+        });
+        
+        const ordersWithImages = ordersWithSequentialNumbers.map(order => ({
           ...order,
           items: order.items.map(item => ({
             ...item,
@@ -122,8 +143,25 @@ const AllOrders = () => {
       }
     };
 
-    fetchOrders();
+    fetchData();
   }, []);
+  // Toggle order selection
+  const toggleOrderSelection = (orderId) => {
+    setSelectedOrders(prev => 
+      prev.includes(orderId) 
+        ? prev.filter(id => id !== orderId) 
+        : [...prev, orderId]
+    );
+  };
+
+  // Select all/deselect all
+  const toggleSelectAll = () => {
+    if (selectedOrders.length === filteredOrders.length) {
+      setSelectedOrders([]);
+    } else {
+      setSelectedOrders(filteredOrders.map(order => order._id));
+    }
+  };
 
   // Filter orders based on search and status
   const filteredOrders = orders.filter(order => {
@@ -161,6 +199,7 @@ const AllOrders = () => {
     }
   };
 
+  // Handle Excel download for single order
   const handleDownload = (order) => {
     const worksheetData = [
       ["Order ID", order._id],
@@ -189,15 +228,73 @@ const AllOrders = () => {
     const workbook = XLSX.utils.book_new();
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
     
-    worksheet["!cols"] = [
-      { wch: 25 }, { wch: 20 }, { wch: 15 }, 
-      { wch: 15 }, { wch: 15 }
+    // Auto size columns
+    const colWidths = [
+      { wch: 25 }, 
+      { wch: 20 }, 
+      { wch: 15 }, 
+      { wch: 15 }, 
+      { wch: 15 }
     ];
+    worksheet['!cols'] = colWidths;
+
+    // Add styling
+    const range = XLSX.utils.decode_range(worksheet['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cell_address = { c: C, r: R };
+        const cell_ref = XLSX.utils.encode_cell(cell_address);
+        
+        if (R === 0 || R === 10) { // Header rows
+          if (!worksheet[cell_ref]) worksheet[cell_ref] = {};
+          if (!worksheet[cell_ref].s) worksheet[cell_ref].s = {};
+          worksheet[cell_ref].s = { font: { bold: true } };
+        }
+      }
+    }
 
     XLSX.utils.book_append_sheet(workbook, worksheet, "Order Details");
     const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
     const data = new Blob([excelBuffer], { type: "application/octet-stream" });
     saveAs(data, `Order_${order._id.slice(-6)}.xlsx`);
+  };
+
+  // Handle Excel download for multiple orders
+  const handleBulkExcelDownload = () => {
+    const workbook = XLSX.utils.book_new();
+    
+    selectedOrders.forEach(orderId => {
+      const order = orders.find(o => o._id === orderId);
+      if (!order) return;
+      
+      const worksheetData = [
+        ["Order ID", order._id],
+        ["Customer", order.name || "N/A"],
+        ["Phone", order.phone || "N/A"],
+        ["Total Amount", `TK. ${order.totalAmount}`],
+        ["Status", order.status || "N/A"],
+        ["Date", formatDateTime(order.createdAt)],
+        [],
+        ["Product", "Size", "Color", "Qty", "Price"]
+      ];
+      
+      order.items.forEach(item => {
+        worksheetData.push([
+          item.productName || "Unknown",
+          item.selectedSize || "N/A",
+          item.selectedColor || "N/A",
+          item.quantity,
+          `TK. ${item.price}`
+        ]);
+      });
+      
+      const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+      XLSX.utils.book_append_sheet(workbook, worksheet, `Order_${order._id.slice(-4)}`);
+    });
+    
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(data, `Bulk_Orders_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   const handleApproveCancellation = async (orderId) => {
@@ -218,10 +315,67 @@ const AllOrders = () => {
     }
   };
 
+  // Delete multiple orders
+  const handleBulkDelete = async () => {
+    const isConfirmed = window.confirm(`Are you sure you want to delete ${selectedOrders.length} orders?`);
+    if (!isConfirmed) return;
+    
+    try {
+      const token = localStorage.getItem("token");
+      await Promise.all(selectedOrders.map(orderId => 
+        axios.delete(
+          `https://ruhana-adv.onrender.com/api/orders/cancel/${orderId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      ));
+      
+      toast.success(`${selectedOrders.length} orders deleted`);
+      setOrders(orders.filter(order => !selectedOrders.includes(order._id)));
+      setSelectedOrders([]);
+    } catch (error) {
+      toast.error("Failed to delete orders");
+      console.error(error);
+    }
+  };
+
   const toggleOrderExpand = (orderId) => {
     setExpandedOrderId(prev => prev === orderId ? null : orderId);
   };
 
+  // Format date with AM/PM and seconds - FIXED DATE FORMAT
+// Robust date formatting function
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "Date not available";
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return "Invalid date";
+      }
+      
+      // Get date components
+      const year = date.getFullYear();
+      const month = date.toLocaleString('default', { month: 'short' });
+      const day = date.getDate();
+      
+      // Get time components
+      let hours = date.getHours();
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      const seconds = date.getSeconds().toString().padStart(2, '0');
+      
+      // Convert to 12-hour format with AM/PM
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12; // Handle midnight (0 hours)
+      
+      return `${day} ${month} ${year} ${hours}:${minutes}:${seconds} ${ampm}`;
+    } catch (e) {
+      console.error("Invalid date format:", dateString);
+      return "Invalid date";
+    }
+  };
+
+  
   const getStatusStyle = (status) => {
     switch (status) {
       case 'Pending': 
@@ -261,6 +415,227 @@ const AllOrders = () => {
           border: "1px solid #E0E0E0"
         };
     }
+  };
+
+  
+
+  // Generate PDF invoice (exactly like Success.jsx)
+  const generateInvoice = async (order) => {
+    const doc = new jsPDF("portrait", "px", "a4");
+    
+    // Page Dimensions
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+
+    // Money formatting function
+    const formatMoney = (num) => 
+      `Tk. ${Number(num).toLocaleString("en-BD", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
+
+    // Set Background Color to WHITE
+    doc.setFillColor("#FFFFFF");
+    doc.rect(0, 0, pageWidth, pageHeight, "F");
+
+    // Add Images
+    const addImages = () => {
+      try {
+        const topLeftImage = "/Invoice/Top-Left-Corner.png";
+        const topRightImage = "/Invoice/T-Logo.png";
+        const topCenterImage = "/Invoice/Top-Center.png";
+        const centerImage = "/Invoice/Center.png";
+
+        doc.addImage(topLeftImage, "PNG", -30, -30, 160, 160);
+        doc.addImage(topRightImage, "PNG", pageWidth - 100, 20, 80, 80);
+        doc.addImage(topCenterImage, "PNG", 100, -80, 350, 250);
+        doc.addImage(
+          centerImage, 
+          "PNG", 
+          (pageWidth - 250) / 2,
+          (pageHeight - 100) / 2,
+          250, 
+          100
+        );
+      } catch (e) {
+        console.error("Error adding images to PDF:", e);
+      }
+    };
+    addImages();
+
+    // Add Header
+    const addHeader = () => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor("#000000");
+      doc.text(`INVOICE`, pageWidth / 2, 120, { align: "center" });
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(12);
+
+      // FIXED: Use sequential order number
+      const invoiceNo = `Invoice No: #${order.sequentialNumber}`;
+      const orderId = `Order ID: ${order._id.slice(-8).toUpperCase()}`;
+      const invoiceDate = `Invoice Date: ${formatDateTime(order.createdAt)}`;
+      const deliveryDate = `Delivery Date: ${new Date(order.estimatedDeliveryDate).toDateString()}`;
+
+      // Right align text
+      const rightMargin = 20;
+      const strings = [invoiceNo, orderId, invoiceDate, deliveryDate];
+      const widths = strings.map(str => doc.getTextWidth(str));
+      const maxWidth = Math.max(...widths);
+      const startX = pageWidth - maxWidth - rightMargin;
+
+      doc.setTextColor("#000000");
+      doc.text(invoiceNo, startX, 150);
+      doc.text(orderId, startX, 170);
+      doc.text(invoiceDate, startX, 190);
+      doc.text(deliveryDate, startX, 210);
+    };
+    addHeader();
+    
+    // Add Customer Details
+    const addCustomerDetails = () => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor("#000000");
+
+      doc.text("Invoice To:", 20, 220);
+
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor("#333333");
+      doc.text(`${order.name}`, 100, 220);
+
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor("#000000");
+      doc.text("Phone:", 20, 240);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor("#333333");
+      doc.text(`${order.phone}`, 100, 240);
+
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor("#000000");
+      doc.text("District:", 20, 260);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor("#333333");
+      doc.text(`${order.jela}`, 100, 260);
+
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor("#000000");
+      doc.text("Upazela:", 20, 280);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor("#333333");
+      doc.text(`${order.upazela}`, 100, 280);
+
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor("#000000");
+      doc.text("Address:", 20, 300);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor("#333333");
+      doc.text(`${order.address}`, 100, 300);
+    };
+    addCustomerDetails();
+
+    // Add Order Table
+    const addOrderTable = () => {
+      let yOffset = 340;
+      
+      // Table Header
+      doc.setFont("helvetica", "bold");
+      doc.setFillColor("#f0f0f0");
+      doc.setDrawColor("#000000");
+      doc.rect(20, yOffset, pageWidth - 40, 20, "FD");
+      doc.setTextColor("#000000");
+      doc.text("No.", 30, yOffset + 15);
+      doc.text("Description", 80, yOffset + 15);
+      doc.text("Quantity", pageWidth - 170, yOffset + 15, { align: "right" });
+      doc.text("Amount", pageWidth - 50, yOffset + 15, { align: "right" });
+
+      // Table Content
+      yOffset += 30;
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor("#333333");
+      order.items.forEach((item, index) => {
+        doc.text(`${index + 1}`, 30, yOffset);
+        doc.text(item.productName, 80, yOffset);
+        doc.text(`${item.quantity}`, pageWidth - 170, yOffset, { align: "right" });
+        
+        doc.text(
+          formatMoney(item.quantity * item.price), 
+          pageWidth - 50, 
+          yOffset, 
+          { align: "right" }
+        );
+        
+        yOffset += 20;
+      });
+
+      // Total Section
+      yOffset += 10;
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor("#000000");
+      
+      const discountAmount = order.discount ? order.totalAmount * (order.discount / 100) : 0;
+      const finalAmount = order.totalAmount - discountAmount + order.deliveryCharge;
+
+      doc.text(`Delivery Charge: ${formatMoney(order.deliveryCharge)}`, 20, yOffset);
+      yOffset += 20;
+
+      if (order.discount) {
+        doc.text(`Discount (${order.discount}%): ${formatMoney(-discountAmount)}`, 20, yOffset);
+        yOffset += 20;
+      }
+
+      doc.setFontSize(12);
+      doc.text(`Total Amount: ${formatMoney(finalAmount)}`, 20, yOffset);
+      doc.setFontSize(10);
+    };
+    addOrderTable();
+
+    // Footer
+    const addFooter = () => {
+      const footerText = "Thank you for shopping with Ruhana Fashions! Payment must be made immediately.";
+      const footerY = pageHeight - 50;
+
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(10);
+      doc.setTextColor("#666666");
+      doc.text(footerText, pageWidth / 2, footerY, { align: "center" });
+
+      // Draw the line
+      doc.setDrawColor("#000000");
+      doc.setLineWidth(1);
+      doc.line(20, footerY + 10, pageWidth - 20, footerY + 10);
+
+      // Add the copyright text
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor("#666666");
+      doc.text("@copyright 2024 reserved by Ruhana Fashions", pageWidth / 2, footerY + 25, { align: "center" });
+    };
+    addFooter();
+
+    // Save PDF
+    doc.save(`ruhana-invoice-${order.sequentialNumber}.pdf`);
+  };
+
+  // Handle bulk invoice download
+  const handleBulkInvoiceDownload = async () => {
+    const zip = new JSZip();
+    
+    for (const orderId of selectedOrders) {
+      const order = orders.find(o => o._id === orderId);
+      if (!order) continue;
+      
+      // Generate PDF
+      const doc = new jsPDF();
+      doc.text(`Invoice #${order.sequentialNumber} for Order #${order._id.slice(-8)}`, 10, 10);
+      const pdfBlob = doc.output('blob');
+      zip.file(`Invoice_${order.sequentialNumber}.pdf`, pdfBlob);
+    }
+    
+    const content = await zip.generateAsync({ type: "blob" });
+    saveAs(content, `Invoices_${new Date().toISOString().slice(0, 10)}.zip`);
   };
 
   // Handle image loading errors
@@ -313,21 +688,113 @@ const AllOrders = () => {
         </span>
       </motion.h1>
       
+      {/* Bulk Actions Toolbar */}
+      {selectedOrders.length > 0 && (
+        <motion.div 
+          className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4 mb-6 flex flex-wrap items-center gap-4 shadow-md"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <span className="font-medium" style={{ color: COLORS.text }}>
+            {selectedOrders.length} {selectedOrders.length === 1 ? 'Order' : 'Orders'} Selected
+          </span>
+          
+          <div className="flex flex-wrap gap-3">
+            <motion.button
+              onClick={handleBulkInvoiceDownload}
+              className="px-4 py-2 rounded-lg flex items-center gap-1.5 font-medium text-sm"
+              style={{ backgroundColor: COLORS.textSecondary, color: 'white' }}
+              whileHover={{ 
+                scale: 1.03,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+              }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <FaDownload className="w-4 h-4" />
+              <span>Download Invoices</span>
+            </motion.button>
+            
+            <motion.button
+              onClick={handleBulkExcelDownload}
+              className="px-4 py-2 rounded-lg flex items-center gap-1.5 font-medium text-sm"
+              style={{ backgroundColor: COLORS.textSecondary, color: 'white' }}
+              whileHover={{ 
+                scale: 1.03,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+              }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <FaFileExcel className="w-4 h-4" />
+              <span>Download Excel</span>
+            </motion.button>
+            
+            <motion.button
+              onClick={handleBulkDelete}
+              className="px-4 py-2 rounded-lg flex items-center gap-1.5 font-medium text-sm"
+              style={{ backgroundColor: COLORS.danger, color: 'white' }}
+              whileHover={{ 
+                scale: 1.03,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+              }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <FaTrash className="w-4 h-4" />
+              <span>Delete Selected</span>
+            </motion.button>
+          </div>
+          
+          <motion.button
+            onClick={() => setSelectedOrders([])}
+            className="ml-auto px-4 py-2 rounded-lg font-medium text-sm"
+            style={{ 
+              backgroundColor: COLORS.background, 
+              color: COLORS.text,
+              border: `1px solid ${COLORS.border}`
+            }}
+            whileHover={{ 
+              scale: 1.03,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+            }}
+            whileTap={{ scale: 0.98 }}
+          >
+            Clear Selection
+          </motion.button>
+        </motion.div>
+      )}
+      
       {/* Search and Filter Section */}
       <motion.div 
-        className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 md:mb-10"
+        className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 md:mb-10"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
       >
+        <div className="md:col-span-1 flex items-center">
+          <input
+            type="checkbox"
+            className="h-5 w-5 rounded border-gray-300 text-black focus:ring-black mr-3"
+            checked={selectedOrders.length > 0 && selectedOrders.length === filteredOrders.length}
+            onChange={toggleSelectAll}
+            disabled={filteredOrders.length === 0}
+          />
+          <label className="text-sm" style={{ color: COLORS.textSecondary }}>
+            Select All
+          </label>
+        </div>
+        
         <div className="md:col-span-2">
           <motion.div 
             whileHover={{ scale: 1.005 }}
+            className="relative"
           >
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaSearch className="text-gray-400" />
+            </div>
             <input
               type="text"
-              placeholder="🔍 Search orders by ID, name or phone..."
-              className="w-full p-3 md:p-4 rounded-xl border focus:outline-none focus:ring-1 shadow-sm text-base md:text-lg"
+              placeholder="Search orders by ID, name or phone..."
+              className="w-full pl-10 pr-4 py-3 md:py-4 rounded-xl border focus:outline-none focus:ring-1 shadow-sm text-base md:text-lg"
               style={{ 
                 backgroundColor: COLORS.highlight, 
                 borderColor: COLORS.border,
@@ -447,6 +914,17 @@ const AllOrders = () => {
                 onClick={() => toggleOrderExpand(order._id)}
               >
                 <div className="flex items-center gap-3 md:gap-4">
+                  <input 
+                    type="checkbox"
+                    className="h-5 w-5 rounded border-gray-300 text-black focus:ring-black"
+                    checked={selectedOrders.includes(order._id)}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      toggleOrderSelection(order._id);
+                    }}
+                  />
+                  
                   {/* Display product image with error handling */}
                   {order.items[0]?.productImage ? (
                     <motion.div 
@@ -486,10 +964,13 @@ const AllOrders = () => {
                   
                   <div>
                     <h3 className={`font-semibold text-lg md:text-xl ${FONTS.heading}`} style={{ color: COLORS.text }}>
-                      Order #{order._id.slice(-8).toUpperCase()}
+                      Order #{order.sequentialNumber} {/* FIXED: Use sequential number */}
                     </h3>
                     <p className="text-sm md:text-base" style={{ color: COLORS.textSecondary }}>
                       {order.name} • {order.phone}
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>
+                      {formatDateTime(order.createdAt)} {/* FIXED: Proper date format */}
                     </p>
                   </div>
                 </div>
@@ -501,13 +982,6 @@ const AllOrders = () => {
                   <span className="text-xs px-2.5 py-1 rounded-full font-medium"
                         style={getStatusStyle(order.status)}>
                     {order.status}
-                  </span>
-                  <span className="text-xs opacity-75" style={{ color: COLORS.textSecondary }}>
-                    {new Date(order.createdAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
                   </span>
                 </div>
               </div>
@@ -594,7 +1068,8 @@ const AllOrders = () => {
                             <p><span className="font-medium">Items:</span> {order.items.length}</p>
                             <p><span className="font-medium">Delivery:</span> ৳{order.deliveryCharge}</p>
                             <p><span className="font-medium">Total:</span> ৳{order.totalAmount}</p>
-                            <p><span className="font-medium">Order Date:</span> {new Date(order.createdAt).toLocaleString()}</p>
+                            <p><span className="font-medium">Order Date:</span> {formatDateTime(order.createdAt)}</p>
+                            <p><span className="font-medium">Est. Delivery:</span> {new Date(order.estimatedDeliveryDate).toDateString()}</p>
                           </div>
                         </div>
                       </div>
@@ -630,27 +1105,22 @@ const AllOrders = () => {
                             }}
                             whileTap={{ scale: 0.98 }}
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
+                            <FaFileExcel className="w-4 h-4" />
                             <span>Excel</span>
                           </motion.button>
                           
                           <motion.button
-                            onClick={() => setSelectedOrder(order)}
+                            onClick={() => generateInvoice(order)}
                             className="px-4 py-2 rounded-lg flex items-center gap-1.5 font-medium text-sm"
-                            style={{ backgroundColor: COLORS.primary, color: 'white' }}
+                            style={{ backgroundColor: COLORS.textSecondary, color: 'white' }}
                             whileHover={{ 
                               scale: 1.03,
                               boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
                             }}
                             whileTap={{ scale: 0.98 }}
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            <span>Details</span>
+                            <FaDownload className="w-4 h-4" />
+                            <span>Invoice</span>
                           </motion.button>
                           
                           {order.status === "CancellationRequested" && (
@@ -664,9 +1134,7 @@ const AllOrders = () => {
                               }}
                               whileTap={{ scale: 0.98 }}
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
+                              <FaTrash className="w-4 h-4" />
                               <span>Cancel</span>
                             </motion.button>
                           )}
@@ -716,7 +1184,7 @@ const AllOrders = () => {
                 <div className="flex justify-between items-center pb-3 border-b"
                      style={{ borderColor: COLORS.border }}>
                   <h2 className={`text-2xl font-bold ${FONTS.heading}`} style={{ color: COLORS.text }}>
-                    Order Details • #{selectedOrder._id.slice(-8).toUpperCase()}
+                    Order Details • #{selectedOrder.sequentialNumber} {/* FIXED: Use sequential number */}
                   </h2>
                   <motion.button
                     onClick={() => setSelectedOrder(null)}
@@ -785,7 +1253,13 @@ const AllOrders = () => {
                         <div className="mt-3">
                           <span className="text-xs opacity-75">Order Date</span>
                           <p className="font-medium" style={{ color: COLORS.text }}>
-                            {new Date(selectedOrder.createdAt).toLocaleString()}
+                            {formatDateTime(selectedOrder.createdAt)}
+                          </p>
+                        </div>
+                        <div className="mt-3">
+                          <span className="text-xs opacity-75">Est. Delivery</span>
+                          <p className="font-medium" style={{ color: COLORS.text }}>
+                            {new Date(selectedOrder.estimatedDeliveryDate).toDateString()}
                           </p>
                         </div>
                       </div>
@@ -863,9 +1337,21 @@ const AllOrders = () => {
                         }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
+                        <FaFileExcel className="w-4 h-4" />
+                        Download Excel
+                      </motion.button>
+                      
+                      <motion.button
+                        onClick={() => generateInvoice(selectedOrder)}
+                        className="px-5 py-2.5 rounded-lg flex items-center gap-2 font-medium text-sm"
+                        style={{ backgroundColor: COLORS.textSecondary, color: 'white' }}
+                        whileHover={{ 
+                          scale: 1.03,
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                        }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <FaDownload className="w-4 h-4" />
                         Download Invoice
                       </motion.button>
                       
@@ -882,9 +1368,7 @@ const AllOrders = () => {
                         }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
+                        <FaEdit className="w-4 h-4" />
                         Manage Order
                       </motion.button>
                     </div>
