@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import axios from "axios";
@@ -9,11 +10,13 @@ import { FiUser, FiPackage, FiTruck, FiCheckCircle, FiClock, FiChevronRight, FiL
 gsap.registerPlugin(ScrollTrigger);
 
 const MyProfile = () => {
-  const [orderId, setOrderId] = useState("");
+  const [inputOrderId, setInputOrderId] = useState("");
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState(null);
   const [activeTab, setActiveTab] = useState("profile");
+  const location = useLocation();
+  const navigate = useNavigate();
   
   const formRef = useRef(null);
   const detailsRef = useRef(null);
@@ -22,7 +25,6 @@ const MyProfile = () => {
   const containerRef = useRef(null);
   const tabsRef = useRef([]);
 
-  // Premium animation config
   const geometricPatterns = [
     "M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5",
     "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z",
@@ -30,7 +32,11 @@ const MyProfile = () => {
   ];
 
   useEffect(() => {
-    // Fetch user profile data
+    // Retrieve full order ID from localStorage if available
+    if (location.state?.orderId) {
+      handleTrackOrder(location.state.orderId);
+    }
+
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -63,7 +69,6 @@ const MyProfile = () => {
     
     fetchProfile();
 
-    // Premium animations
     gsap.fromTo(".profile-section", 
       { opacity: 0, y: 30 },
       {
@@ -95,7 +100,6 @@ const MyProfile = () => {
       );
     }
 
-    // Animate geometric elements
     gsap.fromTo(".geometric-element", 
       { 
         scale: 0, 
@@ -112,7 +116,6 @@ const MyProfile = () => {
       }
     );
 
-    // Tab animation
     if (tabsRef.current.length > 0) {
       gsap.fromTo(tabsRef.current, 
         { y: 30, opacity: 0 },
@@ -126,7 +129,6 @@ const MyProfile = () => {
       );
     }
 
-    // Create subtle parallax effect for background elements
     gsap.to(".geometric-element", {
       y: (i) => i * 15,
       scrollTrigger: {
@@ -159,8 +161,8 @@ const MyProfile = () => {
     }
   };
 
-  const handleTrackOrder = async () => {
-    if (!orderId.trim()) {
+  const handleTrackOrder = async (orderIdToTrack) => {
+    if (!orderIdToTrack) {
       toast.error("Please enter an order ID");
       return;
     }
@@ -169,7 +171,7 @@ const MyProfile = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `https://ruhana-adv.onrender.com/api/orders/${orderId}`,
+        `https://ruhana-adv.onrender.com/api/orders/${orderIdToTrack}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -177,7 +179,6 @@ const MyProfile = () => {
         setOrder(response.data);
         setTimeout(animateOrderSections, 100);
         
-        // Premium animation effect
         gsap.to(".premium-highlight", {
           keyframes: [
             { scale: 1.1, duration: 0.3 },
@@ -187,6 +188,14 @@ const MyProfile = () => {
         });
       }
     } catch (error) {
+      // Try to get full ID from localStorage for short IDs
+      if (orderIdToTrack.length === 8) {
+        const fullOrderId = localStorage.getItem(`order_${orderIdToTrack}`);
+        if (fullOrderId) {
+          handleTrackOrder(fullOrderId);
+          return;
+        }
+      }
       toast.error("Order not found. Please check your Order ID");
       setOrder(null);
     } finally {
@@ -220,7 +229,6 @@ const MyProfile = () => {
         toast.success("Cancellation request sent to admin");
         setOrder({ ...order, status: "CancellationRequested" });
         
-        // Premium animation
         if (deleteRef.current) {
           gsap.fromTo(deleteRef.current, 
             { boxShadow: "0 0 0 0px rgba(0,0,0,0.4)" },
@@ -240,6 +248,9 @@ const MyProfile = () => {
     }
   };
 
+  // Generate short order ID (8 characters)
+  const shortOrderId = order ? order._id.slice(-8).toUpperCase() : "";
+
   return (
     <div 
       className="min-h-screen px-4 py-12 profile-container relative overflow-hidden" 
@@ -248,7 +259,6 @@ const MyProfile = () => {
       }}
       ref={containerRef}
     >
-      {/* Add Google Fonts via style tag */}
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&family=Playfair+Display:wght@500;700&display=swap');
         
@@ -261,7 +271,6 @@ const MyProfile = () => {
         }
       `}</style>
 
-      {/* Premium Geometric Background */}
       <div className="fixed inset-0 pointer-events-none z-0 opacity-10">
         {[...Array(15)].map((_, i) => (
           <svg
@@ -283,14 +292,12 @@ const MyProfile = () => {
         ))}
       </div>
 
-      {/* Premium Watermark */}
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-0 opacity-[0.02] pointer-events-none">
         <h1 className="text-[20rem] font-bold tracking-widest" style={{ fontFamily: "'Playfair Display', serif" }}>
           PREMIUM
         </h1>
       </div>
 
-      {/* Logout Button */}
       <a 
         href="/logout"
         className="fixed top-6 right-6 z-30 px-5 py-2.5 rounded-full flex items-center gap-2 transition-all group"
@@ -305,7 +312,6 @@ const MyProfile = () => {
       </a>
 
       <div className="max-w-6xl mx-auto relative z-10 pt-4">
-        {/* Premium Header */}
         <div className="text-center mb-16">
           <h1 className="text-5xl md:text-6xl font-bold mb-4 tracking-tight" style={{ 
             letterSpacing: "-0.03em"
@@ -315,7 +321,6 @@ const MyProfile = () => {
           <div className="h-0.5 w-24 bg-black mx-auto"></div>
         </div>
 
-        {/* Tab Navigation - Premium Style */}
         <div className="flex justify-center mb-16">
           <div className="flex rounded-full border border-black overflow-hidden">
             {["profile", "orders", "settings"].map((tab, i) => (
@@ -339,7 +344,6 @@ const MyProfile = () => {
           </div>
         </div>
 
-        {/* User Profile Section - Premium */}
         {activeTab === "profile" && profileData && (
           <div 
             className="rounded-2xl border border-black mb-24 profile-section relative overflow-hidden"
@@ -415,7 +419,6 @@ const MyProfile = () => {
                 </div>
               </div>
               
-              {/* Premium Divider */}
               <div className="flex items-center py-8 px-10 border-y border-black border-opacity-10">
                 <div className="h-px bg-black bg-opacity-10 flex-grow"></div>
                 <div 
@@ -426,7 +429,6 @@ const MyProfile = () => {
                 <div className="h-px bg-black bg-opacity-10 flex-grow"></div>
               </div>
               
-              {/* Action Cards - Premium */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-10 pt-0">
                 {[
                   { 
@@ -464,7 +466,6 @@ const MyProfile = () => {
           </div>
         )}
 
-        {/* Order Tracking Section - Premium */}
         {activeTab === "orders" && (
           <div className="profile-section">
             <div 
@@ -480,14 +481,14 @@ const MyProfile = () => {
               <div className="flex flex-col md:flex-row gap-4 max-w-3xl">
                 <input
                   type="text"
-                  value={orderId}
-                  onChange={(e) => setOrderId(e.target.value)}
-                  placeholder="Enter Your Order ID"
+                  value={inputOrderId}
+                  onChange={(e) => setInputOrderId(e.target.value)}
+                  placeholder="Enter Your Order ID (short or full)"
                   className="flex-1 px-6 py-4 rounded-xl border-2 border-black focus:outline-none transition-all placeholder-gray-500 text-lg"
                 />
                 
                 <button
-                  onClick={handleTrackOrder}
+                  onClick={() => handleTrackOrder(inputOrderId)}
                   disabled={loading}
                   className="px-8 py-4 rounded-xl font-semibold transition-all flex items-center gap-2 justify-center disabled:opacity-70 text-lg border-2 border-black bg-black text-white hover:bg-gray-900"
                 >
@@ -527,7 +528,6 @@ const MyProfile = () => {
 
             {order && (
               <div className="space-y-10">
-                {/* Order Details - Premium */}
                 <div 
                   ref={detailsRef} 
                   className="rounded-2xl border border-black p-10"
@@ -550,7 +550,7 @@ const MyProfile = () => {
                         <span 
                           className="font-mono break-all"
                         >
-                          {order._id}
+                          {shortOrderId}
                         </span>
                       </div>
                       
@@ -617,7 +617,6 @@ const MyProfile = () => {
                   </div>
                 </div>
 
-                {/* Order Status - Premium */}
                 <div 
                   ref={statusRef} 
                   className="rounded-2xl border border-black p-10"
@@ -667,7 +666,6 @@ const MyProfile = () => {
                   </div>
                 </div>
 
-                {/* Tracking Information - Premium */}
                 <div 
                   className="rounded-2xl border border-black p-10"
                 >
@@ -683,7 +681,6 @@ const MyProfile = () => {
                     Your order tracking link will be sent via SMS to {profileData?.phonenumber} once the shipment is on its way. Please check your messages for real-time updates.
                   </p>
                   
-                  {/* Premium Tracking Map */}
                   <div 
                     className="mt-6 h-96 rounded-xl overflow-hidden relative border border-black"
                     onClick={() => toast.info("Live tracking will activate once your order ships!")}
@@ -700,7 +697,6 @@ const MyProfile = () => {
                   </div>
                 </div>
 
-                {/* Cancellation Section - Premium */}
                 {order && !["Shipped", "Delivered", "CancellationRequested"].includes(order.status) && (
                   <div 
                     ref={deleteRef} 
@@ -731,7 +727,6 @@ const MyProfile = () => {
           </div>
         )}
 
-        {/* Settings Tab - Premium */}
         {activeTab === "settings" && (
           <div 
             className="rounded-2xl border border-black profile-section p-10"
@@ -787,7 +782,6 @@ const MyProfile = () => {
         )}
       </div>
 
-      {/* Premium Footer */}
       <div className="text-center py-12 text-gray-500 text-sm tracking-widest">
         PREMIUM EXPERIENCE • EXCLUSIVE MEMBER • {new Date().getFullYear()}
       </div>

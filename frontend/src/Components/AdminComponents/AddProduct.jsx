@@ -15,7 +15,7 @@ const COLORS = {
   buttonHover: "#1A1A1A"          // Slightly lighter black for hover
 };
 
-// Categories structure from Navbar - Updated with new categories
+// Default categories structure
 const initialCategories = {
   katua: [
     { name: "Cotton Katua", link: "/category/katua/cotton" },
@@ -82,33 +82,44 @@ const AddProduct = () => {
   });
   
   // State for category management
-  const [categories, setCategories] = useState(initialCategories);
-  const [categoryLabels, setCategoryLabels] = useState(initialCategoryLabels);
+  const [categories, setCategories] = useState({});
+  const [categoryLabels, setCategoryLabels] = useState({});
   const [newCategoryName, setNewCategoryName] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [newSubcategoryName, setNewSubcategoryName] = useState('');
-  const [activeTab, setActiveTab] = useState('product'); // 'product' or 'categories'
+  const [activeTab, setActiveTab] = useState('product');
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
-  // Initialize categories from localStorage
-  useEffect(() => {
-    const savedCategories = localStorage.getItem('admin_categories');
-    const savedLabels = localStorage.getItem('admin_categoryLabels');
-    
-    if (savedCategories && savedLabels) {
-      try {
-        setCategories(JSON.parse(savedCategories));
-        setCategoryLabels(JSON.parse(savedLabels));
-      } catch (e) {
-        console.error('Error parsing categories from localStorage', e);
+  // Fetch categories from backend API
+  const fetchCategories = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('https://ruhana-adv.onrender.com/api/categories', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data && response.data.categories && response.data.labels) {
+        setCategories(response.data.categories);
+        setCategoryLabels(response.data.labels);
+      } else {
+        // Fallback to initial categories if API returns nothing
+        setCategories(initialCategories);
+        setCategoryLabels(initialCategoryLabels);
       }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      toast.error('Failed to load categories. Using default.');
+      setCategories(initialCategories);
+      setCategoryLabels(initialCategoryLabels);
+    } finally {
+      setLoadingCategories(false);
     }
-  }, []);
+  };
 
-  // Save categories to localStorage whenever they change
+  // Initialize categories from backend
   useEffect(() => {
-    localStorage.setItem('admin_categories', JSON.stringify(categories));
-    localStorage.setItem('admin_categoryLabels', JSON.stringify(categoryLabels));
-  }, [categories, categoryLabels]);
+    fetchCategories();
+  }, []);
 
   // Get subcategories based on selected category
   const getSubCategories = () => {
@@ -217,7 +228,7 @@ const AddProduct = () => {
   };
 
   // Category management functions
-  const addNewCategory = () => {
+  const addNewCategory = async () => {
     if (!newCategoryName.trim()) {
       toast.error('Category name cannot be empty');
       return;
@@ -230,27 +241,51 @@ const AddProduct = () => {
       return;
     }
     
-    setCategories(prev => ({ ...prev, [key]: [] }));
-    setCategoryLabels(prev => ({ ...prev, [key]: newCategoryName }));
-    setNewCategoryName('');
-    toast.success(`Category "${newCategoryName}" added successfully`);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        'https://ruhana-adv.onrender.com/api/categories/add',
+        { key, name: newCategoryName },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Update local state
+      setCategories(prev => ({ ...prev, [key]: [] }));
+      setCategoryLabels(prev => ({ ...prev, [key]: newCategoryName }));
+      setNewCategoryName('');
+      toast.success(`Category "${newCategoryName}" added successfully`);
+    } catch (error) {
+      console.error('Error adding category:', error);
+      toast.error('Failed to add category');
+    }
   };
 
-  const deleteCategory = (categoryKey) => {
+  const deleteCategory = async (categoryKey) => {
     if (!window.confirm(`Are you sure you want to delete the "${categoryLabels[categoryKey]}" category?`)) return;
     
-    const newCategories = { ...categories };
-    delete newCategories[categoryKey];
-    
-    const newLabels = { ...categoryLabels };
-    delete newLabels[categoryKey];
-    
-    setCategories(newCategories);
-    setCategoryLabels(newLabels);
-    toast.success('Category deleted successfully');
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`https://ruhana-adv.onrender.com/api/categories/${categoryKey}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Update local state
+      const newCategories = { ...categories };
+      delete newCategories[categoryKey];
+      
+      const newLabels = { ...categoryLabels };
+      delete newLabels[categoryKey];
+      
+      setCategories(newCategories);
+      setCategoryLabels(newLabels);
+      toast.success('Category deleted successfully');
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      toast.error('Failed to delete category');
+    }
   };
 
-  const addSubcategory = () => {
+  const addSubcategory = async () => {
     if (!selectedCategory) {
       toast.error('Please select a category');
       return;
@@ -272,29 +307,54 @@ const AddProduct = () => {
       link: `/category/${selectedCategory}/${newSubcategoryName.toLowerCase().replace(/\s+/g, '-')}`
     };
     
-    setCategories(prev => ({
-      ...prev,
-      [selectedCategory]: [...prev[selectedCategory], newSubcategory]
-    }));
-    
-    setNewSubcategoryName('');
-    toast.success(`Subcategory "${newSubcategoryName}" added to "${categoryLabels[selectedCategory]}"`);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `https://ruhana-adv.onrender.com/api/categories/${selectedCategory}/subcategories`,
+        newSubcategory,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Update local state
+      setCategories(prev => ({
+        ...prev,
+        [selectedCategory]: [...prev[selectedCategory], newSubcategory]
+      }));
+      
+      setNewSubcategoryName('');
+      toast.success(`Subcategory "${newSubcategoryName}" added to "${categoryLabels[selectedCategory]}"`);
+    } catch (error) {
+      console.error('Error adding subcategory:', error);
+      toast.error('Failed to add subcategory');
+    }
   };
 
-  const deleteSubcategory = (categoryKey, subcategoryIndex) => {
+  const deleteSubcategory = async (categoryKey, subcategoryIndex) => {
     const categoryName = categoryLabels[categoryKey];
     const subcategoryName = categories[categoryKey][subcategoryIndex].name;
     
     if (!window.confirm(`Are you sure you want to delete "${subcategoryName}" from "${categoryName}"?`)) return;
     
-    const updatedSubcategories = categories[categoryKey].filter((_, i) => i !== subcategoryIndex);
-    
-    setCategories(prev => ({
-      ...prev,
-      [categoryKey]: updatedSubcategories
-    }));
-    
-    toast.success('Subcategory deleted successfully');
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(
+        `https://ruhana-adv.onrender.com/api/categories/${categoryKey}/subcategories/${subcategoryIndex}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Update local state
+      const updatedSubcategories = categories[categoryKey].filter((_, i) => i !== subcategoryIndex);
+      
+      setCategories(prev => ({
+        ...prev,
+        [categoryKey]: updatedSubcategories
+      }));
+      
+      toast.success('Subcategory deleted successfully');
+    } catch (error) {
+      console.error('Error deleting subcategory:', error);
+      toast.error('Failed to delete subcategory');
+    }
   };
 
   return (
@@ -531,6 +591,7 @@ const AddProduct = () => {
                           color: COLORS.text,
                         }}
                         required
+                        disabled={loadingCategories}
                       >
                         <option value="">Select Category</option>
                         {Object.keys(categories).map((key) => (
@@ -545,6 +606,9 @@ const AddProduct = () => {
                         </svg>
                       </div>
                     </div>
+                    {loadingCategories && (
+                      <div className="text-sm mt-1 text-gray-500">Loading categories...</div>
+                    )}
                   </motion.div>
                   
                   {/* SUBCATEGORY DROPDOWN */}
@@ -566,7 +630,7 @@ const AddProduct = () => {
                           borderColor: COLORS.border, 
                           color: COLORS.text,
                         }}
-                        disabled={!formData.category}
+                        disabled={!formData.category || loadingCategories}
                         required
                       >
                         <option value="">Select Sub-Category</option>
@@ -582,6 +646,9 @@ const AddProduct = () => {
                         </svg>
                       </div>
                     </div>
+                    {loadingCategories && (
+                      <div className="text-sm mt-1 text-gray-500">Loading subcategories...</div>
+                    )}
                   </motion.div>
                   
                   {/* Size Chart */}
@@ -942,6 +1009,7 @@ const AddProduct = () => {
                           borderColor: COLORS.border, 
                           color: COLORS.text,
                         }}
+                        disabled={loadingCategories}
                       >
                         <option value="">Select Category</option>
                         {Object.keys(categories).map((key) => (
@@ -956,6 +1024,9 @@ const AddProduct = () => {
                         </svg>
                       </div>
                     </div>
+                    {loadingCategories && (
+                      <div className="text-sm mt-1 text-gray-500">Loading categories...</div>
+                    )}
                   </div>
                   <div className="md:col-span-1">
                     <input
@@ -968,7 +1039,7 @@ const AddProduct = () => {
                         borderColor: COLORS.border, 
                         color: COLORS.text,
                       }}
-                      disabled={!selectedCategory}
+                      disabled={!selectedCategory || loadingCategories}
                     />
                   </div>
                   <div className="md:col-span-1">
@@ -977,7 +1048,7 @@ const AddProduct = () => {
                       className="w-full px-4 py-3 bg-black text-white rounded-lg font-medium"
                       whileHover={{ backgroundColor: COLORS.buttonHover }}
                       whileTap={{ scale: 0.95 }}
-                      disabled={!selectedCategory}
+                      disabled={!selectedCategory || loadingCategories}
                     >
                       Add Subcategory
                     </motion.button>
@@ -988,46 +1059,58 @@ const AddProduct = () => {
               {/* Categories List */}
               <div>
                 <h3 className="text-xl font-semibold mb-4" style={{ color: COLORS.text }}>Existing Categories</h3>
-                <div className="space-y-6">
-                  {Object.keys(categories).map((key) => (
-                    <div key={key} className="border rounded-lg overflow-hidden" style={{ borderColor: COLORS.border }}>
-                      <div className="flex justify-between items-center p-4 bg-gray-100">
-                        <span className="font-medium" style={{ color: COLORS.text }}>
-                          {categoryLabels[key]}
-                        </span>
-                        <motion.button
-                          onClick={() => deleteCategory(key)}
-                          className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm font-medium"
-                          whileHover={{ backgroundColor: '#fee2e2' }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          Delete Category
-                        </motion.button>
-                      </div>
-                      
-                      <div className="p-4 bg-white">
-                        <h4 className="font-medium mb-3" style={{ color: COLORS.text }}>Subcategories:</h4>
-                        <div className="space-y-2">
-                          {categories[key].map((subcat, index) => (
-                            <div key={index} className="flex justify-between items-center py-2 border-b" style={{ borderColor: COLORS.subtle }}>
-                              <span>{subcat.name}</span>
-                              <motion.button
-                                onClick={() => deleteSubcategory(key, index)}
-                                className="px-2 py-1 text-red-500 hover:text-red-700"
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
-                              </motion.button>
-                            </div>
-                          ))}
+                
+                {loadingCategories ? (
+                  <div className="text-center py-8">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black"></div>
+                    <p className="mt-2">Loading categories...</p>
+                  </div>
+                ) : Object.keys(categories).length === 0 ? (
+                  <div className="text-center py-8 border rounded-lg" style={{ borderColor: COLORS.border }}>
+                    <p>No categories found</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {Object.keys(categories).map((key) => (
+                      <div key={key} className="border rounded-lg overflow-hidden" style={{ borderColor: COLORS.border }}>
+                        <div className="flex justify-between items-center p-4 bg-gray-100">
+                          <span className="font-medium" style={{ color: COLORS.text }}>
+                            {categoryLabels[key]}
+                          </span>
+                          <motion.button
+                            onClick={() => deleteCategory(key)}
+                            className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm font-medium"
+                            whileHover={{ backgroundColor: '#fee2e2' }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            Delete Category
+                          </motion.button>
+                        </div>
+                        
+                        <div className="p-4 bg-white">
+                          <h4 className="font-medium mb-3" style={{ color: COLORS.text }}>Subcategories:</h4>
+                          <div className="space-y-2">
+                            {categories[key].map((subcat, index) => (
+                              <div key={index} className="flex justify-between items-center py-2 border-b" style={{ borderColor: COLORS.subtle }}>
+                                <span>{subcat.name}</span>
+                                <motion.button
+                                  onClick={() => deleteSubcategory(key, index)}
+                                  className="px-2 py-1 text-red-500 hover:text-red-700"
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                  </svg>
+                                </motion.button>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </motion.div>
           )}

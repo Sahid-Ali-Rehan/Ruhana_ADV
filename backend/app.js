@@ -17,7 +17,7 @@ const userRoutes = require('./routes/userRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const dashboardRoute = require('./routes/dashboardRoute');
 const reviewRoutes = require("./routes/reviewRoutes");
-
+const categoryRoutes = require('./routes/categoryRoutes');
 const app = express();
 app.use(bodyParser.json());
 app.use(express.json());
@@ -31,6 +31,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/dashboard', dashboardRoute);
 app.use("/api/reviews", reviewRoutes);
+app.use('/api/categories', categoryRoutes);
 
 
 

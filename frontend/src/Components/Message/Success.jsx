@@ -37,7 +37,14 @@ const Success = () => {
   const [isAnimating, setIsAnimating] = useState(true);
   const checkRef = useRef(null);
   const [invoiceGenerated, setInvoiceGenerated] = useState(false);
-  const [orderCount, setOrderCount] = useState(null); // Changed to null for unloaded state
+  const [orderCount, setOrderCount] = useState(null);
+  
+  // Store full order ID in localStorage for tracking
+  useEffect(() => {
+    if (order) {
+      localStorage.setItem(`order_${order._id.slice(-8).toUpperCase()}`, order._id);
+    }
+  }, [order]);
 
   useEffect(() => {
     const fetchOrderCount = async () => {
@@ -98,7 +105,6 @@ const Success = () => {
 
   const handleDownloadInvoice = async () => {
     if (orderCount === null) {
-      // Refetch count if not available
       try {
         const response = await fetch('/api/orders/count');
         if (!response.ok) throw new Error('Failed to fetch order count');
@@ -117,23 +123,18 @@ const Success = () => {
 
   const generateInvoice = (order, deliveryDate, count) => {
     const doc = new jsPDF("portrait", "px", "a4");
-    
-    // Page Dimensions
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
 
-    // Money formatting function
     const formatMoney = (num) => 
       `Tk. ${Number(num).toLocaleString("en-BD", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })}`;
 
-    // Set Background Color to WHITE
     doc.setFillColor("#FFFFFF");
     doc.rect(0, 0, pageWidth, pageHeight, "F");
 
-    // Add Images
     const addImages = () => {
       const topLeftImage = "Invoice/Top-Left-Corner.png";
       const topRightImage = "Invoice/T-Logo.png";
@@ -143,56 +144,51 @@ const Success = () => {
       doc.addImage(topLeftImage, "PNG", -30, -30, 160, 160);
       doc.addImage(topRightImage, "PNG", pageWidth - 100, 20, 80, 80);
       doc.addImage(topCenterImage, "PNG", 100, -80, 350, 250);
-      // Updated center image dimensions (250x100)
       doc.addImage(
         centerImage, 
         "PNG", 
-        (pageWidth - 250) / 2,  // Center horizontally
-        (pageHeight - 100) / 2, // Center vertically
+        (pageWidth - 250) / 2,
+        (pageHeight - 100) / 2,
         250, 
         100
       );
     };
     addImages();
 
-    // Add Header
-   const addHeader = () => {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.setTextColor("#000000");
-    doc.text(`INVOICE`, pageWidth / 2, 120, { align: "center" });
+    const addHeader = () => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor("#000000");
+      doc.text(`INVOICE`, pageWidth / 2, 120, { align: "center" });
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(12);
 
-    // Updated invoice number text
-    const invoiceNo = `Invoice No: #${count}`;
-    const orderId = `Order ID: ${order._id.slice(-8).toUpperCase()}`;
-    const invoiceDate = `Invoice Date: ${new Date().toLocaleDateString()}`;
-    const deliveryDateText = `Delivery Date: ${deliveryDate.toDateString()}`;
+      const invoiceNo = `Invoice No: #${count}`;
+      const orderId = `Order ID: ${order._id.slice(-8).toUpperCase()}`;
+      const invoiceDate = `Invoice Date: ${new Date().toLocaleDateString()}`;
+      const deliveryDateText = `Delivery Date: ${deliveryDate.toDateString()}`;
 
-    // Right align text
-    const rightMargin = 20;
-    const strings = [invoiceNo, orderId, invoiceDate, deliveryDateText];
-    const widths = strings.map(str => doc.getTextWidth(str));
-    const maxWidth = Math.max(...widths);
-    const startX = pageWidth - maxWidth - rightMargin;
+      const rightMargin = 20;
+      const strings = [invoiceNo, orderId, invoiceDate, deliveryDateText];
+      const widths = strings.map(str => doc.getTextWidth(str));
+      const maxWidth = Math.max(...widths);
+      const startX = pageWidth - maxWidth - rightMargin;
 
-    doc.setTextColor("#000000");
-    doc.text(invoiceNo, startX, 150);
-    doc.text(orderId, startX, 170);
-    doc.text(invoiceDate, startX, 190);
-    doc.text(deliveryDateText, startX, 210);
-  };
-  addHeader();
-    // Add Customer Details (Black theme)
+      doc.setTextColor("#000000");
+      doc.text(invoiceNo, startX, 150);
+      doc.text(orderId, startX, 170);
+      doc.text(invoiceDate, startX, 190);
+      doc.text(deliveryDateText, startX, 210);
+    };
+    addHeader();
+
     const addCustomerDetails = () => {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.setTextColor("#000000");
 
       doc.text("Invoice To:", 20, 220);
-
       doc.setFont("helvetica", "normal");
       doc.setTextColor("#333333");
       doc.text(`${order.name}`, 100, 220);
@@ -204,7 +200,6 @@ const Success = () => {
       doc.setTextColor("#333333");
       doc.text(`${order.phone}`, 100, 240);
 
-      // Replaced email with district and upazela
       doc.setFont("helvetica", "bold");
       doc.setTextColor("#000000");
       doc.text("District:", 20, 260);
@@ -228,11 +223,9 @@ const Success = () => {
     };
     addCustomerDetails();
 
-    // Add Order Table (Premium black theme)
     const addOrderTable = () => {
       let yOffset = 340;
       
-      // Table Header
       doc.setFont("helvetica", "bold");
       doc.setFillColor("#f0f0f0");
       doc.setDrawColor("#000000");
@@ -243,7 +236,6 @@ const Success = () => {
       doc.text("Quantity", pageWidth - 170, yOffset + 15, { align: "right" });
       doc.text("Amount", pageWidth - 50, yOffset + 15, { align: "right" });
 
-      // Table Content - PRESERVE ORIGINAL ORDER
       yOffset += 30;
       doc.setFont("helvetica", "normal");
       doc.setTextColor("#333333");
@@ -262,7 +254,6 @@ const Success = () => {
         yOffset += 20;
       });
 
-      // Total Section
       yOffset += 10;
       doc.setFont("helvetica", "bold");
       doc.setTextColor("#000000");
@@ -284,7 +275,6 @@ const Success = () => {
     };
     addOrderTable();
 
-    // Footer (Black theme)
     const addFooter = () => {
       const footerText = "Thank you for shopping with Jonab Fashions! Payment must be made immediately.";
       const footerY = pageHeight - 50;
@@ -294,12 +284,10 @@ const Success = () => {
       doc.setTextColor("#666666");
       doc.text(footerText, pageWidth / 2, footerY, { align: "center" });
 
-      // Draw the line
       doc.setDrawColor("#000000");
       doc.setLineWidth(1);
       doc.line(20, footerY + 10, pageWidth - 20, footerY + 10);
 
-      // Add the copyright text
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.setTextColor("#666666");
@@ -307,7 +295,6 @@ const Success = () => {
     };
     addFooter();
 
-    // Save PDF with sequential invoice number
     doc.save(`jonab-invoice-${count}.pdf`);
   };
 
@@ -336,7 +323,6 @@ const Success = () => {
           transition={{ duration: 0.8 }}
           className="relative overflow-hidden bg-white rounded-2xl border border-gray-200 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.05)]"
         >
-          {/* Geometric decorations */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-gray-50 to-white border-l border-b border-gray-200 -rotate-45 translate-x-32 -translate-y-32"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 border-t border-r border-gray-200 translate-x-12 translate-y-12"></div>
           
@@ -384,7 +370,6 @@ const Success = () => {
               </motion.p>
             </div>
 
-            {/* Order summary card */}
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -427,7 +412,7 @@ const Success = () => {
                 <div>
                   <h2 className="text-2xl font-light tracking-tight mb-6 text-gray-900 flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 mr-2 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm9 7h-6v13h-2V9H3V7h18v2z" />
                     </svg>
                     Payment Summary
                   </h2>
@@ -458,7 +443,6 @@ const Success = () => {
               </div>
             </motion.div>
 
-            {/* Order items preview */}
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -483,7 +467,6 @@ const Success = () => {
               </div>
             </motion.div>
 
-            {/* Action buttons */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -496,7 +479,7 @@ const Success = () => {
                 className="flex items-center justify-center gap-3 py-4 px-8 bg-black text-white rounded-lg font-medium tracking-wide shadow-[0_4px_0_0_rgba(0,0,0,0.2)] hover:shadow-[0_6px_0_0_rgba(0,0,0,0.2)] transition-all duration-200"
                 onClick={() => {
                   localStorage.removeItem("orderSuccess");
-                  navigate("/my-profile");
+                  navigate("/my-profile", { state: { orderId: order._id } });
                 }}
               >
                 Track Your Order
