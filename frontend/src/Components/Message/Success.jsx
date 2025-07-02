@@ -37,17 +37,26 @@ const Success = () => {
   const [isAnimating, setIsAnimating] = useState(true);
   const checkRef = useRef(null);
   const [invoiceGenerated, setInvoiceGenerated] = useState(false);
+  const [orderCount, setOrderCount] = useState(null);
 
   useEffect(() => {
+    const fetchOrderCount = async () => {
+      try {
+        const response = await fetch('/api/orders/count');
+        const data = await response.json();
+        setOrderCount(data.count);
+      } catch (error) {
+        console.error('Error fetching order count:', error);
+        setOrderCount(0);
+      }
+    };
+
     if (order) {
       const currentDate = new Date();
       currentDate.setDate(currentDate.getDate() + 7);
       setExpectedDelivery(currentDate);
       
-      setTimeout(() => {
-        generateInvoice(order, currentDate);
-        setInvoiceGenerated(true);
-      }, 500);
+      fetchOrderCount();
 
       if (order.paymentMethod === "Stripe") {
         const colors = ['#000', '#222', '#444', '#666', '#888'];
@@ -79,169 +88,202 @@ const Success = () => {
     }
   }, []);
 
-const generateInvoice = (order, deliveryDate) => {
-  const doc = new jsPDF("portrait", "px", "a4");
-  
-  // Page Dimensions
-  const pageWidth = doc.internal.pageSize.width;
-  const pageHeight = doc.internal.pageSize.height;
-
-  // Money formatting function
-  const formatMoney = (num) => 
-    `Tk. ${Number(num).toLocaleString("en-BD", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
-
-  // Set Background Color
-  doc.setFillColor("#fff");
-  doc.rect(0, 0, pageWidth, pageHeight, "F");
-
-  // Add geometric patterns
-  const addPatterns = () => {
-    doc.setDrawColor(200);
-    doc.setLineWidth(0.5);
-    
-    // Top-left triangle
-    doc.line(0, 0, 50, 50);
-    doc.line(0, 50, 50, 0);
-    
-    // Bottom-right patterns
-    for (let i = 0; i < 8; i++) {
-      const x = pageWidth - 20 - i * 15;
-      const y = pageHeight - 20;
-      doc.line(x, y, x + 10, y - 10);
+  useEffect(() => {
+    if (order && expectedDelivery && orderCount !== null && !invoiceGenerated) {
+      generateInvoice(order, expectedDelivery, orderCount);
+      setInvoiceGenerated(true);
     }
+  }, [order, expectedDelivery, orderCount, invoiceGenerated]);
+
+  const generateInvoice = (order, deliveryDate, orderCount) => {
+    const doc = new jsPDF("portrait", "px", "a4");
     
-    // Center diamond
-    doc.line(pageWidth/2 - 20, pageHeight/2, pageWidth/2, pageHeight/2 - 20);
-    doc.line(pageWidth/2, pageHeight/2 - 20, pageWidth/2 + 20, pageHeight/2);
-    doc.line(pageWidth/2 + 20, pageHeight/2, pageWidth/2, pageHeight/2 + 20);
-    doc.line(pageWidth/2, pageHeight/2 + 20, pageWidth/2 - 20, pageHeight/2);
+    // Page Dimensions
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+
+    // Money formatting function
+    const formatMoney = (num) => 
+      `Tk. ${Number(num).toLocaleString("en-BD", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
+
+    // Set Background Color to WHITE
+    doc.setFillColor("#FFFFFF");
+    doc.rect(0, 0, pageWidth, pageHeight, "F");
+
+    // Add Images
+    const addImages = () => {
+      const topLeftImage = "Invoice/Top-Left-Corner.png";
+      const topRightImage = "Invoice/T-Logo.png";
+      const topCenterImage = "Invoice/Top-Center.png";
+      const centerImage = "Invoice/Center.png";
+
+      doc.addImage(topLeftImage, "PNG", -30, -30, 160, 160);
+      doc.addImage(topRightImage, "PNG", pageWidth - 100, 20, 80, 80);
+      doc.addImage(topCenterImage, "PNG", 100, -80, 350, 250);
+      // Updated center image dimensions (500x200)
+      doc.addImage(
+        centerImage, 
+        "PNG", 
+        (pageWidth - 500) / 2,  // Center horizontally
+        (pageHeight - 200) / 2, // Center vertically
+        500, 
+        200
+      );
+    };
+    addImages();
+
+    // Add Header
+    const addHeader = () => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor("#000000"); // Black for premium theme
+      doc.text(`INVOICE`, pageWidth / 2, 120, { align: "center" });
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(12);
+
+      // Use sequential invoice ID based on order count
+      const invoiceId = `Invoice ID: #${orderCount}`;
+      const invoiceDate = `Invoice Date: ${new Date().toLocaleDateString()}`;
+      const deliveryDateText = `Delivery Date: ${deliveryDate.toDateString()}`;
+
+      // Right align text
+      const rightMargin = 20;
+      const invoiceIdWidth = doc.getTextWidth(invoiceId);
+      const invoiceDateWidth = doc.getTextWidth(invoiceDate);
+      const deliveryDateWidth = doc.getTextWidth(deliveryDateText);
+      const maxWidth = Math.max(invoiceIdWidth, invoiceDateWidth, deliveryDateWidth);
+      const startX = pageWidth - maxWidth - rightMargin;
+
+      doc.setTextColor("#000000");
+      doc.text(invoiceId, startX, 150);
+      doc.text(invoiceDate, startX, 170);
+      doc.text(deliveryDateText, startX, 190);
+    };
+    addHeader();
+
+    // Add Customer Details (Black theme)
+    const addCustomerDetails = () => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor("#000000");
+
+      doc.text("Invoice To:", 20, 220);
+
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor("#333333");
+      doc.text(`${order.name}`, 100, 220);
+
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor("#000000");
+      doc.text("Phone:", 20, 240);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor("#333333");
+      doc.text(`${order.phone}`, 100, 240);
+
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor("#000000");
+      doc.text("Email:", 20, 260);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor("#333333");
+      doc.text(`${order.email}`, 100, 260);
+
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor("#000000");
+      doc.text("Address:", 20, 280);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor("#333333");
+      doc.text(`${order.address}`, 100, 280);
+    };
+    addCustomerDetails();
+
+    // Add Order Table (Premium black theme)
+    const addOrderTable = () => {
+      let yOffset = 320;
+      
+      // Table Header
+      doc.setFont("helvetica", "bold");
+      doc.setFillColor("#f0f0f0"); // Light gray header
+      doc.setDrawColor("#000000"); // Black borders
+      doc.rect(20, yOffset, pageWidth - 40, 20, "FD"); // Filled and bordered
+      doc.setTextColor("#000000");
+      doc.text("No.", 30, yOffset + 15);
+      doc.text("Description", 80, yOffset + 15);
+      doc.text("Quantity", pageWidth - 170, yOffset + 15, { align: "right" });
+      doc.text("Amount", pageWidth - 50, yOffset + 15, { align: "right" });
+
+      // Table Content
+      yOffset += 30;
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor("#333333");
+      order.items.forEach((item, index) => {
+        doc.text(`${index + 1}`, 30, yOffset);
+        doc.text(item.productName, 80, yOffset);
+        doc.text(`${item.quantity}`, pageWidth - 170, yOffset, { align: "right" });
+        
+        doc.text(
+          formatMoney(item.quantity * item.price), 
+          pageWidth - 50, 
+          yOffset, 
+          { align: "right" }
+        );
+        
+        yOffset += 20;
+      });
+
+      // Total Section
+      yOffset += 10;
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor("#000000");
+      
+      const discountAmount = order.discount ? order.totalAmount * (order.discount / 100) : 0;
+      const finalAmount = order.totalAmount - discountAmount + order.deliveryCharge;
+
+      doc.text(`Delivery Charge: ${formatMoney(order.deliveryCharge)}`, 20, yOffset);
+      yOffset += 20;
+
+      if (order.discount) {
+        doc.text(`Discount (${order.discount}%): ${formatMoney(-discountAmount)}`, 20, yOffset);
+        yOffset += 20;
+      }
+
+      doc.setFontSize(12);
+      doc.text(`Total Amount: ${formatMoney(finalAmount)}`, 20, yOffset);
+      doc.setFontSize(10);
+    };
+    addOrderTable();
+
+    // Footer (Black theme)
+    const addFooter = () => {
+      const footerText = "Thank you for shopping with Jonab Fashions! Payment must be made immediately.";
+      const footerY = pageHeight - 50;
+
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(10);
+      doc.setTextColor("#666666");
+      doc.text(footerText, pageWidth / 2, footerY, { align: "center" });
+
+      // Draw the line
+      doc.setDrawColor("#000000");
+      doc.setLineWidth(1);
+      doc.line(20, footerY + 10, pageWidth - 20, footerY + 10);
+
+      // Add the copyright text
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor("#666666");
+      doc.text("@copyright 2024 reserved by Jonab Fashions", pageWidth / 2, footerY + 25, { align: "center" });
+    };
+    addFooter();
+
+    // Save PDF with sequential invoice number
+    doc.save(`jonab-invoice-${orderCount}.pdf`);
   };
-  addPatterns();
 
-  // Add Header
-  const addHeader = () => {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(24);
-    doc.setTextColor(0); // Pure black
-    doc.text(`INVOICE`, pageWidth / 2, 60, { align: "center" });
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text("PREMIUM EDITION", pageWidth / 2, 75, { align: "center" });
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(150);
-
-    // Invoice details
-    const invoiceNo = `Invoice No: ${order._id}`;
-    const invoiceDate = `Date: ${new Date().toLocaleDateString()}`;
-    const deliveryDateText = `Delivery: ${deliveryDate.toDateString()}`;
-
-    const rightMargin = 30;
-    doc.text(invoiceNo, pageWidth - rightMargin, 100, { align: "right" });
-    doc.text(invoiceDate, pageWidth - rightMargin, 115, { align: "right" });
-    doc.text(deliveryDateText, pageWidth - rightMargin, 130, { align: "right" });
-  };
-  addHeader();
-
-  // Add Customer Details
-  const addCustomerDetails = () => {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.setTextColor(0);
-    doc.text("CLIENT DETAILS", 30, 150);
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    
-    doc.text(`${order.name}`, 30, 170);
-    doc.text(`${order.phone}`, 30, 185);
-    doc.text(`${order.email || "N/A"}`, 30, 200);
-    doc.text(`${order.address}`, 30, 215, { maxWidth: 200 });
-  };
-  addCustomerDetails();
-
-  // Add Order Table
-  const addOrderTable = () => {
-    let yOffset = 240;
-    
-    // Table Header
-    doc.setFont("helvetica", "bold");
-    doc.setFillColor(245); // Light gray
-    doc.setDrawColor(200);
-    doc.rect(30, yOffset, pageWidth - 60, 15, "F");
-    doc.setTextColor(0);
-    doc.setFontSize(10);
-    doc.text("PRODUCT", 35, yOffset + 10);
-    doc.text("QTY", pageWidth - 120, yOffset + 10, { align: "right" });
-    doc.text("AMOUNT", pageWidth - 40, yOffset + 10, { align: "right" });
-
-    // Table Content
-    yOffset += 25;
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(100);
-    order.items.forEach((item, index) => {
-      doc.setFontSize(9);
-      doc.text(item.productName, 35, yOffset, { maxWidth: 200 });
-      doc.text(`${item.quantity}`, pageWidth - 120, yOffset, { align: "right" });
-      doc.text(formatMoney(item.quantity * item.price), pageWidth - 40, yOffset, { align: "right" });
-      yOffset += 15;
-    });
-
-    // Total Section
-    yOffset += 20;
-    doc.setDrawColor(200);
-    doc.line(30, yOffset, pageWidth - 30, yOffset);
-    yOffset += 15;
-    
-    const discountAmount = order.discount ? order.totalAmount * (order.discount / 100) : 0;
-    const finalAmount = order.totalAmount - discountAmount + order.deliveryCharge;
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.text(`Delivery:`, pageWidth - 120, yOffset, { align: "right" });
-    doc.text(formatMoney(order.deliveryCharge), pageWidth - 40, yOffset, { align: "right" });
-    yOffset += 15;
-
-    if (order.discount) {
-      doc.text(`Discount:`, pageWidth - 120, yOffset, { align: "right" });
-      doc.text(formatMoney(-discountAmount), pageWidth - 40, yOffset, { align: "right" });
-      yOffset += 15;
-    }
-
-    doc.setFontSize(12);
-    doc.text(`TOTAL:`, pageWidth - 120, yOffset, { align: "right" });
-    doc.text(formatMoney(finalAmount), pageWidth - 40, yOffset, { align: "right" });
-  };
-  addOrderTable();
-
-  // Footer
-  const addFooter = () => {
-    const footerY = pageHeight - 30;
-    doc.setFont("helvetica", "italic");
-    doc.setFontSize(8);
-    doc.setTextColor(150);
-    doc.text("Thank you for your premium purchase", pageWidth / 2, footerY, { align: "center" });
-
-    // Signature line
-    doc.setDrawColor(200);
-    doc.setLineWidth(0.5);
-    doc.line(pageWidth - 150, footerY + 10, pageWidth - 30, footerY + 10);
-    doc.setFontSize(7);
-    doc.text("Authorized Signature", pageWidth - 90, footerY + 15, { align: "center" });
-  };
-  addFooter();
-
-  // Save PDF
-  doc.save(`invoice-${order._id.slice(-8)}.pdf`);
-};
-
-  if (!expectedDelivery) {
+  if (!expectedDelivery || orderCount === null) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="animate-pulse flex flex-col items-center">
@@ -332,6 +374,10 @@ const generateInvoice = (order, deliveryDate) => {
                     <div className="flex justify-between pb-3 border-b border-gray-100">
                       <span className="text-gray-600">Order ID:</span>
                       <span className="font-medium text-gray-900">{order._id.slice(-8).toUpperCase()}</span>
+                    </div>
+                    <div className="flex justify-between pb-3 border-b border-gray-100">
+                      <span className="text-gray-600">Invoice ID:</span>
+                      <span className="font-medium text-gray-900">#{orderCount}</span>
                     </div>
                     <div className="flex justify-between pb-3 border-b border-gray-100">
                       <span className="text-gray-600">Payment Method:</span>
@@ -431,7 +477,7 @@ const generateInvoice = (order, deliveryDate) => {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
                 className="flex items-center justify-center gap-3 py-4 px-8 bg-white border border-gray-900 text-gray-900 rounded-lg font-medium tracking-wide shadow-[0_0_0_0_#000] hover:shadow-[4px_4px_0_0_#000] transition-all duration-200"
-                onClick={() => generateInvoice(order, expectedDelivery)}
+                onClick={() => generateInvoice(order, expectedDelivery, orderCount)}
               >
                 Download Invoice
                 <ArrowDownTrayIcon className="w-5 h-5" />

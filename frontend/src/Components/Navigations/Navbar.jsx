@@ -14,53 +14,51 @@ const Navbar = () => {
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
 
-  // Updated categories for luxury men's clothing
+  // Updated categories based on the provided table
   const categories = {
-    suits: [
-      { name: "Tuxedos", link: "/category/tuxedos" },
-      { name: "Business Suits", link: "/category/business-suits" },
-      { name: "Wedding Suits", link: "/category/wedding-suits" },
-      { name: "Designer Suits", link: "/category/designer-suits" },
+    katua: [
+      { name: "Cotton Katua", link: "/category/katua/cotton" },
+      { name: "Embroidered Katua", link: "/category/katua/embroidered" },
+      { name: "Silk Katua", link: "/category/katua/silk" },
+      { name: "Printed Katua", link: "/category/katua/printed" },
+      { name: "Handloom Katua", link: "/category/katua/handloom" },
     ],
-    shirts: [
-      { name: "Dress Shirts", link: "/category/dress-shirts" },
-      { name: "Casual Shirts", link: "/category/casual-shirts" },
-      { name: "Luxury Fabrics", link: "/category/luxury-fabrics" },
-      { name: "Limited Editions", link: "/category/limited-editions-shirts" },
+    panjabi: [
+      { name: "Casual Panjabi", link: "/category/panjabi/casual" },
+      { name: "Formal Panjabi", link: "/category/panjabi/formal" },
+      { name: "Festival Panjabi", link: "/category/panjabi/festival" },
+      { name: "Embroidered Panjabi", link: "/category/panjabi/embroidered" },
+      { name: "Jamdani Panjabi", link: "/category/panjabi/jamdani" },
     ],
-    trousers: [
-      { name: "Formal Trousers", link: "/category/formal-trousers" },
-      { name: "Chinos", link: "/category/chinos" },
-      { name: "Designer Pants", link: "/category/designer-pants" },
-      { name: "Linen Trousers", link: "/category/linen-trousers" },
+    polo: [
+      { name: "Solid Color Polo", link: "/category/polo/solid" },
+      { name: "Striped Polo", link: "/category/polo/striped" },
+      { name: "Logo Embroidered Polo", link: "/category/polo/embroidered" },
+      { name: "Slim Fit Polo", link: "/category/polo/slim-fit" },
+      { name: "Long Sleeve Polo", link: "/category/polo/long-sleeve" },
     ],
-    shoes: [
-      { name: "Oxfords", link: "/category/oxfords" },
-      { name: "Loafers", link: "/category/loafers" },
-      { name: "Boots", link: "/category/boots" },
-      { name: "Sneakers", link: "/category/sneakers" },
+    shirt: [
+      { name: "Formal Shirt", link: "/category/shirt/formal" },
+      { name: "Casual Shirt", link: "/category/shirt/casual" },
+      { name: "Check Shirt", link: "/category/shirt/check" },
+      { name: "Denim Shirt", link: "/category/shirt/denim" },
+      { name: "Linen Shirt", link: "/category/shirt/linen" },
     ],
-    accessories: [
-      { name: "Ties & Bow Ties", link: "/category/ties" },
-      { name: "Belts", link: "/category/belts" },
-      { name: "Wallets", link: "/category/wallets" },
-      { name: "Cufflinks", link: "/category/cufflinks" },
-    ],
-    collections: [
-      { name: "New Arrivals", link: "/category/new-arrivals" },
-      { name: "Best Sellers", link: "/category/best-sellers" },
-      { name: "Limited Editions", link: "/category/limited-editions" },
-      { name: "Seasonal Collection", link: "/category/seasonal-collection" },
+    tshirts: [
+      { name: "Graphic T-shirt", link: "/category/tshirts/graphic" },
+      { name: "Plain T-shirt", link: "/category/tshirts/plain" },
+      { name: "Oversized T-shirt", link: "/category/tshirts/oversized" },
+      { name: "V-Neck T-shirt", link: "/category/tshirts/v-neck" },
+      { name: "Full Sleeve T-shirt", link: "/category/tshirts/full-sleeve" },
     ],
   };
 
   const categoryLabels = {
-    suits: "Suits",
-    shirts: "Shirts",
-    trousers: "Trousers",
-    shoes: "Shoes",
-    accessories: "Accessories",
-    collections: "Collections"
+    katua: "Katua",
+    panjabi: "Panjabi",
+    polo: "Polo",
+    shirt: "Shirt",
+    tshirts: "T-shirts"
   };
 
   // Handle scroll effect
@@ -248,7 +246,7 @@ const Navbar = () => {
                       <div className="py-1">
                         {items.map((item) => (
                           <Link
-                            to={`/products?category=${key}&subcategory=${item.name}`}
+                            to={`/products?category=${key}&subcategory=${encodeURIComponent(item.name)}`}
                             key={item.name}
                             onClick={closeAllDropdowns}
                             className="block px-4 py-3 text-sm text-gray-800 hover:bg-gray-100 transition-all duration-200 border-b border-gray-100 last:border-b-0"
@@ -481,7 +479,7 @@ const Navbar = () => {
                       >
                         {items.map((item) => (
                           <Link
-                            to={`/products?category=${key}&subcategory=${item.name}`}
+                            to={`/products?category=${key}&subcategory=${encodeURIComponent(item.name)}`}
                             key={item.name}
                             onClick={closeAllDropdowns}
                             className="block py-2 text-black hover:text-gray-600 transition-colors duration-300 text-sm"

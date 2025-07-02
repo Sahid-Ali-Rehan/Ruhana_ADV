@@ -262,6 +262,16 @@ router.get("/all-orders", async (req, res) => {
     }
   });  
   
+  // Add this route at the bottom of the file
+router.get('/count', async (req, res) => {
+  try {
+    const count = await Order.countDocuments();
+    res.json({ count });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
   
 
 
