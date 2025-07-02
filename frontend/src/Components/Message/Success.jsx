@@ -37,14 +37,15 @@ const Success = () => {
   const [isAnimating, setIsAnimating] = useState(true);
   const checkRef = useRef(null);
   const [invoiceGenerated, setInvoiceGenerated] = useState(false);
-  const [orderCount, setOrderCount] = useState(null);
+  const [orderCount, setOrderCount] = useState(null); // Changed to null for unloaded state
 
   useEffect(() => {
     const fetchOrderCount = async () => {
       try {
         const response = await fetch('/api/orders/count');
+        if (!response.ok) throw new Error('Failed to fetch order count');
         const data = await response.json();
-        setOrderCount(data.count);
+        setOrderCount(data.count || 0);
       } catch (error) {
         console.error('Error fetching order count:', error);
         setOrderCount(0);
@@ -95,7 +96,26 @@ const Success = () => {
     }
   }, [order, expectedDelivery, orderCount, invoiceGenerated]);
 
-  const generateInvoice = (order, deliveryDate, orderCount) => {
+  const handleDownloadInvoice = async () => {
+    if (orderCount === null) {
+      // Refetch count if not available
+      try {
+        const response = await fetch('/api/orders/count');
+        if (!response.ok) throw new Error('Failed to fetch order count');
+        const data = await response.json();
+        const count = data.count || 0;
+        setOrderCount(count);
+        generateInvoice(order, expectedDelivery, count);
+      } catch (error) {
+        console.error('Error fetching order count:', error);
+        generateInvoice(order, expectedDelivery, 0);
+      }
+    } else {
+      generateInvoice(order, expectedDelivery, orderCount);
+    }
+  };
+
+  const generateInvoice = (order, deliveryDate, count) => {
     const doc = new jsPDF("portrait", "px", "a4");
     
     // Page Dimensions
@@ -123,14 +143,14 @@ const Success = () => {
       doc.addImage(topLeftImage, "PNG", -30, -30, 160, 160);
       doc.addImage(topRightImage, "PNG", pageWidth - 100, 20, 80, 80);
       doc.addImage(topCenterImage, "PNG", 100, -80, 350, 250);
-      // Updated center image dimensions (500x200)
+      // Updated center image dimensions (250x100)
       doc.addImage(
         centerImage, 
         "PNG", 
-        (pageWidth - 500) / 2,  // Center horizontally
-        (pageHeight - 200) / 2, // Center vertically
-        500, 
-        200
+        (pageWidth - 250) / 2,  // Center horizontally
+        (pageHeight - 100) / 2, // Center vertically
+        250, 
+        100
       );
     };
     addImages();
@@ -139,14 +159,14 @@ const Success = () => {
     const addHeader = () => {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(18);
-      doc.setTextColor("#000000"); // Black for premium theme
+      doc.setTextColor("#000000");
       doc.text(`INVOICE`, pageWidth / 2, 120, { align: "center" });
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(12);
 
       // Use sequential invoice ID based on order count
-      const invoiceId = `Invoice ID: #${orderCount}`;
+      const invoiceId = `Invoice ID: #${count}`;
       const invoiceDate = `Invoice Date: ${new Date().toLocaleDateString()}`;
       const deliveryDateText = `Delivery Date: ${deliveryDate.toDateString()}`;
 
@@ -184,38 +204,46 @@ const Success = () => {
       doc.setTextColor("#333333");
       doc.text(`${order.phone}`, 100, 240);
 
+      // Replaced email with district and upazela
       doc.setFont("helvetica", "bold");
       doc.setTextColor("#000000");
-      doc.text("Email:", 20, 260);
+      doc.text("District:", 20, 260);
       doc.setFont("helvetica", "normal");
       doc.setTextColor("#333333");
-      doc.text(`${order.email}`, 100, 260);
+      doc.text(`${order.jela}`, 100, 260);
 
       doc.setFont("helvetica", "bold");
       doc.setTextColor("#000000");
-      doc.text("Address:", 20, 280);
+      doc.text("Upazela:", 20, 280);
       doc.setFont("helvetica", "normal");
       doc.setTextColor("#333333");
-      doc.text(`${order.address}`, 100, 280);
+      doc.text(`${order.upazela}`, 100, 280);
+
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor("#000000");
+      doc.text("Address:", 20, 300);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor("#333333");
+      doc.text(`${order.address}`, 100, 300);
     };
     addCustomerDetails();
 
     // Add Order Table (Premium black theme)
     const addOrderTable = () => {
-      let yOffset = 320;
+      let yOffset = 340;
       
       // Table Header
       doc.setFont("helvetica", "bold");
-      doc.setFillColor("#f0f0f0"); // Light gray header
-      doc.setDrawColor("#000000"); // Black borders
-      doc.rect(20, yOffset, pageWidth - 40, 20, "FD"); // Filled and bordered
+      doc.setFillColor("#f0f0f0");
+      doc.setDrawColor("#000000");
+      doc.rect(20, yOffset, pageWidth - 40, 20, "FD");
       doc.setTextColor("#000000");
       doc.text("No.", 30, yOffset + 15);
       doc.text("Description", 80, yOffset + 15);
       doc.text("Quantity", pageWidth - 170, yOffset + 15, { align: "right" });
       doc.text("Amount", pageWidth - 50, yOffset + 15, { align: "right" });
 
-      // Table Content
+      // Table Content - PRESERVE ORIGINAL ORDER
       yOffset += 30;
       doc.setFont("helvetica", "normal");
       doc.setTextColor("#333333");
@@ -280,10 +308,10 @@ const Success = () => {
     addFooter();
 
     // Save PDF with sequential invoice number
-    doc.save(`jonab-invoice-${orderCount}.pdf`);
+    doc.save(`jonab-invoice-${count}.pdf`);
   };
 
-  if (!expectedDelivery || orderCount === null) {
+  if (!order || !expectedDelivery) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="animate-pulse flex flex-col items-center">
@@ -377,7 +405,9 @@ const Success = () => {
                     </div>
                     <div className="flex justify-between pb-3 border-b border-gray-100">
                       <span className="text-gray-600">Invoice ID:</span>
-                      <span className="font-medium text-gray-900">#{orderCount}</span>
+                      <span className="font-medium text-gray-900">
+                        {orderCount !== null ? `#${orderCount}` : 'Loading...'}
+                      </span>
                     </div>
                     <div className="flex justify-between pb-3 border-b border-gray-100">
                       <span className="text-gray-600">Payment Method:</span>
@@ -477,7 +507,7 @@ const Success = () => {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
                 className="flex items-center justify-center gap-3 py-4 px-8 bg-white border border-gray-900 text-gray-900 rounded-lg font-medium tracking-wide shadow-[0_0_0_0_#000] hover:shadow-[4px_4px_0_0_#000] transition-all duration-200"
-                onClick={() => generateInvoice(order, expectedDelivery, orderCount)}
+                onClick={handleDownloadInvoice}
               >
                 Download Invoice
                 <ArrowDownTrayIcon className="w-5 h-5" />

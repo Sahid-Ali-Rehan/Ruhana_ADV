@@ -201,6 +201,16 @@ router.get("/all-orders", async (req, res) => {
       res.status(500).json({ error: 'Failed to fetch orders.' });
     }
   });
+
+  router.get('/count', async (req, res) => {
+  try {
+    const count = await Order.countDocuments();
+    res.json({ count });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
   
 
   router.get("/:orderId", async (req, res) => {
