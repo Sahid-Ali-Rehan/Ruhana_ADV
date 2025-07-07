@@ -2,66 +2,55 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useNavigate } from "react-router-dom"; // Added for navigation
 
 gsap.registerPlugin(ScrollTrigger);
 
 const AllCategories = () => {
+  const navigate = useNavigate(); // Initialize navigate function
   const sectionRef = useRef(null);
   const headingRef = useRef(null);
   const gridRef = useRef(null);
   const [hoveredIndex, setHoveredIndex] = useState(null);
 
-  // Men's fashion categories with image URLs
+  // Updated with only the 5 requested categories
   const categories = [
     { 
-      name: "Premium T-Shirts", 
-      items: 42, 
-      image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80",
-      link: "/t-shirts" 
+      name: "Katua", 
+      items: 28, 
+      image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80",
+      link: "/products/all?category=Katua" 
     },
     { 
-      name: "Designer Jackets", 
+      name: "Panjabi", 
       items: 36, 
-      image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80",
-      link: "/jackets" 
+      image: "https://images.unsplash.com/photo-1617137968427-85924c800a22?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80",
+      link: "/products/all?category=Panjabi" 
     },
     { 
-      name: "Luxury Watches", 
-      items: 58, 
-      image: "https://images.unsplash.com/photo-1539874754764-5a96559165b0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80",
-      link: "/watches" 
-    },
-    { 
-      name: "Tailored Suits", 
-      items: 27, 
-      image: "https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80",
-      link: "/suits" 
-    },
-    { 
-      name: "Denim Collection", 
+      name: "Polo", 
       items: 45, 
-      image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80",
-      link: "/denim" 
+      image: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80",
+      link: "/products/all?category=Polo" 
     },
     { 
-      name: "Footwear", 
-      items: 63, 
-      image: "https://images.unsplash.com/photo-1560343090-f0409e92791a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80",
-      link: "/footwear" 
+      name: "Shirt", 
+      items: 52, 
+      image: "https://images.unsplash.com/photo-1598032895397-b9472444bf93?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80",
+      link: "/products/all?category=Shirt" 
     },
     { 
-      name: "Accessories", 
-      items: 51, 
-      image: "https://images.unsplash.com/photo-1611312449408-fcece27cdbb7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80",
-      link: "/accessories" 
-    },
-    { 
-      name: "Sportswear", 
-      items: 39, 
-      image: "https://images.unsplash.com/photo-1595341888016-a392ef81b7de?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80",
-      link: "/sportswear" 
+      name: "T-shirts", 
+      items: 64, 
+      image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80",
+      link: "/products/all?category=T-shirts" 
     },
   ];
+
+  // Handle category click
+  const handleCategoryClick = (categoryLink) => {
+    navigate(categoryLink);
+  };
 
   useEffect(() => {
     // GSAP animations for entrance effects
@@ -167,12 +156,12 @@ const AllCategories = () => {
         
         <div 
           ref={gridRef}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8" // Changed to 5 columns
         >
           {categories.map((category, index) => (
             <motion.div
               key={index}
-              className="category-item relative overflow-hidden"
+              className="category-item relative overflow-hidden cursor-pointer"
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -180,6 +169,7 @@ const AllCategories = () => {
               whileHover={{ y: -10 }}
               onHoverStart={() => setHoveredIndex(index)}
               onHoverEnd={() => setHoveredIndex(null)}
+              onClick={() => handleCategoryClick(category.link)} // Added click handler
             >
               <div className="relative h-[400px] overflow-hidden">
                 {/* Image container */}
@@ -249,6 +239,10 @@ const AllCategories = () => {
                   >
                     <button 
                       className="text-white border border-white px-6 py-2 text-sm tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCategoryClick(category.link);
+                      }}
                     >
                       Explore
                     </button>

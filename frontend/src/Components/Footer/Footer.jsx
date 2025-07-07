@@ -117,7 +117,7 @@ const Footer = () => {
           >
             <div className="mb-8" ref={logoRef}>
               <img 
-                src="/Images/Logo.png" 
+                src="/Images/logo.png" 
                 alt="Ruana's Luxury Decor" 
                 className="w-32 h-32 object-contain opacity-90"
               />
