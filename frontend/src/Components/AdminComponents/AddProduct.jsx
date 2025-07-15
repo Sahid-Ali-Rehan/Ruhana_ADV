@@ -289,42 +289,42 @@ const handleSubmit = async (e) => {
     setSizes(updatedSizes);
   };
   
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const payload = {
-      ...formData,
-      availableSizes: sizes,
-    };
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   const payload = {
+  //     ...formData,
+  //     availableSizes: sizes,
+  //   };
     
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post('https://ruhana-adv.onrender.com/api/products/add', payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+  //   try {
+  //     const token = localStorage.getItem('token');
+  //     const response = await axios.post('https://ruhana-adv.onrender.com/api/products/add', payload, {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
       
-      toast.success(response.data.message);
-      setFormData({
-        productName: '',
-        description: '',
-        images: [''],
-        sizeChart: '',
-        availableColors: [],
-        availableSizes: [],
-        stock: 0,
-        price: 0,
-        discount: 0,
-        productCode: '',
-        category: '',
-        subCategory: '',
-        videoUrl: '',
-        isBestSeller: false,
-      });
-      setSizes([{ size: '', sizePrice: 0 }]);
-    } catch (error) {
-      console.error('Error:', error.response ? error.response.data : error.message);
-      toast.error('Something went wrong.');
-    }
-  };
+  //     toast.success(response.data.message);
+  //     setFormData({
+  //       productName: '',
+  //       description: '',
+  //       images: [''],
+  //       sizeChart: '',
+  //       availableColors: [],
+  //       availableSizes: [],
+  //       stock: 0,
+  //       price: 0,
+  //       discount: 0,
+  //       productCode: '',
+  //       category: '',
+  //       subCategory: '',
+  //       videoUrl: '',
+  //       isBestSeller: false,
+  //     });
+  //     setSizes([{ size: '', sizePrice: 0 }]);
+  //   } catch (error) {
+  //     console.error('Error:', error.response ? error.response.data : error.message);
+  //     toast.error('Something went wrong.');
+  //   }
+  // };
 
   // Category management functions
   const addNewCategory = async () => {
