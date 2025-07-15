@@ -28,35 +28,48 @@ const isAdmin = (req, res, next) => {
   }
 };
 
-// Modify add product route
-router.post('/add', upload.array('images'), async (req, res) => {
+// Increase payload size limit at the top of your routes
+router.use(express.json({ limit: '50mb' }));
+router.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Update your Cloudinary upload route
+router.post('/upload', upload.array('images', 5), (req, res) => { // Limit to 5 files
   try {
-    const imageUrls = req.files?.map(file => file.path) || [];
-    const urlImages = req.body.images ? JSON.parse(req.body.images) : [];
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded' });
+    }
     
-    const allImages = [...imageUrls, ...urlImages].filter(url => url);
+    const urls = req.files.map(file => file.path);
+    res.status(200).json({ urls });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ error: 'Upload failed', details: error.message });
+  }
+});
+
+// Update your add product route
+router.post('/add', async (req, res) => {
+  try {
+    // Parse sizes if needed
+    const availableSizes = Array.isArray(req.body.availableSizes) ? 
+      req.body.availableSizes : 
+      JSON.parse(req.body.availableSizes || '[]');
 
     const newProduct = new Product({
       ...req.body,
-      images: allImages,
-      availableSizes: JSON.parse(req.body.availableSizes)
+      images: req.body.images || [],
+      availableSizes
     });
 
     await newProduct.save();
     res.status(201).json({ message: 'Product added successfully' });
   } catch (error) {
     console.error('Error adding product:', error);
-    res.status(500).json({ message: 'Error adding product', error: error.message });
-  }
-});
-
-// Add image upload route
-router.post('/upload', upload.array('images'), (req, res) => {
-  try {
-    const urls = req.files.map(file => file.path);
-    res.status(200).json({ urls });
-  } catch (error) {
-    res.status(500).json({ error: 'Upload failed' });
+    res.status(500).json({ 
+      message: 'Error adding product', 
+      error: error.message,
+      stack: error.stack // For debugging
+    });
   }
 });
 

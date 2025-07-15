@@ -7,12 +7,17 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+// In your cloudinary config file
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: 'ruhana_products',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-    transformation: [{ width: 1000, height: 1000, crop: 'limit' }]
+  params: (req, file) => {
+    return {
+      folder: 'ruhana_products',
+      format: 'webp', // Better format
+      transformation: [
+        { width: 1000, height: 1000, crop: 'limit', quality: 'auto' }
+      ]
+    };
   }
 });
 

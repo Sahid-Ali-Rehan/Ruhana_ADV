@@ -143,32 +143,19 @@ const handleUrlImage = () => {
   }
 };
 
-// Handle file selection
-const handleFileChange = (index, e) => {
-  const files = e.target.files;
-  if (files.length > 0) {
-    const newFileInputs = [...fileInputs];
-    newFileInputs[index] = files[0];
-    setFileInputs(newFileInputs);
-    
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setPreviewImages(prev => [...prev, e.target.result]);
-    };
-    reader.readAsDataURL(files[0]);
-  }
-};
-
-// Handle form submission
+// Update handleSubmit function
 const handleSubmit = async (e) => {
   e.preventDefault();
   
-  // Prepare data
+  // Prepare data with proper type conversions
   const payload = {
     ...formData,
     images: previewImages,
-    availableSizes: JSON.stringify(sizes)
+    stock: Number(formData.stock),
+    price: Number(formData.price),
+    discount: Number(formData.discount),
+    availableSizes: sizes,
+    isBestSeller: formData.isBestSeller
   };
 
   try {
@@ -177,18 +164,61 @@ const handleSubmit = async (e) => {
       'https://ruhana-adv.onrender.com/api/products/add',
       payload,
       {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json' 
+        }
       }
     );
     
     toast.success(response.data.message);
-    // Reset form and previews
+    // Reset form
     setPreviewImages([]);
     setFileInputs([null]);
+    setSizes([{ size: '', sizePrice: 0 }]);
+    // ... reset other fields ...
   } catch (error) {
-    toast.error('Something went wrong.');
+    console.error('Submission error:', error.response?.data || error.message);
+    toast.error(error.response?.data?.message || 'Product submission failed');
   }
 };
+
+// Update file upload method
+const handleFileChange = async (index, e) => {
+  const files = e.target.files;
+  if (files.length > 0) {
+    try {
+      const newFile = files[0];
+      const newFileInputs = [...fileInputs];
+      newFileInputs[index] = newFile;
+      setFileInputs(newFileInputs);
+      
+      // Upload immediately
+      const formData = new FormData();
+      formData.append('images', newFile);
+      
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        'https://ruhana-adv.onrender.com/api/products/upload',
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
+      // Add to previews
+      setPreviewImages(prev => [...prev, ...response.data.urls]);
+      
+    } catch (error) {
+      toast.error('File upload failed');
+    }
+  }
+};
+
+
   // Fetch categories from backend API
   const fetchCategories = async () => {
     try {
