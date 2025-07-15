@@ -89,7 +89,106 @@ const AddProduct = () => {
   const [newSubcategoryName, setNewSubcategoryName] = useState('');
   const [activeTab, setActiveTab] = useState('product');
   const [loadingCategories, setLoadingCategories] = useState(true);
+  // Add new state hooks
+const [uploadMethod, setUploadMethod] = useState('url'); // 'url' or 'upload'
+const [previewImages, setPreviewImages] = useState([]);
+const [uploadProgress, setUploadProgress] = useState({});
+const [fileInputs, setFileInputs] = useState([null]);
 
+
+// Handle file uploads
+const handleFileUpload = async (files) => {
+  const formData = new FormData();
+  Array.from(files).forEach(file => {
+    formData.append('images', file);
+  });
+
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.post(
+      'https://ruhana-adv.onrender.com/api/products/upload',
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        },
+        onUploadProgress: progressEvent => {
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          setUploadProgress(prev => ({
+            ...prev,
+            [files[0].name]: percentCompleted
+          }));
+        }
+      }
+    );
+
+    setPreviewImages(prev => [...prev, ...response.data.urls]);
+    setFileInputs(prev => [...prev, null]);
+    toast.success('Images uploaded successfully!');
+  } catch (error) {
+    console.error('Upload error:', error);
+    toast.error('Image upload failed');
+  }
+};
+
+// Handle URL images
+const handleUrlImage = () => {
+  const url = document.getElementById('image-url-input').value;
+  if (url) {
+    setPreviewImages(prev => [...prev, url]);
+    document.getElementById('image-url-input').value = '';
+  }
+};
+
+// Handle file selection
+const handleFileChange = (index, e) => {
+  const files = e.target.files;
+  if (files.length > 0) {
+    const newFileInputs = [...fileInputs];
+    newFileInputs[index] = files[0];
+    setFileInputs(newFileInputs);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPreviewImages(prev => [...prev, e.target.result]);
+    };
+    reader.readAsDataURL(files[0]);
+  }
+};
+
+// Handle form submission
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  // Prepare data
+  const payload = {
+    ...formData,
+    images: previewImages,
+    availableSizes: JSON.stringify(sizes)
+  };
+
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.post(
+      'https://ruhana-adv.onrender.com/api/products/add',
+      payload,
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+    
+    toast.success(response.data.message);
+    // Reset form and previews
+    setPreviewImages([]);
+    setFileInputs([null]);
+  } catch (error) {
+    toast.error('Something went wrong.');
+  }
+};
   // Fetch categories from backend API
   const fetchCategories = async () => {
     try {
@@ -699,7 +798,7 @@ const AddProduct = () => {
                 </div>
 
                 {/* Dynamic Image URLs */}
-                <motion.div 
+                {/* <motion.div 
                   className="mt-6"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -769,8 +868,136 @@ const AddProduct = () => {
                       </motion.div>
                     ))}
                   </div>
-                </motion.div>
+                </motion.div> */}
+// Add to JSX (replace image section)
+<div className="mt-6">
+  <div className="flex items-center justify-between mb-3">
+    <label className="block text-sm font-medium" style={{ color: COLORS.text }}>
+      Product Images (1-5)
+    </label>
+    <div className="flex gap-2">
+      <button
+        type="button"
+        className={`px-3 py-1 rounded-lg border ${
+          uploadMethod === 'url' ? 'bg-black text-white' : 'border-black'
+        }`}
+        onClick={() => setUploadMethod('url')}
+      >
+        Add URL
+      </button>
+      <button
+        type="button"
+        className={`px-3 py-1 rounded-lg border ${
+          uploadMethod === 'upload' ? 'bg-black text-white' : 'border-black'
+        }`}
+        onClick={() => setUploadMethod('upload')}
+      >
+        Upload File
+      </button>
+    </div>
+  </div>
 
+  {uploadMethod === 'url' && (
+    <div className="flex gap-2 mb-4">
+      <input
+        id="image-url-input"
+        type="url"
+        placeholder="Enter image URL"
+        className="flex-1 p-3 rounded-lg border bg-white"
+        style={{ borderColor: COLORS.border }}
+      />
+      <button
+        type="button"
+        className="px-4 py-3 bg-black text-white rounded-lg"
+        onClick={handleUrlImage}
+      >
+        Add
+      </button>
+    </div>
+  )}
+
+  {uploadMethod === 'upload' && (
+    <div className="space-y-3 mb-4">
+      {fileInputs.map((_, index) => (
+        <div key={index} className="flex items-center gap-2">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleFileChange(index, e)}
+            className="flex-1 p-3 rounded-lg border bg-white"
+            style={{ borderColor: COLORS.border }}
+          />
+          {fileInputs.length > 1 && (
+            <button
+              type="button"
+              onClick={() => {
+                const newInputs = [...fileInputs];
+                newInputs.splice(index, 1);
+                setFileInputs(newInputs);
+                
+                const newPreviews = [...previewImages];
+                newPreviews.splice(index, 1);
+                setPreviewImages(newPreviews);
+              }}
+              className="p-2 rounded-lg border border-black"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </button>
+          )}
+        </div>
+      ))}
+      {fileInputs.length < 5 && (
+        <button
+          type="button"
+          onClick={() => setFileInputs([...fileInputs, null])}
+          className="flex items-center text-sm px-3 py-1 rounded-lg border border-black"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add Another
+        </button>
+      )}
+    </div>
+  )}
+
+  {/* Image Previews */}
+  <div className="grid grid-cols-3 gap-4 mt-4">
+    {previewImages.map((img, index) => (
+      <div key={index} className="relative group">
+        <img 
+          src={img} 
+          alt={`Preview ${index}`}
+          className="w-full h-32 object-contain border rounded-lg"
+          style={{ borderColor: COLORS.border }}
+        />
+        <button
+          type="button"
+          onClick={() => {
+            const newPreviews = [...previewImages];
+            newPreviews.splice(index, 1);
+            setPreviewImages(newPreviews);
+          }}
+          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+        </button>
+        {uploadProgress[img] && uploadProgress[img] < 100 && (
+          <div className="absolute bottom-0 left-0 right-0 bg-gray-200 h-2">
+            <div 
+              className="bg-green-500 h-2"
+              style={{ width: `${uploadProgress[img]}%` }}
+            ></div>
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+</div>
                 {/* Color Input */}
                 <motion.div 
                   className="mt-6"

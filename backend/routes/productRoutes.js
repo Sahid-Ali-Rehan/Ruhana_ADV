@@ -1,4 +1,9 @@
 const express = require('express');
+// Add at top
+const multer = require('multer');
+const { storage } = require('../utils/cloudinary');
+const upload = multer({ storage });
+
 const Product = require('../models/Product');
 const router = express.Router();
 
@@ -22,6 +27,38 @@ const isAdmin = (req, res, next) => {
     return res.status(401).json({ message: 'Invalid or expired token' });
   }
 };
+
+// Modify add product route
+router.post('/add', upload.array('images'), async (req, res) => {
+  try {
+    const imageUrls = req.files?.map(file => file.path) || [];
+    const urlImages = req.body.images ? JSON.parse(req.body.images) : [];
+    
+    const allImages = [...imageUrls, ...urlImages].filter(url => url);
+
+    const newProduct = new Product({
+      ...req.body,
+      images: allImages,
+      availableSizes: JSON.parse(req.body.availableSizes)
+    });
+
+    await newProduct.save();
+    res.status(201).json({ message: 'Product added successfully' });
+  } catch (error) {
+    console.error('Error adding product:', error);
+    res.status(500).json({ message: 'Error adding product', error: error.message });
+  }
+});
+
+// Add image upload route
+router.post('/upload', upload.array('images'), (req, res) => {
+  try {
+    const urls = req.files.map(file => file.path);
+    res.status(200).json({ urls });
+  } catch (error) {
+    res.status(500).json({ error: 'Upload failed' });
+  }
+});
 
 // Add Product (Admin Only)
 router.post('/add', async (req, res) => {
