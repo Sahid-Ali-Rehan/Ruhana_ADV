@@ -12,7 +12,7 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: (req, file) => {
     return {
-      folder: 'ruhana_products',
+      folder: 'jonab_collection',
       format: 'webp', // Better format
       transformation: [
         { width: 1000, height: 1000, crop: 'limit', quality: 'auto' }

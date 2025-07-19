@@ -11,6 +11,12 @@ import Loading from "../../Components/Loading/Loading";
 import Navbar from "../../Components/Navigations/Navbar";
 import Footer from "../../Components/Footer/Footer";
 
+// Enhanced normalization function
+const normalizeCategory = (category) => {
+  if (!category) return '';
+  return category.toLowerCase().replace(/\s+/g, '-');
+};
+
 const AllProductsClient = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,9 +40,6 @@ const AllProductsClient = () => {
   const [hoveredProduct, setHoveredProduct] = useState(null);
 
   const location = useLocation();
-  const urlParams = new URLSearchParams(location.search);
-  const categoryFromUrl = urlParams.get('category');
-  const subCategoryFromUrl = urlParams.get('subcategory');
   const navigate = useNavigate();
   const filterRef = useRef(null);
   const maxPriceRef = useRef(10000);
@@ -70,13 +73,15 @@ const AllProductsClient = () => {
     "Violet": "#EE82EE"
   };
 
+  // Get initial category from navigation state
   useEffect(() => {
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      category: categoryFromUrl || '',
-      subCategory: subCategoryFromUrl || '',
-    }));
-  }, [categoryFromUrl, subCategoryFromUrl]);
+    if (location.state?.selectedCategory) {
+      setFilters(prev => ({
+        ...prev,
+        category: location.state.selectedCategory
+      }));
+    }
+  }, [location]);
 
   // Initialize wishlist
   useEffect(() => {
@@ -92,23 +97,11 @@ const AllProductsClient = () => {
     }
   }, []);
 
-  // Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const { data } = await axios.get('https://ruhana-adv.onrender.com/api/products/fetch-products', {
-          params: {
-            search: filters.search,
-            category: filters.category,
-            subCategory: filters.subCategory,
-            color: filters.color,
-            size: filters.size,
-            sort: filters.sort,
-            page: currentPage,
-            perPage,
-          },
-        });
+        const { data } = await axios.get('https://ruhana-adv.onrender.com/api/products/fetch-products');
         
         // Find max price for price range
         const prices = data.map(p => p.price);
@@ -116,7 +109,6 @@ const AllProductsClient = () => {
         maxPriceRef.current = maxPrice;
         
         setProducts(data);
-        setFilteredProducts(data);
         setFilters(prev => ({
           ...prev,
           minPrice: 0,
@@ -129,13 +121,18 @@ const AllProductsClient = () => {
         setLoading(false);
         toast.error('Failed to load products. Please try again later.', {
           position: 'bottom-right',
-          theme: 'colored',
-          style: { backgroundColor: '#9E5F57', color: '#EFE2B2' }
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
         });
       }
     };
+    
     fetchProducts();
-  }, [filters.category, filters.subCategory, filters.color, filters.size, filters.sort, currentPage, perPage]);
+  }, []);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -193,12 +190,17 @@ const AllProductsClient = () => {
       });
     }
 
+    // Case-insensitive category filtering
     if (filters.category) {
-      result = result.filter((product) => product.category === filters.category);
+      result = result.filter((product) => 
+        normalizeCategory(product.category) === filters.category
+      );
     }
 
     if (filters.subCategory) {
-      result = result.filter((product) => product.subCategory === filters.subCategory);
+      result = result.filter((product) => 
+        normalizeCategory(product.subCategory) === filters.subCategory
+      );
     }
 
     if (filters.color) {
@@ -371,7 +373,7 @@ const AllProductsClient = () => {
                 >
                   <option value="">All Categories</option>
                   {getUniqueValues('category').map((category) => (
-                    <option key={category} value={category}>
+                    <option key={category} value={normalizeCategory(category)}>
                       {category}
                     </option>
                   ))}
@@ -517,7 +519,7 @@ const AllProductsClient = () => {
                 >
                   <option value="">All Categories</option>
                   {getUniqueValues('category').map((category) => (
-                    <option key={category} value={category}>
+                    <option key={category} value={normalizeCategory(category)}>
                       {category}
                     </option>
                   ))}

@@ -2,54 +2,62 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useNavigate } from "react-router-dom"; // Added for navigation
+import { useNavigate } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const AllCategories = () => {
-  const navigate = useNavigate(); // Initialize navigate function
+  const navigate = useNavigate();
   const sectionRef = useRef(null);
   const headingRef = useRef(null);
   const gridRef = useRef(null);
   const [hoveredIndex, setHoveredIndex] = useState(null);
 
-  // Updated with only the 5 requested categories
   const categories = [
     { 
       name: "Katua", 
       items: 28, 
-      image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80",
-      link: "/products/all?category=Katua" 
+      image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80"
     },
     { 
       name: "Panjabi", 
       items: 36, 
-      image: "https://images.unsplash.com/photo-1617137968427-85924c800a22?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80",
-      link: "/products/all?category=Panjabi" 
+      image: "https://images.unsplash.com/photo-1617137968427-85924c800a22?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80"
     },
     { 
       name: "Polo", 
       items: 45, 
-      image: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80",
-      link: "/products/all?category=Polo" 
+      image: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80"
     },
     { 
       name: "Shirt", 
       items: 52, 
-      image: "https://images.unsplash.com/photo-1598032895397-b9472444bf93?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80",
-      link: "/products/all?category=Shirt" 
+      image: "https://images.unsplash.com/photo-1598032895397-b9472444bf93?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80"
     },
     { 
       name: "T-shirts", 
       items: 64, 
-      image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80",
-      link: "/products/all?category=T-shirts" 
+      image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80"
+    },
+    { 
+      name: "Shoes", 
+      items: 48, 
+      image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80"
+    },
+    { 
+      name: "Accessories", 
+      items: 32, 
+      image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80"
     },
   ];
 
-  // Handle category click
-  const handleCategoryClick = (categoryLink) => {
-    navigate(categoryLink);
+  // Handle category click with proper navigation
+  const handleCategoryClick = (categoryName) => {
+    navigate('/products', { 
+      state: { 
+        selectedCategory: categoryName.toLowerCase().replace(/\s+/g, '-') 
+      } 
+    });
   };
 
   useEffect(() => {
@@ -150,13 +158,13 @@ const AllCategories = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.5 }}
           >
-            Curated Men's Fashion Categories
+            Curated Fashion Categories
           </motion.p>
         </div>
         
         <div 
           ref={gridRef}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8" // Changed to 5 columns
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
         >
           {categories.map((category, index) => (
             <motion.div
@@ -169,7 +177,7 @@ const AllCategories = () => {
               whileHover={{ y: -10 }}
               onHoverStart={() => setHoveredIndex(index)}
               onHoverEnd={() => setHoveredIndex(null)}
-              onClick={() => handleCategoryClick(category.link)} // Added click handler
+              onClick={() => handleCategoryClick(category.name)}
             >
               <div className="relative h-[400px] overflow-hidden">
                 {/* Image container */}
@@ -241,7 +249,7 @@ const AllCategories = () => {
                       className="text-white border border-white px-6 py-2 text-sm tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleCategoryClick(category.link);
+                        handleCategoryClick(category.name);
                       }}
                     >
                       Explore

@@ -14,7 +14,7 @@ const Navbar = () => {
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
 
-  // Updated categories based on the provided table
+  // Updated categories with Shoes and Accessories added
   const categories = {
     katua: [
       { name: "Cotton Katua", link: "/category/katua/cotton" },
@@ -51,6 +51,20 @@ const Navbar = () => {
       { name: "V-Neck T-shirt", link: "/category/tshirts/v-neck" },
       { name: "Full Sleeve T-shirt", link: "/category/tshirts/full-sleeve" },
     ],
+    // New Shoes category
+    shoes: [
+      { name: "Men’s Shoes", link: "/category/shoes/mens" },
+      { name: "Women’s Shoes", link: "/category/shoes/womens" },
+      { name: "Kids’ Shoes", link: "/category/shoes/kids" },
+      { name: "Sports Shoes", link: "/category/shoes/sports" },
+    ],
+    // New Accessories category
+    accessories: [
+      { name: "Bags", link: "/category/accessories/bags" },
+      { name: "Wallets", link: "/category/accessories/wallets" },
+      { name: "Watches", link: "/category/accessories/watches" },
+      { name: "Sunglasses", link: "/category/accessories/sunglasses" },
+    ],
   };
 
   const categoryLabels = {
@@ -58,7 +72,9 @@ const Navbar = () => {
     panjabi: "Panjabi",
     polo: "Polo",
     shirt: "Shirt",
-    tshirts: "T-shirts"
+    tshirts: "T-shirts",
+    shoes: "Shoes", // New label
+    accessories: "Accessories", // New label
   };
 
   // Handle scroll effect
