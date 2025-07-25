@@ -44,6 +44,11 @@ const AllProductsClient = () => {
   const filterRef = useRef(null);
   const maxPriceRef = useRef(10000);
 
+  // Fix: Scroll to top on initial render and when location changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   // Color mapping for swatches
   const colorMap = {
     "White": "#FFFFFF",
@@ -140,6 +145,9 @@ const AllProductsClient = () => {
       ...prevFilters,
       [name]: value,
     }));
+    
+    // Reset to first page when filters change
+    setCurrentPage(1);
   };
 
   const handlePriceChange = (e, index) => {
@@ -151,6 +159,9 @@ const AllProductsClient = () => {
       minPrice: newPriceRange[0],
       maxPrice: newPriceRange[1]
     }));
+    
+    // Reset to first page when price changes
+    setCurrentPage(1);
   };
 
   // Handle availableSizes array of objects
@@ -277,6 +288,9 @@ const AllProductsClient = () => {
       maxPrice: maxPriceRef.current,
       priceRange: [0, maxPriceRef.current]
     });
+    
+    // Reset to first page
+    setCurrentPage(1);
   };
 
   // Price formatting
@@ -617,15 +631,14 @@ const AllProductsClient = () => {
             </div>
           )}
           
-          {/* Products Grid */}
+          {/* Products Grid - Changed to 2 columns on mobile */}
           {filteredProducts.length > 0 ? (
             <div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                 {filteredProducts.map((product) => {
                   const discountedPrice = calculateDiscountedPrice(product.price, product.discount);
                   const isInWishlist = wishlist.some(item => item._id === product._id);
                   
-                  // Determine which image to show based on hover state
                   const imageToShow = 
                     hoveredProduct === product._id && product.images?.[1] 
                       ? product.images[1] 
@@ -634,13 +647,13 @@ const AllProductsClient = () => {
                   return (
                     <div 
                       key={product._id} 
-                      className="relative overflow-hidden border border-gray-200 rounded-sm transition-all hover:shadow-lg"
+                      className="relative flex flex-col h-full border border-gray-200 rounded-sm transition-all hover:shadow-lg"
                       onMouseEnter={() => handleMouseEnter(product._id)}
                       onMouseLeave={handleMouseLeave}
                     >
                       {/* Discount Badge */}
                       {product.discount > 0 && (
-                        <div className="absolute top-4 left-4 bg-black text-white font-medium py-1 px-3 rounded-full text-xs z-20">
+                        <div className="absolute top-2 left-2 md:top-4 md:left-4 bg-black text-white font-medium py-1 px-2 md:px-3 rounded-full text-xs z-20">
                           {product.discount}% OFF
                         </div>
                       )}
@@ -651,20 +664,21 @@ const AllProductsClient = () => {
                           src={imageToShow}
                           alt={product.productName}
                           className="w-full h-full object-cover transition-opacity duration-300"
+                          loading="lazy"
                         />
                         
                         {/* Wishlist Button */}
-                        <div className="absolute top-4 right-4 z-20">
+                        <div className="absolute top-2 right-2 md:top-4 md:right-4 z-20">
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
                               handleWishlist(product);
                             }}
-                            className="p-2 rounded-full bg-white border border-gray-300 hover:bg-gray-100 transition-all"
+                            className="p-1.5 md:p-2 rounded-full bg-white border border-gray-300 hover:bg-gray-100 transition-all"
                           >
                             <FontAwesomeIcon
                               icon={isInWishlist ? solidHeart : regularHeart}
-                              className={`text-lg ${isInWishlist ? 'text-black' : 'text-gray-600'}`}
+                              className={`text-base md:text-lg ${isInWishlist ? 'text-black' : 'text-gray-600'}`}
                             />
                           </button>
                         </div>
@@ -677,40 +691,44 @@ const AllProductsClient = () => {
                         )}
                       </div>
                       
-                      {/* Product Info */}
-                      <div className="p-4 bg-white">
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-medium uppercase tracking-wide text-sm">{product.productName}</h3>
-                          <div className="flex flex-col items-end">
-                            <p className="font-semibold text-sm">
+                      {/* Product Info - Fixed height section */}
+                      <div className="flex flex-col flex-grow p-3 md:p-4 bg-white">
+                        {/* Product Name with fixed height and truncation */}
+                        <div className="flex justify-between items-start mb-2 min-h-[40px]">
+                          <h3 className="font-medium uppercase tracking-wide text-xs md:text-sm overflow-hidden line-clamp-2">
+                            {product.productName}
+                          </h3>
+                          <div className="flex flex-col items-end min-w-[70px]">
+                            <p className="font-semibold text-xs md:text-sm whitespace-nowrap">
                               {formatPrice(discountedPrice)}
                             </p>
                             {product.discount > 0 && (
-                              <span className="text-xs line-through text-gray-500">
+                              <span className="text-xs line-through text-gray-500 whitespace-nowrap">
                                 {formatPrice(product.price)}
                               </span>
                             )}
                           </div>
                         </div>
                         
-                        <p className="text-xs text-gray-600 mb-3 truncate">
+                        {/* Product Code */}
+                        <p className="text-xs text-gray-600 mb-2 truncate">
                           Code: {product.productCode}
                         </p>
                         
-                        {/* Category Path */}
-                        <div className="text-xs mb-3 flex items-center">
-                          <span className="bg-gray-100 px-2 py-1 rounded-full">
+                        {/* Category Path - Fixed height */}
+                        <div className="text-xs mb-3 flex flex-wrap items-center min-h-[28px]">
+                          <span className="bg-gray-100 px-2 py-1 rounded-full mb-1 mr-1">
                             {product.category}
                           </span>
-                          <span className="mx-2 text-gray-400">/</span>
-                          <span className="bg-gray-100 px-2 py-1 rounded-full">
+                          <span className="text-gray-400 mr-1">/</span>
+                          <span className="bg-gray-100 px-2 py-1 rounded-full mb-1">
                             {product.subCategory}
                           </span>
                         </div>
                         
                         {/* View Details Button */}
                         <button 
-                          className={`w-full py-2 flex items-center justify-center gap-1 uppercase text-xs transition-colors ${
+                          className={`mt-auto w-full py-2 flex items-center justify-center gap-1 uppercase text-xs transition-colors ${
                             product.stock === 0 
                               ? 'bg-gray-400 cursor-not-allowed text-gray-200' 
                               : 'bg-black text-white hover:bg-gray-800'

@@ -5,7 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaTruck, FaDownload, FaFileExcel, FaTrash, FaEdit, FaSearch } from "react-icons/fa";
+import { FaTruck, FaDownload, FaFileExcel, FaTrash, FaEdit, FaSearch, FaExternalLinkAlt } from "react-icons/fa";
 import JSZip from "jszip";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
@@ -95,7 +95,7 @@ const AllOrders = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedOrders, setSelectedOrders] = useState([]);
   
-useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -111,12 +111,12 @@ useEffect(() => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         
-   // In your fetchData function
-const sortedOrders = ordersResponse.data.sort((a, b) => {
- const dateA = a.createdAt || a._id ? new Date(parseInt(a._id.substring(0, 8), 16) * 1000) : new Date(0);
-const dateB = b.createdAt || b._id ? new Date(parseInt(b._id.substring(0, 8), 16) * 1000) : new Date(0);
-  return dateB - dateA;
-});
+        // Sort orders
+        const sortedOrders = ordersResponse.data.sort((a, b) => {
+          const dateA = a.createdAt || a._id ? new Date(parseInt(a._id.substring(0, 8), 16) * 1000) : new Date(0);
+          const dateB = b.createdAt || b._id ? new Date(parseInt(b._id.substring(0, 8), 16) * 1000) : new Date(0);
+          return dateB - dateA;
+        });
         
         // Create sequential order numbers (1 = oldest, N = newest)
         const ordersWithSequentialNumbers = sortedOrders.map((order, index, array) => {
@@ -145,6 +145,7 @@ const dateB = b.createdAt || b._id ? new Date(parseInt(b._id.substring(0, 8), 16
 
     fetchData();
   }, []);
+  
   // Toggle order selection
   const toggleOrderSelection = (orderId) => {
     setSelectedOrders(prev => 
@@ -343,7 +344,6 @@ const dateB = b.createdAt || b._id ? new Date(parseInt(b._id.substring(0, 8), 16
   };
 
   // Format date with AM/PM and seconds - FIXED DATE FORMAT
-// Robust date formatting function
   const formatDateTime = (dateString) => {
     if (!dateString) return "Date not available";
     
@@ -417,206 +417,226 @@ const dateB = b.createdAt || b._id ? new Date(parseInt(b._id.substring(0, 8), 16
     }
   };
 
-  
-
-  // Generate PDF invoice (exactly like Success.jsx)
-  const generateInvoice = async (order) => {
+  // Generate PDF invoice using old design
+  const generateInvoiceDocument = (order) => {
     const doc = new jsPDF("portrait", "px", "a4");
     
     // Page Dimensions
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
 
+    // NEW: Define consistent margins
+    const leftMargin = 40;
+    const rightMargin = 40;
+    const contentWidth = pageWidth - leftMargin - rightMargin;
+
     // Money formatting function
     const formatMoney = (num) => 
-      `Tk. ${Number(num).toLocaleString("en-BD", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`;
+        `Tk. ${Number(num).toLocaleString("en-BD", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        })}`;
 
     // Set Background Color to WHITE
     doc.setFillColor("#FFFFFF");
     doc.rect(0, 0, pageWidth, pageHeight, "F");
 
-    // Add Images
+    // Add Images (UNCHANGED - positions remain the same)
     const addImages = () => {
-      try {
-        const topLeftImage = "/Invoice/Top-Left-Corner.png";
-        const topRightImage = "/Invoice/T-Logo.png";
-        const topCenterImage = "/Invoice/Top-Center.png";
-        const centerImage = "/Invoice/Center.png";
+        try {
+            const topLeftImage = "/Invoice/Top-Left-Corner.png";
+            const topRightImage = "/Invoice/T-Logo.png";
+            const topCenterImage = "/Invoice/Top-Center.png";
+            const centerImage = "/Invoice/Center.png";
 
-        doc.addImage(topLeftImage, "PNG", -30, -30, 160, 160);
-        doc.addImage(topRightImage, "PNG", pageWidth - 100, 20, 80, 80);
-        doc.addImage(topCenterImage, "PNG", 100, -80, 350, 250);
-        doc.addImage(
-          centerImage, 
-          "PNG", 
-          (pageWidth - 250) / 2,
-          (pageHeight - 100) / 2,
-          250, 
-          100
-        );
-      } catch (e) {
-        console.error("Error adding images to PDF:", e);
-      }
+            doc.addImage(topLeftImage, "PNG", -30, -30, 160, 160);
+            doc.addImage(topRightImage, "PNG", pageWidth - 100, 20, 80, 80);
+            doc.addImage(topCenterImage, "PNG", 100, -80, 350, 250);
+            doc.addImage(
+                centerImage, 
+                "PNG", 
+                (pageWidth - 250) / 2,
+                (pageHeight - 100) / 2,
+                250, 
+                100
+            );
+        } catch (e) {
+            console.error("Error adding images to PDF:", e);
+        }
     };
     addImages();
 
-    // Add Header
+    // Add Header (ADJUSTED margins)
     const addHeader = () => {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(18);
-      doc.setTextColor("#000000");
-      doc.text(`INVOICE`, pageWidth / 2, 120, { align: "center" });
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(18);
+        doc.setTextColor("#000000");
+        doc.text(`INVOICE`, pageWidth / 2, 120, { align: "center" });
 
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(12);
 
-      // FIXED: Use sequential order number
-      const invoiceNo = `Invoice No: #${order.sequentialNumber}`;
-      const orderId = `Order ID: ${order._id.slice(-8).toUpperCase()}`;
-      const invoiceDate = `Invoice Date: ${formatDateTime(order.createdAt)}`;
-      const deliveryDate = `Delivery Date: ${new Date(order.estimatedDeliveryDate).toDateString()}`;
+        const invoiceNo = `Invoice No: #${order.sequentialNumber}`;
+        const orderId = `Order ID: ${order._id.slice(-8).toUpperCase()}`;
+        const invoiceDate = `Invoice Date: ${formatDateTime(order.createdAt)}`;
+        const deliveryDate = `Delivery Date: ${new Date(order.estimatedDeliveryDate).toDateString()}`;
 
-      // Right align text
-      const rightMargin = 20;
-      const strings = [invoiceNo, orderId, invoiceDate, deliveryDate];
-      const widths = strings.map(str => doc.getTextWidth(str));
-      const maxWidth = Math.max(...widths);
-      const startX = pageWidth - maxWidth - rightMargin;
+        // Right align text with new margin
+        const strings = [invoiceNo, orderId, invoiceDate, deliveryDate];
+        const widths = strings.map(str => doc.getTextWidth(str));
+        const maxWidth = Math.max(...widths);
+        const startX = pageWidth - maxWidth - rightMargin;
 
-      doc.setTextColor("#000000");
-      doc.text(invoiceNo, startX, 150);
-      doc.text(orderId, startX, 170);
-      doc.text(invoiceDate, startX, 190);
-      doc.text(deliveryDate, startX, 210);
+        doc.setTextColor("#000000");
+        doc.text(invoiceNo, startX, 150);
+        doc.text(orderId, startX, 170);
+        doc.text(invoiceDate, startX, 190);
+        doc.text(deliveryDate, startX, 210);
     };
     addHeader();
     
-    // Add Customer Details
+    // Add Customer Details (ADJUSTED margins)
     const addCustomerDetails = () => {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.setTextColor("#000000");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor("#000000");
 
-      doc.text("Invoice To:", 20, 220);
+        doc.text("Invoice To:", leftMargin, 220);
 
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor("#333333");
-      doc.text(`${order.name}`, 100, 220);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor("#333333");
+        doc.text(`${order.name}`, leftMargin + 80, 220);
 
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor("#000000");
-      doc.text("Phone:", 20, 240);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor("#333333");
-      doc.text(`${order.phone}`, 100, 240);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor("#000000");
+        doc.text("Phone:", leftMargin, 240);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor("#333333");
+        doc.text(`${order.phone}`, leftMargin + 80, 240);
 
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor("#000000");
-      doc.text("District:", 20, 260);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor("#333333");
-      doc.text(`${order.jela}`, 100, 260);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor("#000000");
+        doc.text("District:", leftMargin, 260);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor("#333333");
+        doc.text(`${order.jela}`, leftMargin + 80, 260);
 
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor("#000000");
-      doc.text("Upazela:", 20, 280);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor("#333333");
-      doc.text(`${order.upazela}`, 100, 280);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor("#000000");
+        doc.text("Upazela:", leftMargin, 280);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor("#333333");
+        doc.text(`${order.upazela}`, leftMargin + 80, 280);
 
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor("#000000");
-      doc.text("Address:", 20, 300);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor("#333333");
-      doc.text(`${order.address}`, 100, 300);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor("#000000");
+        doc.text("Address:", leftMargin, 300);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor("#333333");
+        doc.text(`${order.address}`, leftMargin + 80, 300);
     };
     addCustomerDetails();
 
-    // Add Order Table
+    // Add Order Table (ADJUSTED margins)
     const addOrderTable = () => {
-      let yOffset = 340;
-      
-      // Table Header
-      doc.setFont("helvetica", "bold");
-      doc.setFillColor("#f0f0f0");
-      doc.setDrawColor("#000000");
-      doc.rect(20, yOffset, pageWidth - 40, 20, "FD");
-      doc.setTextColor("#000000");
-      doc.text("No.", 30, yOffset + 15);
-      doc.text("Description", 80, yOffset + 15);
-      doc.text("Quantity", pageWidth - 170, yOffset + 15, { align: "right" });
-      doc.text("Amount", pageWidth - 50, yOffset + 15, { align: "right" });
-
-      // Table Content
-      yOffset += 30;
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor("#333333");
-      order.items.forEach((item, index) => {
-        doc.text(`${index + 1}`, 30, yOffset);
-        doc.text(item.productName, 80, yOffset);
-        doc.text(`${item.quantity}`, pageWidth - 170, yOffset, { align: "right" });
+        let yOffset = 340;
         
-        doc.text(
-          formatMoney(item.quantity * item.price), 
-          pageWidth - 50, 
-          yOffset, 
-          { align: "right" }
-        );
+        // Table Header
+        doc.setFont("helvetica", "bold");
+        doc.setFillColor("#f0f0f0");
+        doc.setDrawColor("#000000");
+        doc.rect(leftMargin, yOffset, contentWidth, 20, "FD");
+        doc.setTextColor("#000000");
+        doc.text("No.", leftMargin + 10, yOffset + 15);
+        doc.text("Description", leftMargin + 60, yOffset + 15);
+        doc.text("Quantity", leftMargin + contentWidth - 70, yOffset + 15, { align: "right" });
+        doc.text("Amount", leftMargin + contentWidth - 10, yOffset + 15, { align: "right" });
+
+        // Table Content
+        yOffset += 30;
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor("#333333");
+        order.items.forEach((item, index) => {
+            doc.text(`${index + 1}`, leftMargin + 10, yOffset);
+            doc.text(item.productName, leftMargin + 60, yOffset);
+            doc.text(`${item.quantity}`, leftMargin + contentWidth - 70, yOffset, { align: "right" });
+            
+            doc.text(
+                formatMoney(item.quantity * item.price), 
+                leftMargin + contentWidth - 10, 
+                yOffset, 
+                { align: "right" }
+            );
+            
+            yOffset += 20;
+        });
+
+        // Total Section (ADJUSTED margins)
+        yOffset += 10;
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor("#000000");
         
+        const discountAmount = order.discount ? order.totalAmount * (order.discount / 100) : 0;
+        const finalAmount = order.totalAmount - discountAmount + order.deliveryCharge;
+
+        doc.text(`Delivery Charge: ${formatMoney(order.deliveryCharge)}`, leftMargin, yOffset);
         yOffset += 20;
-      });
 
-      // Total Section
-      yOffset += 10;
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor("#000000");
-      
-      const discountAmount = order.discount ? order.totalAmount * (order.discount / 100) : 0;
-      const finalAmount = order.totalAmount - discountAmount + order.deliveryCharge;
+        if (order.discount) {
+            doc.text(`Discount (${order.discount}%): ${formatMoney(-discountAmount)}`, leftMargin, yOffset);
+            yOffset += 20;
+        }
 
-      doc.text(`Delivery Charge: ${formatMoney(order.deliveryCharge)}`, 20, yOffset);
-      yOffset += 20;
-
-      if (order.discount) {
-        doc.text(`Discount (${order.discount}%): ${formatMoney(-discountAmount)}`, 20, yOffset);
-        yOffset += 20;
-      }
-
-      doc.setFontSize(12);
-      doc.text(`Total Amount: ${formatMoney(finalAmount)}`, 20, yOffset);
-      doc.setFontSize(10);
+        doc.setFontSize(12);
+        doc.text(`Total Amount: ${formatMoney(finalAmount)}`, leftMargin, yOffset);
+        doc.setFontSize(10);
     };
     addOrderTable();
 
-    // Footer
+    // Footer (ADJUSTED margins)
     const addFooter = () => {
-      const footerText = "Thank you for shopping with Ruhana Fashions! Payment must be made immediately.";
-      const footerY = pageHeight - 50;
+        const footerText = "Thank you for shopping with Ruhana Fashions! Payment must be made immediately.";
+        const footerY = pageHeight - 50;
 
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(10);
-      doc.setTextColor("#666666");
-      doc.text(footerText, pageWidth / 2, footerY, { align: "center" });
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(10);
+        doc.setTextColor("#666666");
+        doc.text(footerText, pageWidth / 2, footerY, { align: "center" });
 
-      // Draw the line
-      doc.setDrawColor("#000000");
-      doc.setLineWidth(1);
-      doc.line(20, footerY + 10, pageWidth - 20, footerY + 10);
+        // Draw the line with new margins
+        doc.setDrawColor("#000000");
+        doc.setLineWidth(1);
+        doc.line(leftMargin, footerY + 10, pageWidth - rightMargin, footerY + 10);
 
-      // Add the copyright text
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
-      doc.setTextColor("#666666");
-      doc.text("@copyright 2024 reserved by Ruhana Fashions", pageWidth / 2, footerY + 25, { align: "center" });
+        // Add the copyright text
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor("#666666");
+        doc.text("@copyright 2024 reserved by Ruhana Fashions", pageWidth / 2, footerY + 25, { align: "center" });
     };
     addFooter();
 
-    // Save PDF
+    return doc;
+};
+
+  // Download PDF invoice
+  const generateInvoice = (order) => {
+    const doc = generateInvoiceDocument(order);
     doc.save(`ruhana-invoice-${order.sequentialNumber}.pdf`);
+  };
+
+  // Open invoice in new tab
+  const openInvoiceInNewTab = async (order) => {
+    const doc = generateInvoiceDocument(order);
+    const pdfBlob = doc.output('blob');
+    const blobUrl = URL.createObjectURL(pdfBlob);
+    
+    window.open(blobUrl, '_blank');
+    
+    // Clean up after 10 seconds
+    setTimeout(() => {
+      URL.revokeObjectURL(blobUrl);
+    }, 10000);
   };
 
   // Handle bulk invoice download
@@ -628,8 +648,7 @@ const dateB = b.createdAt || b._id ? new Date(parseInt(b._id.substring(0, 8), 16
       if (!order) continue;
       
       // Generate PDF
-      const doc = new jsPDF();
-      doc.text(`Invoice #${order.sequentialNumber} for Order #${order._id.slice(-8)}`, 10, 10);
+      const doc = generateInvoiceDocument(order);
       const pdfBlob = doc.output('blob');
       zip.file(`Invoice_${order.sequentialNumber}.pdf`, pdfBlob);
     }
@@ -964,13 +983,13 @@ const dateB = b.createdAt || b._id ? new Date(parseInt(b._id.substring(0, 8), 16
                   
                   <div>
                     <h3 className={`font-semibold text-lg md:text-xl ${FONTS.heading}`} style={{ color: COLORS.text }}>
-                      Order #{order.sequentialNumber} {/* FIXED: Use sequential number */}
+                      Order #{order.sequentialNumber}
                     </h3>
                     <p className="text-sm md:text-base" style={{ color: COLORS.textSecondary }}>
                       {order.name} • {order.phone}
                     </p>
                     <p className="text-xs mt-1" style={{ color: COLORS.textSecondary }}>
-                      {formatDateTime(order.createdAt)} {/* FIXED: Proper date format */}
+                      {formatDateTime(order.createdAt)}
                     </p>
                   </div>
                 </div>
@@ -1120,7 +1139,22 @@ const dateB = b.createdAt || b._id ? new Date(parseInt(b._id.substring(0, 8), 16
                             whileTap={{ scale: 0.98 }}
                           >
                             <FaDownload className="w-4 h-4" />
-                            <span>Invoice</span>
+                            <span>Download</span>
+                          </motion.button>
+                          
+                          {/* New button to open invoice in new tab */}
+                          <motion.button
+                            onClick={() => openInvoiceInNewTab(order)}
+                            className="px-4 py-2 rounded-lg flex items-center gap-1.5 font-medium text-sm"
+                            style={{ backgroundColor: COLORS.primary, color: 'white' }}
+                            whileHover={{ 
+                              scale: 1.03,
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                            }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <FaExternalLinkAlt className="w-4 h-4" />
+                            <span>View</span>
                           </motion.button>
                           
                           {order.status === "CancellationRequested" && (
@@ -1184,7 +1218,7 @@ const dateB = b.createdAt || b._id ? new Date(parseInt(b._id.substring(0, 8), 16
                 <div className="flex justify-between items-center pb-3 border-b"
                      style={{ borderColor: COLORS.border }}>
                   <h2 className={`text-2xl font-bold ${FONTS.heading}`} style={{ color: COLORS.text }}>
-                    Order Details • #{selectedOrder.sequentialNumber} {/* FIXED: Use sequential number */}
+                    Order Details • #{selectedOrder.sequentialNumber}
                   </h2>
                   <motion.button
                     onClick={() => setSelectedOrder(null)}
@@ -1353,6 +1387,20 @@ const dateB = b.createdAt || b._id ? new Date(parseInt(b._id.substring(0, 8), 16
                       >
                         <FaDownload className="w-4 h-4" />
                         Download Invoice
+                      </motion.button>
+                      
+                      <motion.button
+                        onClick={() => openInvoiceInNewTab(selectedOrder)}
+                        className="px-5 py-2.5 rounded-lg flex items-center gap-2 font-medium text-sm"
+                        style={{ backgroundColor: COLORS.primary, color: 'white' }}
+                        whileHover={{ 
+                          scale: 1.03,
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                        }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <FaExternalLinkAlt className="w-4 h-4" />
+                        View Invoice
                       </motion.button>
                       
                       <motion.button

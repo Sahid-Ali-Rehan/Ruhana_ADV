@@ -17,27 +17,27 @@ const AllCategories = () => {
     { 
       name: "Katua", 
       items: 28, 
-      image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80"
+      image: "https://defclo.com/cdn/shop/files/DSC01892_21aa54ed-5630-4cc2-865d-006945499a5a.jpg?v=1742292858"
     },
     { 
       name: "Panjabi", 
       items: 36, 
-      image: "https://images.unsplash.com/photo-1617137968427-85924c800a22?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80"
+      image: "https://media.e-valy.com/cms/products/images/8c08e0bb-217b-4538-a8d2-fc7aa8ed7a63"
     },
     { 
       name: "Polo", 
       items: 45, 
-      image: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80"
+      image: "https://calvinklein-eu.scene7.com/is/image/CalvinKleinEU/J30J315603_YAF_main?$b2c_updp_m_mainImage_1920$"
     },
     { 
       name: "Shirt", 
       items: 52, 
-      image: "https://images.unsplash.com/photo-1598032895397-b9472444bf93?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80"
+      image: "https://static-01.daraz.com.bd/p/c4b875781df35fc5e570279d55747439.jpg"
     },
     { 
       name: "T-shirts", 
       items: 64, 
-      image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80"
+      image: "https://img.drz.lazcdn.com/static/bd/p/5397dafb14e153596cb8f4eadf9d67e1.jpg_720x720q80.jpg"
     },
     { 
       name: "Shoes", 
