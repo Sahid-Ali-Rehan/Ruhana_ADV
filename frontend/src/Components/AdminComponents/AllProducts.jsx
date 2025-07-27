@@ -40,20 +40,23 @@ const AllProducts = () => {
     fetchProducts();
   }, []);
 
-  const handleDelete = async (id) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`https://ruhana-adv.onrender.com/api/products/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      toast.success('Product deleted successfully');
-      setProducts(products.filter(product => product._id !== id));
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      toast.error('Failed to delete product');
-    }
-  };
-
+const handleDelete = async (id) => {
+  try {
+    const token = localStorage.getItem('token');
+    await axios.delete(`https://ruhana-adv.onrender.com/api/products/${id}`, {
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+    });
+    
+    toast.success('Product deleted successfully');
+    setProducts(products.filter(product => product._id !== id));
+  } catch (error) {
+    console.error('Delete error:', error.response?.data || error.message);
+    toast.error(error.response?.data?.message || 'Failed to delete product');
+  }
+};
   const handleEdit = (productId) => {
     navigate(`/edit-product/${productId}`);
   };

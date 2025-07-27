@@ -29,6 +29,15 @@ const SingleProductList = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [showZoom, setShowZoom] = useState(false);
+  const topRef = useRef(null);
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    if (topRef.current) {
+      topRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [id]);
 
   // Fetch product data
   useEffect(() => {
@@ -40,6 +49,15 @@ const SingleProductList = () => {
         const data = await response.json();
         setProduct(data);
         setMainImage(data.images[0]);
+        
+        // Auto-select if only one option available
+        if (data.availableSizes.length === 1) {
+          setSelectedSize(data.availableSizes[0].size);
+        }
+        if (data.availableColors.length === 1) {
+          setSelectedColor(data.availableColors[0]);
+        }
+        
         setIsLoading(false);
       } catch (err) {
         console.error(err.message);
@@ -165,13 +183,17 @@ const SingleProductList = () => {
   };
 
   const addToCart = () => {
-    if (!selectedSize || !selectedColor) {
+    // If only one size/color is available, auto-select it
+    const sizeToUse = product.availableSizes.length === 1 ? product.availableSizes[0].size : selectedSize;
+    const colorToUse = product.availableColors.length === 1 ? product.availableColors[0] : selectedColor;
+    
+    if (!sizeToUse || !colorToUse) {
       toast.error("Please select both size and color.");
       return;
     }
 
     const selectedSizePrice = product.availableSizes?.find(
-      (sizeObj) => sizeObj.size === selectedSize
+      (sizeObj) => sizeObj.size === sizeToUse
     )?.sizePrice;
 
     if (!selectedSizePrice) {
@@ -183,8 +205,8 @@ const SingleProductList = () => {
     const existingItem = existingCartItems.find(
       (item) =>
         item._id === product._id &&
-        item.selectedSize === selectedSize &&
-        item.selectedColor === selectedColor
+        item.selectedSize === sizeToUse &&
+        item.selectedColor === colorToUse
     );
 
     if (existingItem) {
@@ -205,8 +227,8 @@ const SingleProductList = () => {
         ...product,
         price: selectedSizePrice,
         quantity,
-        selectedSize,
-        selectedColor,
+        selectedSize: sizeToUse,
+        selectedColor: colorToUse,
       };
       existingCartItems.push(cartItem);
       localStorage.setItem('cart_guest', JSON.stringify(existingCartItems));
@@ -215,7 +237,11 @@ const SingleProductList = () => {
   };
 
   const handleOrderNow = () => {
-    if (!selectedSize || !selectedColor) {
+    // If only one size/color is available, auto-select it
+    const sizeToUse = product.availableSizes.length === 1 ? product.availableSizes[0].size : selectedSize;
+    const colorToUse = product.availableColors.length === 1 ? product.availableColors[0] : selectedColor;
+    
+    if (!sizeToUse || !colorToUse) {
       toast.error("Please select both size and color before proceeding.");
       return;
     }
@@ -246,12 +272,12 @@ const SingleProductList = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white text-gray-800">
+    <div className="min-h-screen bg-white text-gray-800" ref={topRef}>
       <Navbar />
       
       {/* Floating action buttons */}
       <motion.div 
-        className="fixed right-6 top-1/3 z-30 flex flex-col space-y-4"
+        className="fixed right-4 top-1/3 z-30 flex flex-col space-y-3"
         initial={{ x: 100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ delay: 0.5 }}
@@ -259,18 +285,18 @@ const SingleProductList = () => {
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          className="w-12 h-12 rounded-full shadow-lg flex items-center justify-center bg-white border border-gray-200"
+          className="w-10 h-10 md:w-12 md:h-12 rounded-full shadow-lg flex items-center justify-center bg-white border border-gray-200"
           onClick={toggleFavorite}
         >
-          <FaHeart className={isFavorite ? "text-red-500" : "text-gray-400"} />
+          <FaHeart className={isFavorite ? "text-red-500 text-lg" : "text-gray-400 text-lg"} />
         </motion.button>
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          className="w-12 h-12 rounded-full shadow-lg flex items-center justify-center bg-white border border-gray-200"
+          className="w-10 h-10 md:w-12 md:h-12 rounded-full shadow-lg flex items-center justify-center bg-white border border-gray-200"
           onClick={shareProduct}
         >
-          <FaShare className="text-gray-600" />
+          <FaShare className="text-gray-600 text-lg" />
         </motion.button>
       </motion.div>
       
@@ -282,7 +308,7 @@ const SingleProductList = () => {
           transition={{ duration: 0.6 }}
           className="rounded-3xl shadow-xl overflow-hidden border border-gray-100 bg-white"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6 sm:p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-4 sm:p-6 md:p-8">
             {/* Product Images */}
             <motion.div 
               className="space-y-6"
@@ -291,7 +317,7 @@ const SingleProductList = () => {
               transition={{ delay: 0.2, duration: 0.5 }}
             >
               <div 
-                className="relative overflow-hidden rounded-2xl border border-gray-200 group"
+                className="relative overflow-hidden rounded-2xl border border-gray-200 group aspect-square"
                 onMouseMove={handleMouseMove}
                 onMouseEnter={() => setShowZoom(true)}
                 onMouseLeave={() => setShowZoom(false)}
@@ -299,7 +325,7 @@ const SingleProductList = () => {
                 <motion.img
                   src={mainImage}
                   alt={product.productName}
-                  className="w-full h-auto max-h-[500px] object-contain transition-all duration-300 cursor-zoom-in"
+                  className="w-full h-full object-contain transition-all duration-300 cursor-zoom-in"
                   style={{
                     transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
                     transform: showZoom ? "scale(2)" : "scale(1)"
@@ -340,7 +366,7 @@ const SingleProductList = () => {
                     <img
                       src={img}
                       alt={`Thumbnail ${idx + 1}`}
-                      className="w-20 h-20 object-cover rounded-xl cursor-pointer border-2 transition-all"
+                      className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-xl cursor-pointer border-2 transition-all"
                       style={{ 
                         borderColor: idx === product.images.indexOf(mainImage) ? "#3b82f6" : "transparent",
                         filter: idx !== product.images.indexOf(mainImage) ? "brightness(95%)" : "none"
@@ -351,7 +377,7 @@ const SingleProductList = () => {
                 ))}
               </div>
               
-              {/* Product Video */}
+              {/* Product Video - Modern Design */}
               {product.videoUrl && (
                 <motion.div
                   initial={{ y: 20, opacity: 0 }}
@@ -360,14 +386,24 @@ const SingleProductList = () => {
                   className="mt-6"
                 >
                   <h3 className="text-xl font-semibold mb-3 text-gray-700">Product Video</h3>
-                  <div className="rounded-2xl overflow-hidden shadow border border-gray-200">
-                    <ReactPlayer
-                      url={product.videoUrl}
-                      controls
-                      width="100%"
-                      height="300px"
-                      light={product.images[0]}
-                    />
+                  <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-200 bg-black">
+                    <div className="aspect-w-16 aspect-h-9">
+                      <ReactPlayer
+                        url={product.videoUrl}
+                        controls
+                        width="100%"
+                        height="100%"
+                        light={product.images[0]}
+                        playing={false}
+                        playIcon={
+                          <div className="w-16 h-16 rounded-full bg-blue-600 bg-opacity-80 flex items-center justify-center">
+                            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        }
+                      />
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -381,8 +417,8 @@ const SingleProductList = () => {
               transition={{ delay: 0.2, duration: 0.5 }}
             >
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900">{product.productName}</h1>
-                <p className="text-lg mt-1 text-gray-600">Product Code: {product.productCode}</p>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">{product.productName}</h1>
+                <p className="text-base md:text-lg mt-1 text-gray-600">Product Code: {product.productCode}</p>
               </div>
               
               {/* Ratings */}
@@ -398,37 +434,37 @@ const SingleProductList = () => {
                     return (
                       <span key={index}>
                         {averageRating >= ratingValue ? (
-                          <FaStar className="text-xl" />
+                          <FaStar className="text-lg md:text-xl" />
                         ) : averageRating >= ratingValue - 0.5 ? (
-                          <FaStarHalfAlt className="text-xl" />
+                          <FaStarHalfAlt className="text-lg md:text-xl" />
                         ) : (
-                          <FaRegStar className="text-xl" />
+                          <FaRegStar className="text-lg md:text-xl" />
                         )}
                       </span>
                     );
                   })}
                 </div>
-                <p className="ml-2 text-lg font-semibold text-gray-700">
+                <p className="ml-2 text-base md:text-lg font-semibold text-gray-700">
                   {averageRating} <span className="text-gray-500">({totalReviews} Reviews)</span>
                 </p>
               </motion.div>
               
               {/* Pricing */}
               <motion.div 
-                className="p-4 rounded-xl border border-gray-200 bg-gray-50"
+                className="p-4 rounded-xl border border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
               >
-                <div className="flex items-baseline">
-                  <p className="text-3xl font-bold text-gray-900">
+                <div className="flex flex-wrap items-baseline gap-2">
+                  <p className="text-2xl md:text-3xl font-bold text-gray-900">
                     ৳ {discountedPrice.toFixed(2)}
                   </p>
                   {product.discount > 0 && (
                     <>
-                      <span className="line-through ml-2 text-xl text-gray-500">৳ {selectedSizePrice.toFixed(2)}</span>
+                      <span className="line-through text-lg md:text-xl text-gray-500">৳ {selectedSizePrice.toFixed(2)}</span>
                       <motion.span 
-                        className="ml-3 px-2 py-1 rounded-full text-sm font-bold bg-red-100 text-red-600"
+                        className="px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-600"
                         initial={{ scale: 0.8 }}
                         animate={{ scale: 1 }}
                         transition={{ type: "spring", stiffness: 300 }}
@@ -449,14 +485,14 @@ const SingleProductList = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
               >
-                <h3 className="text-xl font-semibold mb-3 text-gray-700">Select Size</h3>
+                <h3 className="text-lg md:text-xl font-semibold mb-3 text-gray-700">Select Size</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {product.availableSizes.map((sizeObj) => (
                     <motion.button
                       key={sizeObj.size}
-                      className={`px-4 py-3 rounded-xl text-center transition-all font-medium border ${
+                      className={`px-3 py-2 md:px-4 md:py-3 rounded-xl text-center transition-all font-medium border ${
                         selectedSize === sizeObj.size
-                          ? "bg-blue-600 text-white border-blue-600"
+                          ? "bg-blue-600 text-white border-blue-600 shadow-md"
                           : "bg-transparent border-gray-300 text-gray-700 hover:border-gray-500"
                       }`}
                       onClick={() => handleSizeSelection(sizeObj.size)}
@@ -475,13 +511,13 @@ const SingleProductList = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
               >
-                <h3 className="text-xl font-semibold mb-3 text-gray-700">Select Color</h3>
+                <h3 className="text-lg md:text-xl font-semibold mb-3 text-gray-700">Select Color</h3>
                 <div className="flex flex-wrap gap-3">
                   {product.availableColors.map((color) => (
                     <motion.button
                       key={color}
-                      className={`w-10 h-10 rounded-full border-2 transition-all ${
-                        selectedColor === color ? "scale-110 ring-2 ring-offset-2 ring-blue-500" : ""
+                      className={`w-8 h-8 md:w-10 md:h-10 rounded-full border-2 transition-all ${
+                        selectedColor === color ? "scale-110 ring-2 ring-offset-2 ring-blue-500 shadow-md" : ""
                       }`}
                       style={{ 
                         backgroundColor: color,
@@ -501,21 +537,21 @@ const SingleProductList = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
               >
-                <h3 className="text-xl font-semibold mb-3 text-gray-700">Quantity</h3>
+                <h3 className="text-lg md:text-xl font-semibold mb-3 text-gray-700">Quantity</h3>
                 <div className="flex items-center space-x-4">
                   <motion.button
                     onClick={() => handleQuantityChange(quantity - 1)}
                     disabled={quantity <= 1}
-                    className="w-12 h-12 rounded-full flex items-center justify-center shadow border border-gray-300 bg-white"
+                    className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shadow border border-gray-300 bg-white"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <FaMinus className="text-gray-600" />
                   </motion.button>
-                  <span className="text-2xl font-bold w-12 text-center text-gray-900">{quantity}</span>
+                  <span className="text-xl md:text-2xl font-bold w-12 text-center text-gray-900">{quantity}</span>
                   <motion.button
                     onClick={() => handleQuantityChange(quantity + 1)}
-                    className="w-12 h-12 rounded-full flex items-center justify-center shadow border border-gray-300 bg-white"
+                    className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shadow border border-gray-300 bg-white"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -534,17 +570,17 @@ const SingleProductList = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <motion.button
                     onClick={addToCart}
-                    className="py-4 text-lg font-bold rounded-xl flex items-center justify-center space-x-2 bg-gray-900 border border-gray-800 hover:bg-gray-800 text-white transition-colors"
+                    className="py-3 md:py-4 text-base md:text-lg font-bold rounded-xl flex items-center justify-center space-x-2 bg-gray-900 border border-gray-800 hover:bg-gray-800 text-white transition-colors"
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <FaShoppingCart className="text-xl" />
+                    <FaShoppingCart className="text-lg" />
                     <span>Add to Cart</span>
                   </motion.button>
                   
                   <motion.button
                     onClick={handleOrderNow}
-                    className="py-4 text-lg font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+                    className="py-3 md:py-4 text-base md:text-lg font-bold rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-md"
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -554,49 +590,49 @@ const SingleProductList = () => {
                 
                 <motion.button
                   onClick={handleOrderOnWhatsApp}
-                  className="w-full py-4 text-lg font-semibold rounded-xl flex items-center justify-center space-x-2 bg-green-600 text-white hover:bg-green-700"
+                  className="w-full py-3 md:py-4 text-base md:text-lg font-semibold rounded-xl flex items-center justify-center space-x-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 shadow-md"
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <FaWhatsapp className="text-2xl" />
+                  <FaWhatsapp className="text-xl" />
                   <span>Order on WhatsApp</span>
                 </motion.button>
               </motion.div>
               
               {/* Product Features */}
               <motion.div 
-                className="grid grid-cols-2 gap-4 mt-6"
+                className="grid grid-cols-2 gap-3 mt-6"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.9 }}
               >
                 <motion.div 
-                  className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 bg-gray-50"
+                  className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 bg-gray-50 shadow-sm"
                   whileHover={{ y: -5 }}
                 >
-                  <FaShippingFast className="text-xl text-blue-600" />
-                  <span className="text-sm text-gray-700">Free Shipping</span>
+                  <FaShippingFast className="text-lg md:text-xl text-blue-600" />
+                  <span className="text-xs md:text-sm text-gray-700">Free Shipping</span>
                 </motion.div>
                 <motion.div 
-                  className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 bg-gray-50"
+                  className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 bg-gray-50 shadow-sm"
                   whileHover={{ y: -5 }}
                 >
-                  <FaExchangeAlt className="text-xl text-blue-600" />
-                  <span className="text-sm text-gray-700">Easy Returns</span>
+                  <FaExchangeAlt className="text-lg md:text-xl text-blue-600" />
+                  <span className="text-xs md:text-sm text-gray-700">Easy Returns</span>
                 </motion.div>
                 <motion.div 
-                  className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 bg-gray-50"
+                  className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 bg-gray-50 shadow-sm"
                   whileHover={{ y: -5 }}
                 >
-                  <FaLock className="text-xl text-blue-600" />
-                  <span className="text-sm text-gray-700">Secure Payment</span>
+                  <FaLock className="text-lg md:text-xl text-blue-600" />
+                  <span className="text-xs md:text-sm text-gray-700">Secure Payment</span>
                 </motion.div>
                 <motion.div 
-                  className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 bg-gray-50"
+                  className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 bg-gray-50 shadow-sm"
                   whileHover={{ y: -5 }}
                 >
-                  <FaStar className="text-xl text-blue-600" />
-                  <span className="text-sm text-gray-700">Authentic Products</span>
+                  <FaStar className="text-lg md:text-xl text-blue-600" />
+                  <span className="text-xs md:text-sm text-gray-700">Authentic Products</span>
                 </motion.div>
               </motion.div>
             </motion.div>
@@ -604,22 +640,22 @@ const SingleProductList = () => {
           
           {/* Tabs Section */}
           <motion.div 
-            className="px-6 sm:px-8 py-6 border-t border-gray-200 bg-white"
+            className="px-4 sm:px-6 py-6 border-t border-gray-200 bg-white"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1 }}
           >
-            <div className="flex space-x-4 border-b border-gray-200">
+            <div className="flex space-x-4 border-b border-gray-200 overflow-x-auto custom-scrollbar">
               <button
                 onClick={() => setActiveTab("description")}
-                className={`px-4 py-3 text-lg font-medium ${activeTab === "description" ? "border-b-2 text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
+                className={`px-3 py-2 md:px-4 md:py-3 text-base md:text-lg font-medium whitespace-nowrap ${activeTab === "description" ? "border-b-2 text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
                 style={{ borderColor: activeTab === "description" ? "#3b82f6" : "transparent" }}
               >
                 Description
               </button>
               <button
                 onClick={() => setActiveTab("sizeChart")}
-                className={`px-4 py-3 text-lg font-medium ${activeTab === "sizeChart" ? "border-b-2 text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
+                className={`px-3 py-2 md:px-4 md:py-3 text-base md:text-lg font-medium whitespace-nowrap ${activeTab === "sizeChart" ? "border-b-2 text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
                 style={{ borderColor: activeTab === "sizeChart" ? "#3b82f6" : "transparent" }}
               >
                 Size Chart
@@ -635,9 +671,13 @@ const SingleProductList = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.3 }}
-                    className="leading-relaxed text-gray-700"
+                    className="leading-relaxed text-gray-700 space-y-4"
                   >
-                    <p>{product.description}</p>
+                    {product.description.split('\n').map((paragraph, index) => (
+                      <p key={index} className="text-base md:text-lg">
+                        {paragraph}
+                      </p>
+                    ))}
                   </motion.div>
                 )}
                 
@@ -653,7 +693,7 @@ const SingleProductList = () => {
                       <img
                         src={product.sizeChart}
                         alt="Size Chart"
-                        className="max-w-full max-h-[500px] object-contain rounded-lg border border-gray-200"
+                        className="max-w-full max-h-[500px] object-contain rounded-lg border border-gray-200 shadow-sm"
                       />
                     </div>
                   </motion.div>
@@ -664,16 +704,16 @@ const SingleProductList = () => {
           
           {/* Reviews Section */}
           <motion.div 
-            className="px-6 sm:px-8 py-8 border-t border-gray-200 bg-white"
+            className="px-4 sm:px-6 py-8 border-t border-gray-200 bg-white"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.1 }}
           >
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">Customer Reviews</h2>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900">Customer Reviews</h2>
               <motion.button
                 onClick={toggleReviewModal}
-                className="px-6 py-3 rounded-full font-medium bg-blue-600 text-white hover:bg-blue-700"
+                className="px-4 py-2 md:px-6 md:py-3 rounded-full font-medium bg-blue-600 text-white hover:bg-blue-700 text-sm md:text-base"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -689,24 +729,24 @@ const SingleProductList = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.1 }}
-                    className="p-6 rounded-xl border border-gray-200 bg-white"
+                    className="p-4 md:p-6 rounded-xl border border-gray-200 bg-white shadow-sm"
                   >
-                    <div className="flex justify-between">
-                      <p className="font-bold text-lg text-gray-900">{review.name}</p>
+                    <div className="flex flex-col md:flex-row justify-between gap-2">
+                      <p className="font-bold text-base md:text-lg text-gray-900">{review.name}</p>
                       <div className="flex space-x-1 text-yellow-400">
                         {Array.from({ length: 5 }).map((_, i) => (
                           <span key={i}>
                             {review.rating > i ? (
-                              <FaStar />
+                              <FaStar className="text-base md:text-lg" />
                             ) : (
-                              <FaRegStar />
+                              <FaRegStar className="text-base md:text-lg" />
                             )}
                           </span>
                         ))}
                       </div>
                     </div>
-                    <p className="mt-3 text-gray-600">{review.comment}</p>
-                    <p className="mt-3 text-sm text-gray-500">
+                    <p className="mt-3 text-gray-600 text-sm md:text-base">{review.comment}</p>
+                    <p className="mt-3 text-xs md:text-sm text-gray-500">
                       {new Date(review.createdAt).toLocaleDateString()}
                     </p>
                   </motion.div>
@@ -714,7 +754,7 @@ const SingleProductList = () => {
               </div>
             ) : (
               <div className="text-center py-10">
-                <p className="text-lg text-gray-500">No reviews yet. Be the first to review!</p>
+                <p className="text-base md:text-lg text-gray-500">No reviews yet. Be the first to review!</p>
               </div>
             )}
           </motion.div>
@@ -722,12 +762,12 @@ const SingleProductList = () => {
         
         {/* Related Products */}
         <motion.div 
-          className="mt-16"
+          className="mt-12 md:mt-16"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.2 }}
         >
-          <h2 className="text-3xl font-bold text-center mb-10 text-gray-900">Related Products</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-10 text-gray-900">Related Products</h2>
           <RelatedProduct category={product.category} currentProductId={product._id} />
         </motion.div>
       </div>
@@ -753,7 +793,7 @@ const SingleProductList = () => {
                 <h3 className="text-xl font-bold text-gray-900">Write a Review</h3>
                 <button 
                   onClick={() => setReviewModalOpen(false)}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-gray-500 hover:text-gray-700 text-xl"
                 >
                   &times;
                 </button>
@@ -842,7 +882,7 @@ const SingleProductList = () => {
               className="relative max-w-5xl w-full max-h-[90vh]"
             >
               <button 
-                className="absolute top-4 right-4 text-gray-700 text-3xl z-10 hover:text-gray-900"
+                className="absolute top-4 right-4 text-gray-700 text-3xl z-10 hover:text-gray-900 bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-md"
                 onClick={() => setImageModalOpen(false)}
               >
                 &times;
@@ -860,14 +900,14 @@ const SingleProductList = () => {
               />
               
               <button 
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-700 bg-white bg-opacity-80 w-10 h-10 rounded-full flex items-center justify-center hover:bg-opacity-100 shadow-md"
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-700 bg-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 shadow-md text-xl"
                 onClick={(e) => { e.stopPropagation(); navigateImages('prev'); }}
               >
                 &lt;
               </button>
               
               <button 
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-700 bg-white bg-opacity-80 w-10 h-10 rounded-full flex items-center justify-center hover:bg-opacity-100 shadow-md"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-700 bg-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 shadow-md text-xl"
                 onClick={(e) => { e.stopPropagation(); navigateImages('next'); }}
               >
                 &gt;

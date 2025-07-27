@@ -21,37 +21,26 @@ const userSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator: function (v) {
-        return /^[+]?[0-9]{7,15}$/.test(v); // Valid international phone number
+        return /^[+]?[0-9]{7,15}$/.test(v);
       },
       message: props => `${props.value} is not a valid phone number!`,
     },
   },
   password: {
     type: String,
-    required: true,
-    minlength: 8,
-    validate: {
-      validator: function (v) {
-        return /^[A-Za-z\d]{8,}$/.test(v); // At least 8 characters, only letters and numbers
-      },
-      message: 'Password must be at least 8 characters long and contain only letters and numbers.',
-    },
+    required: [true, 'Password is required'],
+    minlength: [8, 'Password must be at least 8 characters long'],
   },
-
   isActive: {
     type: Boolean,
     default: true,
   },
-  
   role: {
     type: String,
     default: 'customer',
     enum: ['customer', 'admin'],
   },
- 
 }, { timestamps: true });
-
-
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {

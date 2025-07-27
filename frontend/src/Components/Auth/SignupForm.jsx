@@ -119,10 +119,9 @@ const SignupForm = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Password strength check
-    const passwordRegex = /^[A-Za-z\d]{8,}$/;
-    if (!passwordRegex.test(formData.password)) {
-      toast.error("Password must be at least 8 characters long and contain only letters and numbers.");
+    // Password length check (min 8 characters)
+    if (formData.password.length < 8) {
+      toast.error("Password must be at least 8 characters long");
       setIsLoading(false);
       return;
     }
@@ -234,7 +233,7 @@ const SignupForm = () => {
           />
           
           <div className="mt-4 mb-6">
-            <div className="flex items-center mb-3">
+            <div className="flex items-center">
               <motion.div 
                 className="w-6 h-6 rounded-full mr-3 flex items-center justify-center border border-black"
                 animate={{ 
@@ -246,19 +245,6 @@ const SignupForm = () => {
                 )}
               </motion.div>
               <span className="text-lg" style={{ color: COLORS.darkGray }}>At least 8 characters</span>
-            </div>
-            <div className="flex items-center">
-              <motion.div 
-                className="w-6 h-6 rounded-full mr-3 flex items-center justify-center border border-black"
-                animate={{ 
-                  backgroundColor: /[A-Za-z]/.test(formData.password) && /\d/.test(formData.password) ? COLORS.pureBlack : COLORS.pureWhite
-                }}
-              >
-                {/[A-Za-z]/.test(formData.password) && /\d/.test(formData.password) && (
-                  <div className="w-2 h-2 rounded-full bg-white"></div>
-                )}
-              </motion.div>
-              <span className="text-lg" style={{ color: COLORS.darkGray }}>Letters and numbers</span>
             </div>
           </div>
           

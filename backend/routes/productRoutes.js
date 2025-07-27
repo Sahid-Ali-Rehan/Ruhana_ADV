@@ -238,19 +238,30 @@ router.get('/single/:id', async (req, res) => {
 });
 
 
-router.delete('/:id', isAdmin, async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Add validation for MongoDB ID format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid product ID' });
+    }
+
     const deletedProduct = await Product.findByIdAndDelete(id);
+    
     if (!deletedProduct) {
       return res.status(404).json({ message: 'Product not found' });
     }
+    
     res.status(200).json({ message: 'Product deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting product', error: error.message });
+    console.error('Delete error:', error);
+    res.status(500).json({ 
+      message: 'Error deleting product', 
+      error: error.message 
+    });
   }
 });
-
 
 router.get('/related/:category', async (req, res) => {
   const { category } = req.params;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FaFilter, FaTimes, FaSearch, FaArrowDown } from 'react-icons/fa';
@@ -21,8 +21,7 @@ const AllProductsClient = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [perPage] = useState(10);
+  const [visibleProducts, setVisibleProducts] = useState(20);
   const [wishlist, setWishlist] = useState([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -38,11 +37,14 @@ const AllProductsClient = () => {
     priceRange: [0, 10000]
   });
   const [hoveredProduct, setHoveredProduct] = useState(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMoreProducts, setHasMoreProducts] = useState(true);
 
   const location = useLocation();
   const navigate = useNavigate();
   const filterRef = useRef(null);
   const maxPriceRef = useRef(10000);
+  const loadMoreRef = useRef(null);
 
   // Fix: Scroll to top on initial render and when location changes
   useEffect(() => {
@@ -146,8 +148,9 @@ const AllProductsClient = () => {
       [name]: value,
     }));
     
-    // Reset to first page when filters change
-    setCurrentPage(1);
+    // Reset visible products when filters change
+    setVisibleProducts(20);
+    setHasMoreProducts(true);
   };
 
   const handlePriceChange = (e, index) => {
@@ -160,8 +163,9 @@ const AllProductsClient = () => {
       maxPrice: newPriceRange[1]
     }));
     
-    // Reset to first page when price changes
-    setCurrentPage(1);
+    // Reset visible products when price changes
+    setVisibleProducts(20);
+    setHasMoreProducts(true);
   };
 
   // Handle availableSizes array of objects
@@ -179,16 +183,11 @@ const AllProductsClient = () => {
     return [...new Set(values)].filter(val => val !== null && val !== undefined && val !== '');
   };
 
-  const paginate = (pageNumber) => {
-    setCurrentPage(pageNumber);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   const calculateDiscountedPrice = (price, discount) => {
     return price - (price * (discount / 100));
   };
 
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let result = [...products];
 
     // Combined search for both name and code
@@ -240,11 +239,12 @@ const AllProductsClient = () => {
     }
 
     setFilteredProducts(result);
-  };
+    setHasMoreProducts(result.length > visibleProducts);
+  }, [filters, products, visibleProducts]);
 
   useEffect(() => {
     applyFilters();
-  }, [filters, products]);
+  }, [filters, products, applyFilters]);
 
   const handleViewDetails = (productId) => {
     navigate(`/products/single/${productId}`);
@@ -289,8 +289,9 @@ const AllProductsClient = () => {
       priceRange: [0, maxPriceRef.current]
     });
     
-    // Reset to first page
-    setCurrentPage(1);
+    // Reset visible products
+    setVisibleProducts(20);
+    setHasMoreProducts(true);
   };
 
   // Price formatting
@@ -307,6 +308,19 @@ const AllProductsClient = () => {
     setHoveredProduct(null);
   };
 
+  // Load more products
+  const loadMoreProducts = () => {
+    setIsLoadingMore(true);
+    
+    // Simulate loading delay for better UX
+    setTimeout(() => {
+      const newVisibleCount = visibleProducts + 20;
+      setVisibleProducts(newVisibleCount);
+      setHasMoreProducts(filteredProducts.length > newVisibleCount);
+      setIsLoadingMore(false);
+    }, 600);
+  };
+
   if (loading) {
     return <Loading />;
   }
@@ -316,21 +330,31 @@ const AllProductsClient = () => {
       <Navbar />
       
       <div className="flex-grow pt-24 pb-16">
-        {/* Hero Section */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h1 
-              className="text-4xl md:text-5xl font-bold tracking-tight mb-6"
-              style={{ fontFamily: 'Cormorant Garamond, serif' }}
-            >
-              CURATED COLLECTION
-            </h1>
-            <div className="w-24 h-0.5 bg-black mx-auto mb-6"></div>
-            <p 
-              className="text-lg max-w-3xl mx-auto tracking-wider text-gray-600"
-            >
-              Discover premium showpieces that redefine elegance and craftsmanship
-            </p>
+        {/* Hero Section with Parallax Effect */}
+        <div className="relative h-96 overflow-hidden mb-16">
+          <div 
+            className="absolute inset-0 bg-cover bg-center transform scale-110"
+            style={{ 
+              backgroundImage: "url('https://images.unsplash.com/photo-1523381294911-8d3cead13475?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')",
+              backgroundAttachment: 'fixed'
+            }}
+          >
+            <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+              <div className="text-center text-white px-4">
+                <h1 
+                  className="text-4xl md:text-5xl font-bold tracking-tight mb-6 animate-fade-in"
+                  style={{ fontFamily: 'Cormorant Garamond, serif' }}
+                >
+                  CURATED COLLECTION
+                </h1>
+                <div className="w-24 h-0.5 bg-white mx-auto mb-6"></div>
+                <p 
+                  className="text-lg max-w-3xl mx-auto tracking-wider"
+                >
+                  Discover premium showpieces that redefine elegance and craftsmanship
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -345,7 +369,7 @@ const AllProductsClient = () => {
               <input
                 type="text"
                 placeholder="Search products..."
-                className="pl-10 pr-4 py-2 w-full md:w-80 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                className="pl-10 pr-4 py-2 w-full md:w-80 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-black text-sm transition-all duration-300 hover:shadow-md"
                 value={filters.search}
                 onChange={(e) => handleFilterChange(e)}
                 name="search"
@@ -355,7 +379,7 @@ const AllProductsClient = () => {
             {/* Filter Toggle Button */}
             <div className="flex items-center gap-4">
               <button
-                className="flex items-center gap-2 text-xs tracking-widest uppercase px-4 py-2 border border-black rounded-md hover:bg-black hover:text-white transition-all"
+                className="flex items-center gap-2 text-xs tracking-widest uppercase px-4 py-2 border border-black rounded-md hover:bg-black hover:text-white transition-all duration-300 transform hover:scale-105"
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
               >
                 <FaFilter className="text-xs" />
@@ -363,7 +387,7 @@ const AllProductsClient = () => {
               </button>
               
               <button
-                className="text-xs uppercase border-b border-black pb-1"
+                className="text-xs uppercase border-b border-black pb-1 transition-all duration-300 hover:text-gray-600"
                 onClick={resetFilters}
               >
                 Reset Filters
@@ -375,7 +399,7 @@ const AllProductsClient = () => {
         {/* Filters Panel */}
         {isFilterOpen && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
-            <div className="bg-white border border-gray-200 rounded-lg p-6 grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="bg-white border border-gray-200 rounded-lg p-6 grid grid-cols-1 md:grid-cols-4 gap-6 shadow-lg animate-slide-down">
               {/* Category Filter */}
               <div>
                 <h3 className="font-medium text-sm uppercase tracking-wider mb-3">Category</h3>
@@ -383,7 +407,7 @@ const AllProductsClient = () => {
                   name="category"
                   value={filters.category}
                   onChange={handleFilterChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                  className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black text-sm transition-all duration-300 hover:shadow-md"
                 >
                   <option value="">All Categories</option>
                   {getUniqueValues('category').map((category) => (
@@ -403,7 +427,7 @@ const AllProductsClient = () => {
                 <div className="relative py-4">
                   <div className="relative h-2 bg-gray-200 rounded-full">
                     <div 
-                      className="absolute h-2 bg-black rounded-full"
+                      className="absolute h-2 bg-black rounded-full transition-all duration-300"
                       style={{
                         left: `${(filters.priceRange[0] / maxPriceRef.current) * 100}%`,
                         width: `${((filters.priceRange[1] - filters.priceRange[0]) / maxPriceRef.current) * 100}%`
@@ -437,7 +461,7 @@ const AllProductsClient = () => {
                         max={filters.priceRange[1]}
                         value={filters.priceRange[0]}
                         onChange={(e) => handlePriceChange(e, 0)}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black text-sm transition-all duration-300 hover:shadow-md"
                       />
                     </div>
                     <div>
@@ -448,7 +472,7 @@ const AllProductsClient = () => {
                         max={maxPriceRef.current}
                         value={filters.priceRange[1]}
                         onChange={(e) => handlePriceChange(e, 1)}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black text-sm transition-all duration-300 hover:shadow-md"
                       />
                     </div>
                   </div>
@@ -464,8 +488,8 @@ const AllProductsClient = () => {
                     return (
                       <div 
                         key={color}
-                        className={`w-6 h-6 rounded-full border border-gray-300 cursor-pointer transition-all ${
-                          filters.color === color ? 'ring-2 ring-black ring-offset-1' : 'hover:scale-110'
+                        className={`w-6 h-6 rounded-full border border-gray-300 cursor-pointer transition-all duration-300 transform hover:scale-125 ${
+                          filters.color === color ? 'ring-2 ring-black ring-offset-1' : ''
                         }`}
                         style={{ backgroundColor: hexColor }}
                         onClick={() => setFilters(prev => ({...prev, color: prev.color === color ? '' : color}))}
@@ -483,7 +507,7 @@ const AllProductsClient = () => {
                   name="sort"
                   value={filters.sort}
                   onChange={handleFilterChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                  className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black text-sm transition-all duration-300 hover:shadow-md"
                 >
                   <option value="low-to-high">Price: Low to High</option>
                   <option value="high-to-low">Price: High to Low</option>
@@ -499,12 +523,12 @@ const AllProductsClient = () => {
           {/* Results Summary */}
           <div className="flex justify-between items-center mb-6 pb-3 border-b border-gray-200">
             <p className="text-sm text-gray-600">
-              Showing <span className="font-medium">{filteredProducts.length}</span> products
+              Showing <span className="font-medium">{Math.min(visibleProducts, filteredProducts.length)}</span> of <span className="font-medium">{filteredProducts.length}</span> products
             </p>
             
             {/* Mobile Filter Toggle */}
             <button
-              className="md:hidden flex items-center gap-1 text-xs uppercase px-3 py-1.5 border border-black rounded-md"
+              className="md:hidden flex items-center gap-1 text-xs uppercase px-3 py-1.5 border border-black rounded-md transition-all duration-300 transform hover:scale-105"
               onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
             >
               <FaFilter size={12} />
@@ -514,7 +538,7 @@ const AllProductsClient = () => {
           
           {/* Mobile Filters Panel */}
           {mobileFiltersOpen && (
-            <div className="md:hidden bg-white border border-gray-200 p-5 mb-6 rounded-lg">
+            <div className="md:hidden bg-white border border-gray-200 p-5 mb-6 rounded-lg shadow-lg animate-slide-down">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-medium">FILTERS</h2>
                 <button onClick={() => setMobileFiltersOpen(false)}>
@@ -623,7 +647,7 @@ const AllProductsClient = () => {
               <div className="mt-5">
                 <button
                   onClick={resetFilters}
-                  className="w-full py-2.5 bg-black text-white text-sm rounded-md"
+                  className="w-full py-2.5 bg-black text-white text-sm rounded-md transition-all duration-300 transform hover:scale-105"
                 >
                   Reset Filters
                 </button>
@@ -631,11 +655,11 @@ const AllProductsClient = () => {
             </div>
           )}
           
-          {/* Products Grid - Changed to 2 columns on mobile */}
+          {/* Products Grid */}
           {filteredProducts.length > 0 ? (
             <div>
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                {filteredProducts.map((product) => {
+                {filteredProducts.slice(0, visibleProducts).map((product) => {
                   const discountedPrice = calculateDiscountedPrice(product.price, product.discount);
                   const isInWishlist = wishlist.some(item => item._id === product._id);
                   
@@ -647,13 +671,14 @@ const AllProductsClient = () => {
                   return (
                     <div 
                       key={product._id} 
-                      className="relative flex flex-col h-full border border-gray-200 rounded-sm transition-all hover:shadow-lg"
+                      className="relative flex flex-col h-full border border-gray-200 rounded-sm transition-all duration-500 hover:shadow-xl hover:scale-[1.02] overflow-hidden group cursor-pointer"
                       onMouseEnter={() => handleMouseEnter(product._id)}
                       onMouseLeave={handleMouseLeave}
+                      onClick={() => handleViewDetails(product._id)}
                     >
                       {/* Discount Badge */}
                       {product.discount > 0 && (
-                        <div className="absolute top-2 left-2 md:top-4 md:left-4 bg-black text-white font-medium py-1 px-2 md:px-3 rounded-full text-xs z-20">
+                        <div className="absolute top-2 left-2 md:top-4 md:left-4 bg-black text-white font-medium py-1 px-2 md:px-3 rounded-full text-xs z-20 animate-pulse">
                           {product.discount}% OFF
                         </div>
                       )}
@@ -663,7 +688,7 @@ const AllProductsClient = () => {
                         <img
                           src={imageToShow}
                           alt={product.productName}
-                          className="w-full h-full object-cover transition-opacity duration-300"
+                          className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
                           loading="lazy"
                         />
                         
@@ -674,11 +699,11 @@ const AllProductsClient = () => {
                               e.stopPropagation();
                               handleWishlist(product);
                             }}
-                            className="p-1.5 md:p-2 rounded-full bg-white border border-gray-300 hover:bg-gray-100 transition-all"
+                            className="p-1.5 md:p-2 rounded-full bg-white border border-gray-300 hover:bg-gray-100 transition-all duration-300 transform hover:scale-110"
                           >
                             <FontAwesomeIcon
                               icon={isInWishlist ? solidHeart : regularHeart}
-                              className={`text-base md:text-lg ${isInWishlist ? 'text-black' : 'text-gray-600'}`}
+                              className={`text-base md:text-lg ${isInWishlist ? 'text-red-500' : 'text-gray-600'}`}
                             />
                           </button>
                         </div>
@@ -691,11 +716,10 @@ const AllProductsClient = () => {
                         )}
                       </div>
                       
-                      {/* Product Info - Fixed height section */}
+                      {/* Product Info */}
                       <div className="flex flex-col flex-grow p-3 md:p-4 bg-white">
-                        {/* Product Name with fixed height and truncation */}
                         <div className="flex justify-between items-start mb-2 min-h-[40px]">
-                          <h3 className="font-medium uppercase tracking-wide text-xs md:text-sm overflow-hidden line-clamp-2">
+                          <h3 className="font-medium uppercase tracking-wide text-xs md:text-sm overflow-hidden line-clamp-2 group-hover:underline">
                             {product.productName}
                           </h3>
                           <div className="flex flex-col items-end min-w-[70px]">
@@ -710,31 +734,31 @@ const AllProductsClient = () => {
                           </div>
                         </div>
                         
-                        {/* Product Code */}
                         <p className="text-xs text-gray-600 mb-2 truncate">
                           Code: {product.productCode}
                         </p>
                         
-                        {/* Category Path - Fixed height */}
                         <div className="text-xs mb-3 flex flex-wrap items-center min-h-[28px]">
-                          <span className="bg-gray-100 px-2 py-1 rounded-full mb-1 mr-1">
+                          <span className="bg-gray-100 px-2 py-1 rounded-full mb-1 mr-1 transition-all duration-300 hover:bg-gray-200">
                             {product.category}
                           </span>
                           <span className="text-gray-400 mr-1">/</span>
-                          <span className="bg-gray-100 px-2 py-1 rounded-full mb-1">
+                          <span className="bg-gray-100 px-2 py-1 rounded-full mb-1 transition-all duration-300 hover:bg-gray-200">
                             {product.subCategory}
                           </span>
                         </div>
                         
-                        {/* View Details Button */}
                         <button 
-                          className={`mt-auto w-full py-2 flex items-center justify-center gap-1 uppercase text-xs transition-colors ${
+                          className={`mt-auto w-full py-2 flex items-center justify-center gap-1 uppercase text-xs transition-colors duration-300 transform hover:scale-[1.02] ${
                             product.stock === 0 
                               ? 'bg-gray-400 cursor-not-allowed text-gray-200' 
                               : 'bg-black text-white hover:bg-gray-800'
                           }`}
                           disabled={product.stock === 0}
-                          onClick={() => handleViewDetails(product._id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewDetails(product._id);
+                          }}
                         >
                           {product.stock === 0 ? 'Out of Stock' : 'View Details'}
                         </button>
@@ -744,43 +768,48 @@ const AllProductsClient = () => {
                 })}
               </div>
               
-              {/* Pagination */}
-              <div className="flex justify-center mt-10 space-x-4">
-                <button
-                  onClick={() => paginate(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className={`px-6 py-3 rounded-full text-lg font-medium transition-all duration-300 ${
-                    currentPage === 1 
-                      ? 'bg-gray-300 cursor-not-allowed' 
-                      : 'bg-black text-white hover:bg-gray-800'
-                  }`}
-                >
-                  Previous
-                </button>
-                
-                <div className="flex items-center">
-                  <span className="mx-4 text-gray-700 font-medium">Page {currentPage}</span>
-                </div>
-                
-                <button
-                  onClick={() => paginate(currentPage + 1)}
-                  className={`px-6 py-3 rounded-full text-lg font-medium transition-all duration-300 ${
-                    filteredProducts.length < perPage 
-                      ? 'bg-gray-300 cursor-not-allowed' 
-                      : 'bg-black text-white hover:bg-gray-800'
-                  }`}
-                  disabled={filteredProducts.length < perPage}
-                >
-                  Next
-                </button>
+              {/* Infinite Scrolling Load More */}
+              <div className="flex justify-center mt-10">
+                {hasMoreProducts ? (
+                  <button
+                    ref={loadMoreRef}
+                    onClick={loadMoreProducts}
+                    disabled={isLoadingMore}
+                    className={`px-8 py-3 rounded-full text-lg font-medium transition-all duration-500 transform hover:scale-105 ${
+                      isLoadingMore 
+                        ? 'bg-gray-300 cursor-not-allowed' 
+                        : 'bg-black text-white hover:bg-gray-800'
+                    }`}
+                  >
+                    {isLoadingMore ? (
+                      <span className="flex items-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Loading...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        Load More <FaArrowDown className="animate-bounce" />
+                      </span>
+                    )}
+                  </button>
+                ) : (
+                  visibleProducts > 20 && (
+                    <p className="text-center py-6 text-gray-600 italic animate-fade-in">
+                      You've reached the end of products
+                    </p>
+                  )
+                )}
               </div>
             </div>
           ) : (
-            <div className="text-center py-16">
+            <div className="text-center py-16 animate-fade-in">
               <p className="text-lg mb-4">No products match your filters</p>
               <button
                 onClick={resetFilters}
-                className="px-5 py-2.5 bg-black text-white tracking-wider text-sm rounded-md"
+                className="px-5 py-2.5 bg-black text-white tracking-wider text-sm rounded-md transition-all duration-300 transform hover:scale-105"
               >
                 Reset Filters
               </button>
@@ -790,6 +819,27 @@ const AllProductsClient = () => {
       </div>
       
       <Footer />
+      
+      {/* Custom CSS for animations */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+          animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        .animate-slide-down {
+          animation: slideDown 0.5s ease-out forwards;
+        }
+      `}</style>
     </div>
   );
 };
