@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose'); // Add this line
 // Add at top
 const multer = require('multer');
 const { storage } = require('../utils/cloudinary');
@@ -238,13 +239,13 @@ router.get('/single/:id', async (req, res) => {
 });
 
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Add validation for MongoDB ID format
+    // Validate ID format using Mongoose
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid product ID' });
+      return res.status(400).json({ message: 'Invalid product ID format' });
     }
 
     const deletedProduct = await Product.findByIdAndDelete(id);
