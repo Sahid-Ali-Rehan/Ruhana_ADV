@@ -82,6 +82,7 @@ const CheckoutForm = () => {
   const navigate = useNavigate();
   const [processing, setProcessing] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [inDhaka, setInDhaka] = useState(false);
   const [userDetails, setUserDetails] = useState({
     name: "",
     phone: "",
@@ -93,10 +94,12 @@ const CheckoutForm = () => {
   });
 
   const cartItems = JSON.parse(localStorage.getItem('cart_guest')) || [];
-  const deliveryCharge = 120;
+  // Calculate delivery charge based on Dhaka selection
+  const deliveryCharge = inDhaka ? 60 : 120;
   const subtotal = cartItems.reduce((acc, item) => acc + item.quantity * item.price * (1 - item.discount / 100), 0);
   const totalPrice = subtotal + deliveryCharge;
 
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setUserDetails(prev => ({ ...prev, [name]: value }));
@@ -367,6 +370,25 @@ const CheckoutForm = () => {
                   </div>
                 </motion.div>
 
+                {/* Dhaka Delivery Toggle */}
+      <motion.div layout className="flex items-center gap-4">
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="inDhaka"
+            checked={inDhaka}
+            onChange={(e) => setInDhaka(e.target.checked)}
+            className="h-5 w-5 rounded border-gray-300 text-black focus:ring-black"
+          />
+          <label htmlFor="inDhaka" className="ml-3 text-gray-700">
+            Inside Dhaka
+          </label>
+        </div>
+        <span className="text-sm text-gray-500">
+          {inDhaka ? "Delivery: ৳60" : "Delivery: ৳120"}
+        </span>
+      </motion.div>
+
                 <motion.div layout>
                   <motion.h2 
                     className="text-2xl font-light tracking-tight mb-8 flex items-center gap-3 pb-4 border-b border-gray-100"
@@ -504,7 +526,7 @@ const CheckoutForm = () => {
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white opacity-10"></div>
                   <TruckIcon className="w-8 h-8 flex-shrink-0 text-gray-800" />
                   <div>
-                    <p className="font-medium text-gray-900">Free Delivery</p>
+                    <p className="font-medium text-gray-900">Fast Delivery</p>
                     <p className="text-sm mt-1 text-gray-600">All orders delivered within 3-7 days</p>
                   </div>
                 </motion.div>

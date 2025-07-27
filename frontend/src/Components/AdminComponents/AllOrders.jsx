@@ -418,207 +418,201 @@ const AllOrders = () => {
   };
 
   // Generate PDF invoice using old design
-  const generateInvoiceDocument = (order) => {
-    const doc = new jsPDF("portrait", "px", "a4");
+const generateInvoiceDocument = (order) => {
+  const doc = new jsPDF("portrait", "px", "a4");
+  const pageWidth = doc.internal.pageSize.width;
+  const pageHeight = doc.internal.pageSize.height;
+
+  // Money formatting function
+  const formatMoney = (num) =>
+    `Tk. ${Number(num).toLocaleString("en-BD", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+
+  // White background
+  doc.setFillColor("#FFFFFF");
+  doc.rect(0, 0, pageWidth, pageHeight, "F");
+
+  // Add decorative images
+  const addImages = () => {
+    const topLeftImage = "/Invoice/Top-Left-Corner.png";
+    const topRightImage = "/Invoice/T-Logo.png";
+    const topCenterImage = "/Invoice/Top-Center.png";
+
+    try {
+      doc.addImage(topLeftImage, "PNG", -30, -30, 160, 160);
+      doc.addImage(topRightImage, "PNG", pageWidth - 100, 20, 80, 80);
+      doc.addImage(topCenterImage, "PNG", 100, -80, 350, 250);
+
+      // Add "Ruhana Fashions" Text to Top Left
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(22);
+      doc.setTextColor("#000000");
+      doc.text("Ruhana Fashions", 40, 65);
+    } catch (e) {
+      console.log("Image loading error:", e);
+    }
+  };
+  addImages();
+
+  // Invoice Header
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.setTextColor("#000000");
+  doc.text("INVOICE", pageWidth / 2, 120, { align: "center" });
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+
+  // Invoice details
+  const invoiceNo = `Invoice No: #${order.sequentialNumber}`;
+  const orderId = `Order ID: ${order._id.slice(-8).toUpperCase()}`;
+  const invoiceDate = `Invoice Date: ${new Date().toLocaleDateString()}`;
+  const deliveryDateText = `Delivery Date: ${new Date(order.estimatedDeliveryDate).toDateString()}`;
+
+  const strings = [invoiceNo, orderId, invoiceDate, deliveryDateText];
+  const widths = strings.map(str => doc.getTextWidth(str));
+  const maxWidth = Math.max(...widths);
+  const startX = pageWidth - maxWidth - 20;
+
+  doc.setTextColor("#000000");
+  doc.text(invoiceNo, startX, 150);
+  doc.text(orderId, startX, 170);
+  doc.text(invoiceDate, startX, 190);
+  doc.text(deliveryDateText, startX, 210);
+
+  // Customer info
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor("#000000");
+  doc.setFontSize(12);
+  doc.text("BILLED TO:", 20, 150);
+  
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor("#333333");
+  doc.setFontSize(10);
+  let infoY = 170;
+  const customerInfo = [
+    order.name,
+    `${order.phone}`,
+    `${order.jela}`,
+    `${order.upazela}`,
+    `${order.address}`
+  ];
+  customerInfo.forEach((line) => {
+    doc.text(line, 20, infoY);
+    infoY += 15;
+  });
+
+  // Table Headers
+  let yOffset = 260;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFillColor("#f0f0f0");
+  doc.rect(20, yOffset, pageWidth - 40, 20, "F");
+  doc.setTextColor("#000000");
+  doc.text("No.", 30, yOffset + 15);
+  doc.text("Description", 80, yOffset + 15);
+  doc.text("Quantity", pageWidth - 120, yOffset + 15, { align: "right" });
+  doc.text("Amount", pageWidth - 50, yOffset + 15, { align: "right" });
+
+  // Order Items
+  yOffset += 30;
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor("#333333");
+
+  order.items.forEach((item, index) => {
+    // Use selectedSize and selectedColor
+    const sizeText = item.selectedSize && item.selectedSize !== 'Free' ? item.selectedSize : '';
+    const colorText = item.selectedColor && item.selectedColor !== 'N/A' ? item.selectedColor : '';
+    const description = [item.productName, sizeText, colorText].filter(Boolean).join(' | ') || item.productName;
     
-    // Page Dimensions
-    const pageWidth = doc.internal.pageSize.width;
-    const pageHeight = doc.internal.pageSize.height;
+    const itemTotal = item.quantity * item.price;
+    const itemDiscount = item.discount ? itemTotal * (item.discount / 100) : 0;
+    const itemFinal = itemTotal - itemDiscount;
 
-    // NEW: Define consistent margins
-    const leftMargin = 40;
-    const rightMargin = 40;
-    const contentWidth = pageWidth - leftMargin - rightMargin;
+    doc.text(`${index + 1}`, 30, yOffset);
+    doc.text(description, 80, yOffset);
+    doc.text(`${item.quantity}`, pageWidth - 120, yOffset, { align: "right" });
+    doc.text(formatMoney(itemFinal), pageWidth - 50, yOffset, { align: "right" });
 
-    // Money formatting function
-    const formatMoney = (num) => 
-        `Tk. ${Number(num).toLocaleString("en-BD", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        })}`;
-
-    // Set Background Color to WHITE
-    doc.setFillColor("#FFFFFF");
-    doc.rect(0, 0, pageWidth, pageHeight, "F");
-
-    // Add Images (UNCHANGED - positions remain the same)
-    const addImages = () => {
-        try {
-            const topLeftImage = "/Invoice/Top-Left-Corner.png";
-            const topRightImage = "/Invoice/T-Logo.png";
-            const topCenterImage = "/Invoice/Top-Center.png";
-            const centerImage = "/Invoice/Center.png";
-
-            doc.addImage(topLeftImage, "PNG", -30, -30, 160, 160);
-            doc.addImage(topRightImage, "PNG", pageWidth - 100, 20, 80, 80);
-            doc.addImage(topCenterImage, "PNG", 100, -80, 350, 250);
-            doc.addImage(
-                centerImage, 
-                "PNG", 
-                (pageWidth - 250) / 2,
-                (pageHeight - 100) / 2,
-                250, 
-                100
-            );
-        } catch (e) {
-            console.error("Error adding images to PDF:", e);
-        }
-    };
-    addImages();
-
-    // Add Header (ADJUSTED margins)
-    const addHeader = () => {
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(18);
-        doc.setTextColor("#000000");
-        doc.text(`INVOICE`, pageWidth / 2, 120, { align: "center" });
-
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(12);
-
-        const invoiceNo = `Invoice No: #${order.sequentialNumber}`;
-        const orderId = `Order ID: ${order._id.slice(-8).toUpperCase()}`;
-        const invoiceDate = `Invoice Date: ${formatDateTime(order.createdAt)}`;
-        const deliveryDate = `Delivery Date: ${new Date(order.estimatedDeliveryDate).toDateString()}`;
-
-        // Right align text with new margin
-        const strings = [invoiceNo, orderId, invoiceDate, deliveryDate];
-        const widths = strings.map(str => doc.getTextWidth(str));
-        const maxWidth = Math.max(...widths);
-        const startX = pageWidth - maxWidth - rightMargin;
-
-        doc.setTextColor("#000000");
-        doc.text(invoiceNo, startX, 150);
-        doc.text(orderId, startX, 170);
-        doc.text(invoiceDate, startX, 190);
-        doc.text(deliveryDate, startX, 210);
-    };
-    addHeader();
+    // Calculation line
+    doc.setFontSize(8);
+    doc.setTextColor("#666666");
+    const calcText = `${item.quantity} × Tk.${item.price.toFixed(2)} = ${formatMoney(itemTotal)}`;
+    let discountText = "";
     
-    // Add Customer Details (ADJUSTED margins)
-    const addCustomerDetails = () => {
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.setTextColor("#000000");
+    if (itemDiscount > 0) {
+      discountText = ` - ${item.discount}% discount = ${formatMoney(itemFinal)}`;
+    }
+    
+    doc.text(calcText + discountText, 80, yOffset + 8);
+    doc.setFontSize(10);
+    doc.setTextColor("#333333");
 
-        doc.text("Invoice To:", leftMargin, 220);
+    yOffset += 25;
+  });
 
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor("#333333");
-        doc.text(`${order.name}`, leftMargin + 80, 220);
+  // Totals
+  yOffset += 10;
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor("#000000");
 
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor("#000000");
-        doc.text("Phone:", leftMargin, 240);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor("#333333");
-        doc.text(`${order.phone}`, leftMargin + 80, 240);
+  const subtotal = order.items.reduce((sum, item) => {
+    const itemTotal = item.quantity * item.price;
+    const discount = item.discount ? itemTotal * (item.discount / 100) : 0;
+    return sum + (itemTotal - discount);
+  }, 0);
+  
+  const delivery = order.deliveryCharge;
+  const orderDiscount = order.discount ? subtotal * (order.discount / 100) : 0;
+  const finalAmount = subtotal - orderDiscount + delivery;
 
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor("#000000");
-        doc.text("District:", leftMargin, 260);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor("#333333");
-        doc.text(`${order.jela}`, leftMargin + 80, 260);
+  doc.text(`Subtotal: ${formatMoney(subtotal)}`, pageWidth - 50, yOffset, { align: "right" });
+  yOffset += 20;
 
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor("#000000");
-        doc.text("Upazela:", leftMargin, 280);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor("#333333");
-        doc.text(`${order.upazela}`, leftMargin + 80, 280);
+  if (orderDiscount > 0) {
+    doc.text(`Discount (${order.discount}%): -${formatMoney(orderDiscount)}`, pageWidth - 50, yOffset, { align: "right" });
+    yOffset += 20;
+  }
 
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor("#000000");
-        doc.text("Address:", leftMargin, 300);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor("#333333");
-        doc.text(`${order.address}`, leftMargin + 80, 300);
-    };
-    addCustomerDetails();
+  doc.text(`Delivery Charge: ${formatMoney(delivery)}`, pageWidth - 50, yOffset, { align: "right" });
+  yOffset += 20;
 
-    // Add Order Table (ADJUSTED margins)
-    const addOrderTable = () => {
-        let yOffset = 340;
-        
-        // Table Header
-        doc.setFont("helvetica", "bold");
-        doc.setFillColor("#f0f0f0");
-        doc.setDrawColor("#000000");
-        doc.rect(leftMargin, yOffset, contentWidth, 20, "FD");
-        doc.setTextColor("#000000");
-        doc.text("No.", leftMargin + 10, yOffset + 15);
-        doc.text("Description", leftMargin + 60, yOffset + 15);
-        doc.text("Quantity", leftMargin + contentWidth - 70, yOffset + 15, { align: "right" });
-        doc.text("Amount", leftMargin + contentWidth - 10, yOffset + 15, { align: "right" });
+  doc.setFontSize(12);
+  doc.text(`Total: ${formatMoney(finalAmount)}`, pageWidth - 50, yOffset, { align: "right" });
+  doc.setFontSize(10);
 
-        // Table Content
-        yOffset += 30;
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor("#333333");
-        order.items.forEach((item, index) => {
-            doc.text(`${index + 1}`, leftMargin + 10, yOffset);
-            doc.text(item.productName, leftMargin + 60, yOffset);
-            doc.text(`${item.quantity}`, leftMargin + contentWidth - 70, yOffset, { align: "right" });
-            
-            doc.text(
-                formatMoney(item.quantity * item.price), 
-                leftMargin + contentWidth - 10, 
-                yOffset, 
-                { align: "right" }
-            );
-            
-            yOffset += 20;
-        });
+  // Payment note
+  yOffset += 30;
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor("#000000");
+  doc.text("Payment Note:", 20, yOffset);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor("#333333");
+  doc.text(`Payment Method: ${order.paymentMethod === "COD" ? "Cash on Delivery" : "Credit Card"}`, 20, yOffset + 15);
+  doc.text("Payment must be made immediately upon delivery", 20, yOffset + 30);
 
-        // Total Section (ADJUSTED margins)
-        yOffset += 10;
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor("#000000");
-        
-        const discountAmount = order.discount ? order.totalAmount * (order.discount / 100) : 0;
-        const finalAmount = order.totalAmount - discountAmount + order.deliveryCharge;
+  // Footer
+  const footerY = pageHeight - 50;
+  const footerText = "Thank you for shopping with Ruhana Fashions!";
 
-        doc.text(`Delivery Charge: ${formatMoney(order.deliveryCharge)}`, leftMargin, yOffset);
-        yOffset += 20;
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(10);
+  doc.setTextColor("#666666");
+  doc.text(footerText, pageWidth / 2, footerY, { align: "center" });
 
-        if (order.discount) {
-            doc.text(`Discount (${order.discount}%): ${formatMoney(-discountAmount)}`, leftMargin, yOffset);
-            yOffset += 20;
-        }
+  doc.setDrawColor("#000000");
+  doc.setLineWidth(0.5);
+  doc.line(20, footerY + 10, pageWidth - 20, footerY + 10);
 
-        doc.setFontSize(12);
-        doc.text(`Total Amount: ${formatMoney(finalAmount)}`, leftMargin, yOffset);
-        doc.setFontSize(10);
-    };
-    addOrderTable();
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor("#666666");
+  doc.text("@copyright 2025 reserved by Ruhana Fashions", pageWidth / 2, footerY + 25, { align: "center" });
 
-    // Footer (ADJUSTED margins)
-    const addFooter = () => {
-        const footerText = "Thank you for shopping with Ruhana Fashions! Payment must be made immediately.";
-        const footerY = pageHeight - 50;
-
-        doc.setFont("helvetica", "italic");
-        doc.setFontSize(10);
-        doc.setTextColor("#666666");
-        doc.text(footerText, pageWidth / 2, footerY, { align: "center" });
-
-        // Draw the line with new margins
-        doc.setDrawColor("#000000");
-        doc.setLineWidth(1);
-        doc.line(leftMargin, footerY + 10, pageWidth - rightMargin, footerY + 10);
-
-        // Add the copyright text
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        doc.setTextColor("#666666");
-        doc.text("@copyright 2024 reserved by Ruhana Fashions", pageWidth / 2, footerY + 25, { align: "center" });
-    };
-    addFooter();
-
-    return doc;
+  return doc;
 };
-
   // Download PDF invoice
   const generateInvoice = (order) => {
     const doc = generateInvoiceDocument(order);

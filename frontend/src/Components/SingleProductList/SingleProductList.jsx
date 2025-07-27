@@ -251,7 +251,7 @@ const SingleProductList = () => {
   };
   
   const handleOrderOnWhatsApp = () => {
-    const phoneNumber = "+8801714394330";
+    const phoneNumber = "+8801994830798";
     const productName = product.productName;
     const currentURL = window.location.href;
     const message = `Hello, I am interested in purchasing: *${productName}*. Here is the link: ${currentURL}`;

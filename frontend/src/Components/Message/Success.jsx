@@ -4,7 +4,13 @@ import { jsPDF } from "jspdf";
 import confetti from 'canvas-confetti';
 import Navbar from "../Navigations/Navbar";
 import Footer from "../Footer/Footer";
-import { CheckCircleIcon, ArrowDownTrayIcon, TruckIcon } from "@heroicons/react/24/solid";
+import { 
+  CheckCircleIcon, 
+  ArrowDownTrayIcon, 
+  TruckIcon,
+  ExclamationTriangleIcon,
+  ArrowPathIcon
+} from "@heroicons/react/24/solid";
 import { motion } from "framer-motion";
 
 const ImageWithFallback = ({ src, alt, className }) => {
@@ -38,8 +44,9 @@ const Success = () => {
   const checkRef = useRef(null);
   const [invoiceGenerated, setInvoiceGenerated] = useState(false);
   const [orderCount, setOrderCount] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
   
-  // Store full order ID in localStorage for tracking
   useEffect(() => {
     if (order) {
       localStorage.setItem(`order_${order._id.slice(-8).toUpperCase()}`, order._id);
@@ -47,15 +54,21 @@ const Success = () => {
   }, [order]);
 
   useEffect(() => {
-    const fetchOrderCount = async () => {
+    const fetchOrderCount = async (retries = 3) => {
       try {
         const response = await fetch('/api/orders/count');
         if (!response.ok) throw new Error('Failed to fetch order count');
         const data = await response.json();
         setOrderCount(data.count || 0);
+        setFetchError(false);
       } catch (error) {
         console.error('Error fetching order count:', error);
-        setOrderCount(0);
+        if (retries > 0) {
+          setTimeout(() => fetchOrderCount(retries - 1), 1500);
+        } else {
+          setOrderCount(0);
+          setFetchError(true);
+        }
       }
     };
 
@@ -94,7 +107,7 @@ const Success = () => {
     } else {
       navigate("/");
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     if (order && expectedDelivery && orderCount !== null && !invoiceGenerated) {
@@ -104,180 +117,211 @@ const Success = () => {
   }, [order, expectedDelivery, orderCount, invoiceGenerated]);
 
   const handleDownloadInvoice = async () => {
-    if (orderCount === null) {
-      try {
-        const response = await fetch('/api/orders/count');
-        if (!response.ok) throw new Error('Failed to fetch order count');
-        const data = await response.json();
-        const count = data.count || 0;
-        setOrderCount(count);
-        generateInvoice(order, expectedDelivery, count);
-      } catch (error) {
-        console.error('Error fetching order count:', error);
-        generateInvoice(order, expectedDelivery, 0);
+    setIsGenerating(true);
+    try {
+      if (orderCount === null) {
+        try {
+          const response = await fetch('/api/orders/count');
+          if (!response.ok) throw new Error('Failed to fetch order count');
+          const data = await response.json();
+          const count = data.count || 0;
+          setOrderCount(count);
+          generateInvoice(order, expectedDelivery, count);
+        } catch (error) {
+          console.error('Error fetching order count:', error);
+          generateInvoice(order, expectedDelivery, 0);
+        }
+      } else {
+        generateInvoice(order, expectedDelivery, orderCount);
       }
-    } else {
-      generateInvoice(order, expectedDelivery, orderCount);
+    } catch (error) {
+      console.error("Invoice generation failed:", error);
+      alert("Failed to generate invoice. Please try again.");
+    } finally {
+      setIsGenerating(false);
     }
   };
 
   const generateInvoice = (order, deliveryDate, count) => {
-    const doc = new jsPDF("portrait", "px", "a4");
-    const pageWidth = doc.internal.pageSize.width;
-    const pageHeight = doc.internal.pageSize.height;
+    try {
+      const doc = new jsPDF("portrait", "px", "a4");
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
 
-    const formatMoney = (num) => 
-      `Tk. ${Number(num).toLocaleString("en-BD", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`;
+      const formatMoney = (num) =>
+        `Tk. ${Number(num).toLocaleString("en-BD", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`;
 
-    doc.setFillColor("#FFFFFF");
-    doc.rect(0, 0, pageWidth, pageHeight, "F");
+      // White background
+      doc.setFillColor("#FFFFFF");
+      doc.rect(0, 0, pageWidth, pageHeight, "F");
 
-    const addImages = () => {
-      const topLeftImage = "Invoice/Top-Left-Corner.png";
-      const topRightImage = "Invoice/T-Logo.png";
-      const topCenterImage = "Invoice/Top-Center.png";
-      const centerImage = "Invoice/Center.png";
+      // Add decorative images
+      const addImages = () => {
+  const topLeftImage = "Invoice/Top-Left-Corner.png";
+  const topRightImage = "Invoice/T-Logo.png";
+  const topCenterImage = "Invoice/Top-Center.png";
 
-      doc.addImage(topLeftImage, "PNG", -30, -30, 160, 160);
-      doc.addImage(topRightImage, "PNG", pageWidth - 100, 20, 80, 80);
-      doc.addImage(topCenterImage, "PNG", 100, -80, 350, 250);
-      doc.addImage(
-        centerImage, 
-        "PNG", 
-        (pageWidth - 250) / 2,
-        (pageHeight - 100) / 2,
-        250, 
-        100
-      );
-    };
-    addImages();
+  try {
+    doc.addImage(topLeftImage, "PNG", -30, -30, 160, 160);
+    doc.addImage(topRightImage, "PNG", pageWidth - 100, 20, 80, 80);
+    doc.addImage(topCenterImage, "PNG", 100, -80, 350, 250);
 
-    const addHeader = () => {
+    // Add "Jonab-BD" Text to Top Left
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor("#000000");
+    doc.text("Jonab-BD", 40, 65); // Adjust padding as needed
+  } catch (e) {
+    console.log("Image loading error:", e);
+  }
+};
+
+      addImages();
+
+      // Invoice Header
       doc.setFont("helvetica", "bold");
       doc.setFontSize(18);
       doc.setTextColor("#000000");
-      doc.text(`INVOICE`, pageWidth / 2, 120, { align: "center" });
+      doc.text("INVOICE", pageWidth / 2, 120, { align: "center" });
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(12);
 
+      // Invoice details
       const invoiceNo = `Invoice No: #${count}`;
       const orderId = `Order ID: ${order._id.slice(-8).toUpperCase()}`;
       const invoiceDate = `Invoice Date: ${new Date().toLocaleDateString()}`;
       const deliveryDateText = `Delivery Date: ${deliveryDate.toDateString()}`;
 
-      const rightMargin = 20;
       const strings = [invoiceNo, orderId, invoiceDate, deliveryDateText];
       const widths = strings.map(str => doc.getTextWidth(str));
       const maxWidth = Math.max(...widths);
-      const startX = pageWidth - maxWidth - rightMargin;
+      const startX = pageWidth - maxWidth - 20;
 
       doc.setTextColor("#000000");
       doc.text(invoiceNo, startX, 150);
       doc.text(orderId, startX, 170);
       doc.text(invoiceDate, startX, 190);
       doc.text(deliveryDateText, startX, 210);
-    };
-    addHeader();
 
-    const addCustomerDetails = () => {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.setTextColor("#000000");
-
-      doc.text("Invoice To:", 20, 220);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor("#333333");
-      doc.text(`${order.name}`, 100, 220);
+      // Customer info
+      const customerInfo = [
+        order.name,
+        `${order.phone}`,
+        `${order.jela}`,
+        `${order.upazela}`,
+        `${order.address}`
+      ];
 
       doc.setFont("helvetica", "bold");
       doc.setTextColor("#000000");
-      doc.text("Phone:", 20, 240);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor("#333333");
-      doc.text(`${order.phone}`, 100, 240);
-
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor("#000000");
-      doc.text("District:", 20, 260);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor("#333333");
-      doc.text(`${order.jela}`, 100, 260);
-
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor("#000000");
-      doc.text("Upazela:", 20, 280);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor("#333333");
-      doc.text(`${order.upazela}`, 100, 280);
-
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor("#000000");
-      doc.text("Address:", 20, 300);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor("#333333");
-      doc.text(`${order.address}`, 100, 300);
-    };
-    addCustomerDetails();
-
-    const addOrderTable = () => {
-      let yOffset = 340;
+      doc.setFontSize(12);
+      doc.text("BILLED TO:", 20, 150);
       
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor("#333333");
+      doc.setFontSize(10);
+      let infoY = 170;
+      customerInfo.forEach((line) => {
+        doc.text(line, 20, infoY);
+        infoY += 15;
+      });
+
+      // Table Headers
+      let yOffset = 260;
+
       doc.setFont("helvetica", "bold");
       doc.setFillColor("#f0f0f0");
-      doc.setDrawColor("#000000");
-      doc.rect(20, yOffset, pageWidth - 40, 20, "FD");
+      doc.rect(20, yOffset, pageWidth - 40, 20, "F");
       doc.setTextColor("#000000");
       doc.text("No.", 30, yOffset + 15);
       doc.text("Description", 80, yOffset + 15);
-      doc.text("Quantity", pageWidth - 170, yOffset + 15, { align: "right" });
+      doc.text("Quantity", pageWidth - 120, yOffset + 15, { align: "right" });
       doc.text("Amount", pageWidth - 50, yOffset + 15, { align: "right" });
 
-      yOffset += 30;
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor("#333333");
-      order.items.forEach((item, index) => {
-        doc.text(`${index + 1}`, 30, yOffset);
-        doc.text(item.productName, 80, yOffset);
-        doc.text(`${item.quantity}`, pageWidth - 170, yOffset, { align: "right" });
+      // Order Items
+    yOffset += 30;
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor("#333333");
+
+    order.items.forEach((item, index) => {
+      // FIXED: Use selectedSize and selectedColor
+      const sizeText = item.selectedSize && item.selectedSize !== 'Free' ? item.selectedSize : '';
+      const colorText = item.selectedColor && item.selectedColor !== 'N/A' ? item.selectedColor : '';
+      const description = [item.productName, sizeText, colorText].filter(Boolean).join(' | ') || item.productName;
+      
+      const itemTotal = item.quantity * item.price;
+      const itemDiscount = item.discount ? itemTotal * (item.discount / 100) : 0;
+      const itemFinal = itemTotal - itemDiscount;
+
+      doc.text(`${index + 1}`, 30, yOffset);
+      doc.text(description, 80, yOffset);
+      doc.text(`${item.quantity}`, pageWidth - 120, yOffset, { align: "right" });
+      doc.text(formatMoney(itemFinal), pageWidth - 50, yOffset, { align: "right" });
+
+        // Calculation line - FIXED: Show final price instead of discount amount
+        doc.setFontSize(8);
+        doc.setTextColor("#666666");
+        const calcText = `${item.quantity} × Tk.${item.price.toFixed(2)} = ${formatMoney(itemTotal)}`;
+        let discountText = "";
         
-        doc.text(
-          formatMoney(item.quantity * item.price), 
-          pageWidth - 50, 
-          yOffset, 
-          { align: "right" }
-        );
+        if (itemDiscount > 0) {
+          discountText = ` - ${item.discount}% discount = ${formatMoney(itemFinal)}`;
+        }
         
-        yOffset += 20;
+        doc.text(calcText + discountText, 80, yOffset + 8);
+        doc.setFontSize(10);
+        doc.setTextColor("#333333");
+
+        yOffset += 25;
       });
 
+      // Totals
       yOffset += 10;
       doc.setFont("helvetica", "bold");
       doc.setTextColor("#000000");
-      
-      const discountAmount = order.discount ? order.totalAmount * (order.discount / 100) : 0;
-      const finalAmount = order.totalAmount - discountAmount + order.deliveryCharge;
 
-      doc.text(`Delivery Charge: ${formatMoney(order.deliveryCharge)}`, 20, yOffset);
+      const subtotal = order.items.reduce((sum, item) => {
+        const itemTotal = item.quantity * item.price;
+        const discount = item.discount ? itemTotal * (item.discount / 100) : 0;
+        return sum + (itemTotal - discount);
+      }, 0);
+      
+      const delivery = order.deliveryCharge;
+      const orderDiscount = order.discount ? subtotal * (order.discount / 100) : 0;
+      const finalAmount = subtotal - orderDiscount + delivery;
+
+      doc.text(`Subtotal: ${formatMoney(subtotal)}`, pageWidth - 50, yOffset, { align: "right" });
       yOffset += 20;
 
-      if (order.discount) {
-        doc.text(`Discount (${order.discount}%): ${formatMoney(-discountAmount)}`, 20, yOffset);
+      if (orderDiscount > 0) {
+        doc.text(`Discount (${order.discount}%): -${formatMoney(orderDiscount)}`, pageWidth - 50, yOffset, { align: "right" });
         yOffset += 20;
       }
 
-      doc.setFontSize(12);
-      doc.text(`Total Amount: ${formatMoney(finalAmount)}`, 20, yOffset);
-      doc.setFontSize(10);
-    };
-    addOrderTable();
+      doc.text(`Delivery Charge: ${formatMoney(delivery)}`, pageWidth - 50, yOffset, { align: "right" });
+      yOffset += 20;
 
-    const addFooter = () => {
-      const footerText = "Thank you for shopping with Jonab Fashions! Payment must be made immediately.";
+      doc.setFontSize(12);
+      doc.text(`Total: ${formatMoney(finalAmount)}`, pageWidth - 50, yOffset, { align: "right" });
+      doc.setFontSize(10);
+
+      // Payment note
+      yOffset += 30;
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor("#000000");
+      doc.text("Payment Note:", 20, yOffset);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor("#333333");
+      doc.text(`Payment Method: ${order.paymentMethod === "COD" ? "Cash on Delivery" : "Credit Card"}`, 20, yOffset + 15);
+      doc.text("Payment must be made immediately upon delivery", 20, yOffset + 30);
+
+      // Footer
       const footerY = pageHeight - 50;
+      const footerText = "Thank you for shopping with Jonab-BD!";
 
       doc.setFont("helvetica", "italic");
       doc.setFontSize(10);
@@ -285,28 +329,60 @@ const Success = () => {
       doc.text(footerText, pageWidth / 2, footerY, { align: "center" });
 
       doc.setDrawColor("#000000");
-      doc.setLineWidth(1);
+      doc.setLineWidth(0.5);
       doc.line(20, footerY + 10, pageWidth - 20, footerY + 10);
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.setTextColor("#666666");
-      doc.text("@copyright 2024 reserved by Jonab Fashions", pageWidth / 2, footerY + 25, { align: "center" });
-    };
-    addFooter();
+      doc.text("@copyright 2025 reserved by Jonab-BD", pageWidth / 2, footerY + 25, { align: "center" });
 
-    doc.save(`jonab-invoice-${count}.pdf`);
+      doc.save(`jonab-invoice-${count}.pdf`);
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      throw new Error("Failed to generate PDF");
+    }
   };
 
   if (!order || !expectedDelivery) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="w-32 h-32 rounded-full bg-gray-200 mb-8 flex items-center justify-center">
-            <div className="w-24 h-24 rounded-full bg-gray-300 animate-pulse"></div>
+        <div className="text-center max-w-md px-4">
+          <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-8">
+            <ExclamationTriangleIcon className="w-16 h-16 text-yellow-500" />
           </div>
-          <div className="h-12 bg-gray-300 rounded w-80 mb-6"></div>
-          <div className="h-4 bg-gray-200 rounded w-96"></div>
+          <h2 className="text-2xl font-medium text-gray-900 mb-4">Order Information Missing</h2>
+          <p className="text-gray-600 mb-6">
+            We couldn't retrieve your order details. This might be because:
+          </p>
+          <ul className="text-left text-gray-600 mb-8 space-y-2">
+            <li className="flex items-start">
+              <span className="mr-2">•</span>
+              <span>Your session expired</span>
+            </li>
+            <li className="flex items-start">
+              <span className="mr-2">•</span>
+              <span>You refreshed the page after checkout</span>
+            </li>
+            <li className="flex items-start">
+              <span className="mr-2">•</span>
+              <span>There was an issue with order processing</span>
+            </li>
+          </ul>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={() => navigate("/my-profile")}
+              className="px-6 py-3 bg-black text-white rounded-lg font-medium"
+            >
+              Check Order History
+            </button>
+            <button
+              onClick={() => navigate("/")}
+              className="px-6 py-3 bg-white border border-gray-300 text-gray-900 rounded-lg font-medium"
+            >
+              Continue Shopping
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -366,7 +442,7 @@ const Success = () => {
                 transition={{ delay: 0.5 }}
                 className="text-xl text-gray-600 max-w-2xl mx-auto"
               >
-                Your premium invoice has been generated
+                Your invoice has been generated
               </motion.p>
             </div>
 
@@ -391,7 +467,12 @@ const Success = () => {
                     <div className="flex justify-between pb-3 border-b border-gray-100">
                       <span className="text-gray-600">Invoice ID:</span>
                       <span className="font-medium text-gray-900">
-                        {orderCount !== null ? `#${orderCount}` : 'Loading...'}
+                        {orderCount !== null ? `#${orderCount}` : (
+                          <span className="flex items-center text-yellow-600">
+                            <ArrowPathIcon className="w-4 h-4 mr-1 animate-spin" />
+                            Loading...
+                          </span>
+                        )}
                       </span>
                     </div>
                     <div className="flex justify-between pb-3 border-b border-gray-100">
@@ -452,7 +533,7 @@ const Success = () => {
               <h2 className="text-2xl font-light tracking-tight mb-6 text-gray-900">Your Selection</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {order.items.slice(0, 4).map((item, index) => (
-                  <div key={index} className="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div key={index} className="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
                     <ImageWithFallback 
                       src={item.productImage} 
                       alt={item.productName} 
@@ -461,6 +542,11 @@ const Success = () => {
                     <div>
                       <h3 className="font-medium text-gray-900">{item.productName}</h3>
                       <p className="text-sm text-gray-600">Qty: {item.quantity} | Tk. {item.price.toFixed(2)}</p>
+                      {/* FIXED: Size/color display */}
+                      <p className="text-xs text-gray-500 mt-1">
+                        {item.size && item.size !== 'Free' ? `${item.size}${item.color ? ' | ' : ''}` : ''}
+                        {item.color || (item.size ? '' : 'Standard')}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -489,11 +575,26 @@ const Success = () => {
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
-                className="flex items-center justify-center gap-3 py-4 px-8 bg-white border border-gray-900 text-gray-900 rounded-lg font-medium tracking-wide shadow-[0_0_0_0_#000] hover:shadow-[4px_4px_0_0_#000] transition-all duration-200"
+                className="flex items-center justify-center gap-3 py-4 px-8 bg-white border border-gray-900 text-gray-900 rounded-lg font-medium tracking-wide shadow-[0_0_0_0_#000] hover:shadow-[4px_4px_0_0_#000] transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                 onClick={handleDownloadInvoice}
+                disabled={isGenerating || fetchError}
               >
-                Download Invoice
-                <ArrowDownTrayIcon className="w-5 h-5" />
+                {isGenerating ? (
+                  <span className="flex items-center">
+                    <ArrowPathIcon className="w-5 h-5 mr-2 animate-spin" />
+                    Generating...
+                  </span>
+                ) : fetchError ? (
+                  <span className="flex items-center text-red-600">
+                    <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+                    Failed - Try Again
+                  </span>
+                ) : (
+                  <span className="flex items-center">
+                    Download Invoice
+                    <ArrowDownTrayIcon className="w-5 h-5 ml-2" />
+                  </span>
+                )}
               </motion.button>
             </motion.div>
           </div>

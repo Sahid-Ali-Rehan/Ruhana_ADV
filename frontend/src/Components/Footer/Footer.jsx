@@ -118,24 +118,24 @@ const Footer = () => {
             <div className="mb-8" ref={logoRef}>
               <img 
                 src="/Images/logo.png" 
-                alt="Ruana's Luxury Decor" 
+                alt="Jonab's Fashion" 
                 className="w-32 h-32 object-contain opacity-90"
               />
             </div>
             <div className="w-24 h-px bg-black mb-8"></div>
             <p className="text-lg leading-relaxed mb-8 opacity-80 tracking-wide max-w-xs">
-              Premium, Original Showpieces You Can Trust
+              Premium, Original Products You Can Trust
             </p>
             <div className="flex space-x-4">
               <a 
-                href="https://www.facebook.com/ruhanacreation" 
+                href="https://www.facebook.com/thejonabbd/" 
                 className="social-icon p-4 border border-black rounded-full flex items-center justify-center hover:bg-black hover:text-white transition-colors duration-500"
                 aria-label="Facebook"
               >
                 <FaFacebookF size={20} />
               </a>
               <a 
-                href="https://wa.me/1234567890" 
+                href="https://wa.me/8801994830798" 
                 className="social-icon p-4 border border-black rounded-full flex items-center justify-center hover:bg-black hover:text-white transition-colors duration-500"
                 aria-label="WhatsApp"
               >
@@ -181,48 +181,63 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact Info */}
+          {/* Outlet Sections */}
           <div 
             ref={el => columnsRef.current[2] = el}
+          >
+            <h3 className="text-3xl font-bold mb-8 tracking-wider uppercase" style={{ letterSpacing: '0.2em' }}>
+              Our Outlets
+            </h3>
+            <div className="w-24 h-px bg-black mb-8"></div>
+            <ul className="space-y-8">
+              {[
+                "Aziz Supermarket, Shop 78, Ground Floor, Shahabag Dhaka.",
+                "Center Point, Shop No 26,27 Shopping Mall, Mouchak",
+                "Tokeo Square, Level 2, Shop no 356, Mohammadpur.",
+                "Alauddin Tower, Shop no 409, 3rd floor Uttara 3."
+              ].map((outlet, index) => (
+                <li key={index} className="flex items-start">
+                  <div className="mt-1 mr-4 opacity-70">
+                    <FaMapMarkerAlt size={18} />
+                  </div>
+                  <p className="text-lg opacity-80 tracking-wide leading-relaxed">
+                    {outlet}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact & Social Media */}
+          <div 
+            ref={el => columnsRef.current[3] = el}
           >
             <h3 className="text-3xl font-bold mb-8 tracking-wider uppercase" style={{ letterSpacing: '0.2em' }}>
               Contact
             </h3>
             <div className="w-24 h-px bg-black mb-8"></div>
-            <ul className="space-y-8">
-              <li className="flex items-start">
-                <div className="mt-1 mr-4 opacity-70">
-                  <FaMapMarkerAlt size={18} />
+            <ul className="space-y-8 mb-12">
+              <li className="flex items-center">
+                <div className="mr-4 opacity-70">
+                  <FaWhatsapp size={18} />
                 </div>
-                <p className="text-lg opacity-80 tracking-wide leading-relaxed max-w-xs">
-                  Section 12, Block C, Line No: 6, House No 13, Pallabi Thana Mirpur Dhaka 1216
-                </p>
+                <p className="text-lg opacity-80 tracking-wide">+880 1994-830798</p>
               </li>
               <li className="flex items-center">
                 <div className="mr-4 opacity-70">
                   <FaPhoneAlt size={16} />
                 </div>
-                <p className="text-lg opacity-80 tracking-wide">(+880) 1714394330</p>
+                <p className="text-lg opacity-80 tracking-wide">01687706095</p>
               </li>
               <li className="flex items-center">
                 <div className="mr-4 opacity-70">
                   <FaEnvelope size={16} />
                 </div>
-                <p className="text-lg opacity-80 tracking-wide">ruhanas0311@gmail.com</p>
-              </li>
-              <li className="mt-10 pt-6 border-t border-gray-200">
-                <h4 className="text-xl font-semibold mb-4 tracking-wider">BUSINESS HOURS</h4>
-                <p className="text-lg opacity-80 tracking-wide">Mon-Sat: 10AM - 8PM</p>
-                <p className="text-lg opacity-80 tracking-wide">Sunday: Closed</p>
+                <p className="text-lg opacity-80 tracking-wide">jonabbd04@gmail.com</p>
               </li>
             </ul>
-          </div>
 
-          {/* Social Media */}
-          <div 
-            ref={el => columnsRef.current[3] = el}
-          >
-            <h3 className="text-3xl font-bold mb-8 tracking-wider uppercase" style={{ letterSpacing: '0.2em' }}>
+            <h3 className="text-3xl font-bold mb-8 tracking-wider uppercase mt-16" style={{ letterSpacing: '0.2em' }}>
               Connect
             </h3>
             <div className="w-24 h-px bg-black mb-8"></div>
@@ -231,10 +246,10 @@ const Footer = () => {
             </p>
             <div className="grid grid-cols-2 gap-6">
               {[
-                { icon: <FaTwitter size={24} />, href: "https://x.com/ruhanas362188?t=YlcG_ybEFEpKOtpYbyc8zg&s=09", label: "Twitter" },
-                { icon: <FaYoutube size={24} />, href: "https://www.youtube.com/@Ruhana-c5s", label: "YouTube" },
-                { icon: <FaInstagram size={24} />, href: "https://www.instagram.com/ruhanas0311", label: "Instagram" },
-                { icon: <FaTiktok size={24} />, href: "https://www.tiktok.com/@ruhanas0311?_t=ZS-8xPVf4cpQAq&_r=1", label: "TikTok" }
+                { icon: <FaYoutube size={24} />, href: "https://www.youtube.com/@JonabBd-v5q", label: "YouTube" },
+                { icon: <FaInstagram size={24} />, href: "https://www.instagram.com/jonab._.bd/", label: "Instagram" },
+                { icon: <FaTiktok size={24} />, href: "https://www.tiktok.com/@jonabbd", label: "TikTok" },
+                { icon: <FaTwitter size={24} />, href: "https://x.com/JonabBd", label: "Twitter" }
               ].map((social, index) => (
                 <a
                   key={index}
@@ -246,21 +261,6 @@ const Footer = () => {
                 </a>
               ))}
             </div>
-            
-            {/* <div className="mt-12 pt-8 border-t border-gray-200">
-              <h4 className="text-xl font-semibold mb-6 tracking-wider">NEWSLETTER</h4>
-              <div className="flex">
-                <input 
-                  type="email" 
-                  placeholder="Your email address" 
-                  className="flex-1 px-4 py-3 border-t border-b border-l border-black text-lg focus:outline-none"
-                />
-                <button className="bg-black text-white px-6 py-3 text-lg font-medium hover:bg-gray-800 transition-colors duration-300">
-                  JOIN
-                </button>
-              </div>
-              <p className="text-sm mt-3 opacity-70">Exclusive offers & private viewings</p>
-            </div> */}
           </div>
         </div>
 
@@ -272,7 +272,7 @@ const Footer = () => {
           <div className="absolute inset-0 border-[16px] border-white z-10 pointer-events-none"></div>
           <iframe
             className="w-full h-full"
-            src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d7052.16612955766!2d90.37824213228555!3d23.83144931468726!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755c1ae043955f1%3A0x9b5859a2015ec2a0!2sRuhanas%20Fashion%20Studio!5e1!3m2!1sen!2sbd!4v1750568439057!5m2!1sen!2sbd"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1263.0195838516104!2d90.39240927183072!3d23.738685696661257!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755b9a704d3d7e5%3A0x781623f8127962bf!2sAziz%20Super%20Market!5e1!3m2!1sen!2sbd!4v1753612543895!5m2!1sen!2sbd"
             allowFullScreen=""
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
@@ -304,13 +304,13 @@ const Footer = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="text-center md:text-left">
               <p className="text-lg opacity-80 tracking-widest">
-                <span>&copy; {new Date().getFullYear()}</span> Jonab'S Fashion | ELEVATING SPACES
+                <span>&copy; {new Date().getFullYear()}</span> Jonab'S Fashion | ELEVATING STYLE
               </p>
             </div>
             <div className="flex items-center space-x-4">
               <span className="opacity-80 tracking-widest">CRAFTED WITH EXCELLENCE BY</span>
               <a
-                href="https://www.instagram.com/ur_rehu/"
+                href="https://www.instagram.com/saastudio.dev/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center hover:opacity-100 opacity-80 transition-opacity duration-300 tracking-wider group"
@@ -318,7 +318,7 @@ const Footer = () => {
                 <div className="bg-black text-white p-2 rounded-full mr-2 group-hover:rotate-12 transition-transform">
                   <FaInstagram className="text-white" />
                 </div>
-                <span className="border-b border-transparent group-hover:border-black">@UR_REHU</span>
+                <span className="border-b border-transparent group-hover:border-black">@SaaStudio</span>
               </a>
             </div>
           </div>
