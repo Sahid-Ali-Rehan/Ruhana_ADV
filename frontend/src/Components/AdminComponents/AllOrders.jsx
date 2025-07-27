@@ -449,7 +449,7 @@ const generateInvoiceDocument = (order) => {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(22);
       doc.setTextColor("#000000");
-      doc.text("Ruhana Fashions", 40, 65);
+      doc.text("Jonab-BD", 40, 65);
     } catch (e) {
       console.log("Image loading error:", e);
     }
@@ -595,7 +595,7 @@ const generateInvoiceDocument = (order) => {
 
   // Footer
   const footerY = pageHeight - 50;
-  const footerText = "Thank you for shopping with Ruhana Fashions!";
+  const footerText = "Thank you for shopping with Jonab-BD!";
 
   doc.setFont("helvetica", "italic");
   doc.setFontSize(10);
@@ -609,7 +609,7 @@ const generateInvoiceDocument = (order) => {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor("#666666");
-  doc.text("@copyright 2025 reserved by Ruhana Fashions", pageWidth / 2, footerY + 25, { align: "center" });
+  doc.text("@copyright 2025 reserved by Jonab-BD", pageWidth / 2, footerY + 25, { align: "center" });
 
   return doc;
 };
